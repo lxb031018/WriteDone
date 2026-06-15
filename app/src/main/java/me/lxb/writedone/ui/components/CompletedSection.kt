@@ -32,7 +32,6 @@ import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.util.FormatUtils
 import java.util.Calendar
 import java.util.Date
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -130,7 +129,8 @@ fun CompletedCard(
 ) {
     val seed = remember { abs(note.id.toInt()) + note.content.hashCode() }
     val rng = remember { Random(seed.toLong()) }
-    val rotation = remember { (rng.nextDouble() - 0.5) * (4.0 * PI / 180.0) }
+    // Rotation in **degrees** (Modifier.rotate expects degrees, not radians).
+    val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
     val colorIndex = remember { rng.nextInt(AppColors.macaronPalette.size) }
 
     val bgColor = AppColors.macaronPalette[colorIndex]
@@ -157,15 +157,14 @@ fun CompletedCard(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimens.pageH),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         BreathingWrapper(enabled = breathingEnabled) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .rotate(rotation.toFloat())
+                    .rotate(rotationDeg.toFloat())
+                    .stickyNoteShadow(bgColor)
                     .background(color = bgColor, shape = RoundedCornerShape(4.dp))
                     .padding(Dimens.cardPad),
             ) {

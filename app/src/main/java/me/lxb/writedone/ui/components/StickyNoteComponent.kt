@@ -29,7 +29,6 @@ import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.util.FormatUtils
 import java.util.Calendar
 import java.util.Date
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -44,7 +43,8 @@ fun StickyNoteInput(
 ) {
     val seed = remember { abs(java.util.Objects.hash(value)) }
     val rng = remember { Random(seed.toLong()) }
-    val rotation = remember { (rng.nextDouble() - 0.5) * (4.0 * PI / 180.0) }
+    // Rotation in **degrees** (Modifier.rotate expects degrees, not radians).
+    val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
     val colorIndex = remember { rng.nextInt(AppColors.macaronPalette.size) }
     val bgColor = AppColors.macaronPalette[colorIndex]
 
@@ -65,10 +65,15 @@ fun StickyNoteInput(
                 val cal = Calendar.getInstance().apply { time = createdAt }
                 append("${cal.get(Calendar.YEAR)}年${cal.get(Calendar.MONTH) + 1}月${cal.get(Calendar.DAY_OF_MONTH)}日    ")
                 append("开始:${FormatUtils.time(createdAt)}")
+            } else {
+                append("--年--月--日    开始:--:--")
             }
             if (durationSeconds != null) {
                 append("    ")
                 append("用时:${FormatUtils.duration(durationSeconds)}")
+            } else {
+                append("    ")
+                append("用时:--")
             }
         }
     }
@@ -78,21 +83,20 @@ fun StickyNoteInput(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .rotate(rotation.toFloat())
+                    .rotate(rotationDeg.toFloat())
+                    .stickyNoteShadow(bgColor)
                     .background(color = bgColor, shape = RoundedCornerShape(4.dp))
                     .padding(Dimens.cardPad),
             ) {
-                if (headerText.isNotEmpty()) {
-                    Text(
-                        text = headerText,
-                        fontFamily = handwritingFont,
-                        fontSize = 13.sp,
-                        color = AppColors.textMuted,
-                    )
-                    Spacer(Modifier.height(Dimens.gap))
-                    HorizontalDivider(color = AppColors.border, thickness = 1.dp)
-                    Spacer(Modifier.height(Dimens.gap))
-                }
+                Text(
+                    text = headerText,
+                    fontFamily = handwritingFont,
+                    fontSize = 13.sp,
+                    color = AppColors.textMuted,
+                )
+                Spacer(Modifier.height(Dimens.gap))
+                HorizontalDivider(color = AppColors.border, thickness = 1.dp)
+                Spacer(Modifier.height(Dimens.gap))
                 BasicTextField(
                     value = value,
                     onValueChange = { if (it.length <= 60) onValueChange(it) },

@@ -22,10 +22,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -171,27 +167,9 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(AppColors.bg),
+                    .background(AppColors.bg)
+                    .statusBarsPadding(),
             ) {
-                // Top bar with hamburger button (mirrors Flutter Scaffold.drawer affordance)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(start = Dimens.gapSm, end = Dimens.pageH),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(
-                        onClick = { animateDrawerTo(1f) },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = "打开设置",
-                            tint = AppColors.textSecondary,
-                        )
-                    }
-                }
-
                 if (isLandscape) {
                     // Flutter home.dart _buildLandscape
                     Row(
