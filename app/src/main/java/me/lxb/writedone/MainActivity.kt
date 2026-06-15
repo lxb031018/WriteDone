@@ -1,0 +1,152 @@
+package me.lxb.writedone
+
+import android.app.Activity
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
+import me.lxb.writedone.data.repository.SettingsRepository
+import me.lxb.writedone.ui.screens.calendar.CalendarPage
+import me.lxb.writedone.ui.screens.legal.AgreementDialog
+import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
+import me.lxb.writedone.ui.screens.legal.UserAgreementPage
+import me.lxb.writedone.ui.screens.home.HomeScreen
+import me.lxb.writedone.ui.screens.settings.AboutPage
+import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.WriteDoneTheme
+import me.lxb.writedone.viewmodel.CompletedViewModel
+import me.lxb.writedone.viewmodel.SettingsViewModel
+import me.lxb.writedone.viewmodel.TimerViewModel
+import java.util.Date
+
+class MainActivity : ComponentActivity() {
+    private lateinit var timerViewModel: TimerViewModel
+    private lateinit var completedViewModel: CompletedViewModel
+    private lateinit var settingsViewModel: SettingsViewModel
+    private lateinit var settingsRepo: SettingsRepository
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        timerViewModel = ViewModelProvider(this)[TimerViewModel::class.java]
+        completedViewModel = ViewModelProvider(this)[CompletedViewModel::class.java]
+        settingsViewModel = ViewModelProvider(this)[SettingsViewModel::class.java]
+        settingsRepo = SettingsRepository(applicationContext)
+
+        setContent {
+            WriteDoneTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = AppColors.bg,
+                ) {
+                    WriteDoneApp(
+                        timerViewModel = timerViewModel,
+                        completedViewModel = completedViewModel,
+                        settingsViewModel = settingsViewModel,
+                        settingsRepo = settingsRepo,
+                    )
+                }
+            }
+        }
+    }
+}
+
+enum class Screen { Home, Calendar, About, UserAgreement, PrivacyPolicy }
+
+@Composable
+private fun WriteDoneApp(
+    timerViewModel: TimerViewModel,
+    completedViewModel: CompletedViewModel,
+    settingsViewModel: SettingsViewModel,
+    settingsRepo: SettingsRepository,
+) {
+    var currentScreen by remember { mutableStateOf(Screen.Home) }
+    var showAgreement by remember { mutableStateOf(false) }
+    var agreementChecked by remember { mutableStateOf(false) }
+    var calendarDate by remember { mutableStateOf(Date()) }
+    val completedState = completedViewModel.state.collectAsStateWithLifecycle().value
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        if (!settingsRepo.isAgreementAccepted()) {
+            showAgreement = true
+        }
+        agreementChecked = true
+    }
+
+    if (!agreementChecked) return
+
+    if (showAgreement) {
+        AgreementDialog(
+            onAgree = {
+                coroutineScope.launch {
+                    settingsRepo.setAgreementAccepted(true)
+                }
+                showAgreement = false
+            },
+            onDisagree = { (context as? Activity)?.finish() },
+            onShowUserAgreement = { currentScreen = Screen.UserAgreement },
+            onShowPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
+        )
+    }
+
+    when (currentScreen) {
+        Screen.Home -> {
+            HomeScreen(
+                timerViewModel = timerViewModel,
+                completedViewModel = completedViewModel,
+                settingsViewModel = settingsViewModel,
+                onNavigateToCalendar = {
+                    calendarDate = completedState.selectedDate
+                    currentScreen = Screen.Calendar
+                },
+                onNavigateToAbout = { currentScreen = Screen.About },
+                onNavigateToUserAgreement = { currentScreen = Screen.UserAgreement },
+                onNavigateToPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
+            )
+        }
+        Screen.Calendar -> {
+            CalendarPage(
+                onBack = { date ->
+                    completedViewModel.selectDate(date)
+                    currentScreen = Screen.Home
+                },
+                selectedDate = calendarDate,
+                notes = completedState.notes,
+                onDateSelected = { date ->
+                    calendarDate = date
+                    completedViewModel.selectDate(date)
+                },
+            )
+        }
+        Screen.About -> {
+            AboutPage(
+                onBack = { currentScreen = Screen.Home },
+                onUserAgreement = { currentScreen = Screen.UserAgreement },
+                onPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
+            )
+        }
+        Screen.UserAgreement -> {
+            UserAgreementPage(onBack = { currentScreen = Screen.Home })
+        }
+        Screen.PrivacyPolicy -> {
+            PrivacyPolicyPage(onBack = { currentScreen = Screen.Home })
+        }
+    }
+}
