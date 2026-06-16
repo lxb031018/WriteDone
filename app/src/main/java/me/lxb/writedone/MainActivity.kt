@@ -136,8 +136,6 @@ private fun WriteDoneApp(
                 completedViewModel = completedViewModel,
                 settingsViewModel = settingsViewModel,
                 ambientController = ambientController,
-                onNavigateToUserAgreement = { currentScreen = Screen.UserAgreement },
-                onNavigateToPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
             )
         }
         Screen.Calendar -> {
@@ -157,15 +155,17 @@ private fun WriteDoneApp(
         Screen.About -> {
             AboutPage(
                 onBack = { currentScreen = Screen.Home },
-                onUserAgreement = { currentScreen = Screen.UserAgreement },
-                onPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
             )
         }
         Screen.UserAgreement -> {
-            UserAgreementPage(onBack = { currentScreen = Screen.Home })
+            UserAgreementPage(onBack = {
+                currentScreen = Screen.Home
+            })
         }
         Screen.PrivacyPolicy -> {
-            PrivacyPolicyPage(onBack = { currentScreen = Screen.Home })
+            PrivacyPolicyPage(onBack = {
+                currentScreen = Screen.Home
+            })
         }
     }
 }

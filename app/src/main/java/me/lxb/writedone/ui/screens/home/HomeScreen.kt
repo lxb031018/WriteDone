@@ -32,6 +32,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -47,6 +48,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalView
+import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.launch
 import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.ambient.AmbientStatus
@@ -54,6 +56,8 @@ import me.lxb.writedone.viewmodel.TimerStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
+import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
+import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.settings.SettingsDrawer
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
@@ -86,8 +90,6 @@ fun HomeScreen(
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
     ambientController: AmbientController,
-    onNavigateToUserAgreement: () -> Unit,
-    onNavigateToPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val timerState by timerViewModel.state.collectAsState()
@@ -102,6 +104,9 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val drawerAnim = remember { Animatable(0f) }
     val calendarAnim = remember { Animatable(0f) }
+
+    var showUserAgreement by remember { mutableStateOf(false) }
+    var showPrivacyPolicy by remember { mutableStateOf(false) }
 
     fun animateDrawerTo(target: Float) {
         scope.launch {
@@ -379,8 +384,8 @@ fun HomeScreen(
                     .clipToBounds(),
             ) {
                 SettingsDrawer(
-                    onUserAgreement = onNavigateToUserAgreement,
-                    onPrivacyPolicy = onNavigateToPrivacyPolicy,
+                    onUserAgreement = { showUserAgreement = true },
+                    onPrivacyPolicy = { showPrivacyPolicy = true },
                     modifier = Modifier.align(Alignment.CenterStart),
                 )
             }
@@ -396,6 +401,16 @@ fun HomeScreen(
                     notes = completedState.notes,
                     onDateSelected = { completedViewModel.selectDate(it) },
                 )
+            }
+
+            // ── Legal page overlays ──
+            if (showUserAgreement) {
+                BackHandler { showUserAgreement = false }
+                UserAgreementPage(onBack = { showUserAgreement = false })
+            }
+            if (showPrivacyPolicy) {
+                BackHandler { showPrivacyPolicy = false }
+                PrivacyPolicyPage(onBack = { showPrivacyPolicy = false })
             }
         }
     }

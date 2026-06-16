@@ -2,6 +2,7 @@ package me.lxb.writedone.ui.screens.settings
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.Font
@@ -36,13 +40,19 @@ import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
 import me.lxb.writedone.R
+import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
+import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutPage(onBack: () -> Unit, onUserAgreement: () -> Unit, onPrivacyPolicy: () -> Unit) {
+fun AboutPage(onBack: () -> Unit) {
+    var showUserAgreement by remember { mutableStateOf(false) }
+    var showPrivacyPolicy by remember { mutableStateOf(false) }
+
     val handwritingFont = FontFamily(
         Font(
             googleFont = GoogleFont("ZCOOL KuaiLe"),
@@ -54,7 +64,8 @@ fun AboutPage(onBack: () -> Unit, onUserAgreement: () -> Unit, onPrivacyPolicy: 
         ),
     )
 
-    Scaffold(
+    Box {
+        Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("关于") },
@@ -120,13 +131,13 @@ fun AboutPage(onBack: () -> Unit, onUserAgreement: () -> Unit, onPrivacyPolicy: 
             DocLinkCard(
                 title = "《粒时用户协议》",
                 summary = "约定你与开发者之间就使用本应用的权利和义务。",
-                onClick = onUserAgreement,
+                onClick = { showUserAgreement = true },
             )
             Spacer(Modifier.height(8.dp))
             DocLinkCard(
                 title = "《粒时隐私政策》",
                 summary = "说明本应用如何处理你的信息。本应用不收集任何信息。",
-                onClick = onPrivacyPolicy,
+                onClick = { showPrivacyPolicy = true },
             )
 
             Spacer(Modifier.height(24.dp))
@@ -148,6 +159,17 @@ fun AboutPage(onBack: () -> Unit, onUserAgreement: () -> Unit, onPrivacyPolicy: 
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(16.dp))
+        }
+    }
+
+        // ── Legal page overlays ──
+        if (showUserAgreement) {
+            BackHandler { showUserAgreement = false }
+            UserAgreementPage(onBack = { showUserAgreement = false })
+        }
+        if (showPrivacyPolicy) {
+            BackHandler { showPrivacyPolicy = false }
+            PrivacyPolicyPage(onBack = { showPrivacyPolicy = false })
         }
     }
 }
@@ -181,11 +203,6 @@ private fun DocLinkCard(title: String, summary: String, onClick: () -> Unit) {
                     color = AppColors.textMuted,
                 )
             }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = AppColors.textMuted,
-            )
         }
     }
 }
