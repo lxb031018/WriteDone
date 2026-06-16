@@ -43,9 +43,10 @@ class CompletedViewModel(application: Application) : AndroidViewModel(applicatio
             durationSeconds = durationSeconds,
         )
         viewModelScope.launch(Dispatchers.IO) {
-            noteRepo.insert(note)
+            val rowId = noteRepo.insert(note)
+            val savedNote = note.copy(id = rowId)
             _state.update { st ->
-                st.copy(notes = listOf(note) + st.notes)
+                st.copy(notes = listOf(savedNote) + st.notes)
             }
         }
     }
