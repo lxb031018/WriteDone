@@ -24,10 +24,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -180,12 +176,12 @@ fun HomeScreen(
                 },
         ) {
             // ── Layer 1: Drawer ──
-            // Flutter: offset = w * (1 - t)
+            // Flutter: offset = w * (1 - t)  where w = SCREEN width (not drawer width)
             // t=0(closed): offset = w (offscreen right), t=1(open): offset = 0 (visible)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .offset { IntOffset((drawerWidthPx * (1f - drawerAnim.value)).roundToInt(), 0) }
+                    .offset { IntOffset((screenWidthPx * (1f - drawerAnim.value)).roundToInt(), 0) }
                     .clipToBounds(),
             ) {
                 SettingsDrawer(
@@ -214,12 +210,12 @@ fun HomeScreen(
             }
 
             // ── Layer 2: Main Content ──
-            // Flutter: offset = -w * t
-            // t=0(closed): offset = 0, t=1(open): offset = -w (shifted left)
+            // Flutter: offset = -w * t  where w = SCREEN width (so Main is fully off-screen when t=1)
+            // t=0(closed): offset = 0, t=1(open): offset = -w (shifted left off-screen)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .offset { IntOffset((-drawerWidthPx * drawerAnim.value).roundToInt(), 0) }
+                    .offset { IntOffset((-screenWidthPx * drawerAnim.value).roundToInt(), 0) }
                     .background(Color.Transparent),
             ) {
                 Column(
@@ -228,24 +224,6 @@ fun HomeScreen(
                         .background(bgColor)
                         .statusBarsPadding(),
                 ) {
-                    // Top bar with hamburger button (mirrors Flutter Scaffold.drawer affordance)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = Dimens.gapSm, end = Dimens.pageH),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        IconButton(
-                            onClick = { animateDrawerTo(1f) },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "打开设置",
-                                tint = AppColors.textSecondary,
-                            )
-                        }
-                    }
-
                     if (isLandscape) {
                         Row(
                             modifier = Modifier
