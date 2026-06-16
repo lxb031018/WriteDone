@@ -260,10 +260,18 @@ fun HomeScreen(
                                     }
                                 }
                                 dragAmount < 0f -> {
-                                    lastDragDirection = -1f
-                                    scope.launch {
-                                        val delta = -dragAmount / screenWidthPx
-                                        drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
+                                    if (calendarAnim.value > 0f) {
+                                        lastDragDirection = 1f
+                                        scope.launch {
+                                            val delta = dragAmount / screenWidthPx
+                                            calendarAnim.snapTo((calendarAnim.value + delta).coerceIn(0f, 1f))
+                                        }
+                                    } else {
+                                        lastDragDirection = -1f
+                                        scope.launch {
+                                            val delta = -dragAmount / screenWidthPx
+                                            drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
+                                        }
                                     }
                                 }
                             }
@@ -277,7 +285,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .offset { IntOffset((-screenWidthPx * drawerAnim.value).roundToInt(), 0) }
+                    .offset { IntOffset((screenWidthPx * calendarAnim.value - screenWidthPx * drawerAnim.value).roundToInt(), 0) }
                     .background(Color.Transparent),
             ) {
                 Column(
@@ -419,9 +427,27 @@ fun HomeScreen(
                 )
             }
 
-            // ── Layer 3: Calendar Overlay (slides in from LEFT) ──
-            // Self-contained with its own swipe-to-close gesture handler.
+            // ── Calendar Scrim ──
             if (calendarAnim.value > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = calendarAnim.value * 0.5f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { animateCalendarTo(0f) },
+                        ),
+                )
+            }
+
+            // ── Layer 3: Calendar (slides in from LEFT, pushes content right) ──
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset { IntOffset((-screenWidthPx * (1f - calendarAnim.value)).roundToInt(), 0) }
+                    .clipToBounds(),
+            ) {
                 CalendarOverlay(
                     calendarAnim = calendarAnim,
                     screenWidthPx = screenWidthPx,
