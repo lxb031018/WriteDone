@@ -27,7 +27,7 @@ fun UserAgreementPage(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("粒时 用户协议") },
+                title = { Text("WriteDone 用户协议") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")

@@ -129,13 +129,13 @@ fun AboutPage(onBack: () -> Unit) {
             Spacer(Modifier.height(8.dp))
 
             DocLinkCard(
-                title = "《粒时用户协议》",
+                title = "《WriteDone用户协议》",
                 summary = "约定你与开发者之间就使用本应用的权利和义务。",
                 onClick = { showUserAgreement = true },
             )
             Spacer(Modifier.height(8.dp))
             DocLinkCard(
-                title = "《粒时隐私政策》",
+                title = "《WriteDone隐私政策》",
                 summary = "说明本应用如何处理你的信息。本应用不收集任何信息。",
                 onClick = { showPrivacyPolicy = true },
             )

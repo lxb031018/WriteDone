@@ -27,7 +27,7 @@ fun PrivacyPolicyPage(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("粒时 隐私政策") },
+                title = { Text("WriteDone 隐私政策") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")

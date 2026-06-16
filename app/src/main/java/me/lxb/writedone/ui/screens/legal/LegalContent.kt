@@ -20,7 +20,7 @@ fun UserAgreementBody() {
         append("本协议是开发者 ")
         withStyle(boldSpan) { append("lxb") }
         append(" (以下简称\"我们\"或\"开发者\") 与您 (以下简称\"用户\"或\"您\") 之间就使用 ")
-        withStyle(boldSpan) { append("\"粒时\"") }
+        withStyle(boldSpan) { append("\"WriteDone\"") }
         append(" 移动应用 (以下简称\"本应用\") 所订立的协议。请您仔细阅读本协议的全部条款, 一旦您开始使用本应用即视为您已阅读、理解并接受本协议的所有条款。")
     })
 
@@ -28,7 +28,7 @@ fun UserAgreementBody() {
 
     LH2("一、关于本应用")
     LPRich(buildAnnotatedString {
-        withStyle(boldSpan) { append("粒时") }
+        withStyle(boldSpan) { append("WriteDone") }
         append(" 是一款离线个人时间管理工具, 灵感来自 Git 的\"原子提交\"理念, 鼓励用户在自由时间主动做点有意义的事并记录下来。")
     })
     LH3("1.1 核心功能")
@@ -75,7 +75,7 @@ fun UserAgreementBody() {
 
     LH2("三、用户内容")
     LH3("3.1 所有权")
-    LP("您在粒时中创建的所有内容 (包括但不限于\"提交\"记录、计时数据等, 以下简称\"用户内容\") 由您独立创作, 其知识产权归您所有。我们不主张对用户内容的任何所有权。")
+    LP("您在 WriteDone 中创建的所有内容 (包括但不限于\"提交\"记录、计时数据等, 以下简称\"用户内容\") 由您独立创作, 其知识产权归您所有。我们不主张对用户内容的任何所有权。")
     LH3("3.2 我们的访问")
     LPRich(buildAnnotatedString {
         append("由于本应用为")
@@ -90,7 +90,7 @@ fun UserAgreementBody() {
     LRule()
 
     LH2("四、隐私保护")
-    LP("本应用尊重并保护您的隐私。本应用的隐私实践详见《粒时隐私政策》, 该政策构成本协议不可分割的一部分。")
+    LP("本应用尊重并保护您的隐私。本应用的隐私实践详见《WriteDone 隐私政策》, 该政策构成本协议不可分割的一部分。")
 
     LRule()
 
@@ -218,7 +218,7 @@ fun PrivacyPolicyBody() {
     })
     LPRich(buildAnnotatedString {
         append("您的隐私对我们至关重要。本隐私政策说明 ")
-        withStyle(boldSpan) { append("\"粒时\"") }
+        withStyle(boldSpan) { append("\"WriteDone\"") }
         append(" 移动应用 (以下简称\"本应用\") 如何处理您的信息。请您仔细阅读本政策, 一旦您开始使用本应用即视为您已阅读、理解并接受本政策的全部内容。")
     })
     LP("本政策依据《中华人民共和国个人信息保护法》《中华人民共和国网络安全法》《App 违法违规收集使用个人信息行为认定方法》等相关法律法规制定。")
@@ -257,7 +257,7 @@ fun PrivacyPolicyBody() {
     LH2("二、信息的存储")
     LH3("2.1 存储位置")
     LPRich(buildAnnotatedString {
-        append("您在粒时中创建的所有用户内容 (如\"读了 30 页书\"、用时 25 分钟等提交记录) ")
+        append("您在 WriteDone 中创建的所有用户内容 (如\"读了 30 页书\"、用时 25 分钟等提交记录) ")
         withStyle(boldSpan) { append("仅存储在您的设备本地") }
         append(", 具体位置为 Android 系统的应用沙箱目录 (即 /data/data/ 之类的私有目录)。")
     })
@@ -322,7 +322,7 @@ fun PrivacyPolicyBody() {
         withStyle(boldSpan) { append("本地通知 (提醒开始)") }
         append(" — 计划申请 ")
         withStyle(codeSpan) { append("POST_NOTIFICATIONS") }
-        append(", 用于在合适时间提醒您开始一件新的事; 您可在系统设置 → 应用 → 粒时 → 通知中随时关闭。")
+        append(", 用于在合适时间提醒您开始一件新的事; 您可在系统设置 → 应用 → WriteDone → 通知中随时关闭。")
     })
     LPRich(buildAnnotatedString {
         append("我们")
@@ -349,7 +349,7 @@ fun PrivacyPolicyBody() {
     LH3("7.2 删除权")
     LP("您可以通过以下方式删除您的数据:")
     LBullet("在应用内删除单条记录 (未来版本将提供)")
-    LBullet("清除应用数据 (系统设置 → 应用 → 粒时 → 存储 → 清除数据)")
+    LBullet("清除应用数据 (系统设置 → 应用 → WriteDone → 存储 → 清除数据)")
     LBullet("卸载应用 (永久删除所有数据)")
     LH3("7.3 导出权 (未来)")
     LP("未来版本可能提供\"导出数据\"功能, 让您将本地数据导出为通用格式 (如 JSON、CSV)。")
@@ -388,7 +388,7 @@ fun PrivacyPolicyBody() {
     LContactLine(label = "项目主页", value = "github.com/lxb031018/lishi")
     LPRich(buildAnnotatedString {
         append("为保障您的反馈得到有效处理, 请在邮件主题中注明 ")
-        withStyle(boldSpan) { append("\"粒时 + 反馈类型 (如: 隐私 / 协议 / Bug / 建议)\"") }
+        withStyle(boldSpan) { append("\"WriteDone + 反馈类型 (如: 隐私 / 协议 / Bug / 建议)\"") }
         append("。")
     })
     LPRich(buildAnnotatedString {
