@@ -1,6 +1,10 @@
 package me.lxb.writedone.viewmodel
 
+import android.app.AlarmManager
 import android.app.Application
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -12,6 +16,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.lxb.writedone.data.repository.SettingsRepository
 import me.lxb.writedone.data.repository.TimerStateRepository
+import me.lxb.writedone.notification.AlarmReceiver
+import me.lxb.writedone.notification.NotificationHelper
 
 enum class TimerStatus { Idle, Running }
 enum class TimerMode { Normal, Pomodoro }
@@ -39,18 +45,39 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         restoreTimer()
+        NotificationHelper.createChannel(getApplication())
     }
 
     private fun restoreTimer() {
         val startTime = timerStateRepo.loadStartTime() ?: return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
+        val mode = _state.value.mode
+        if (mode == TimerMode.Pomodoro) {
+            val workSeconds = 25 * 60
+            if (elapsed < workSeconds) {
+                scheduleBreakAlarm(startTime)
+            } else {
+                if (!timerStateRepo.loadBreakReminderSent()) {
+                    NotificationHelper.createChannel(getApplication())
+                    NotificationHelper.showBreakReminder(getApplication())
+                    viewModelScope.launch {
+                        timerStateRepo.saveBreakReminderSent(true)
+                    }
+                }
+            }
+        }
         startTimer(startTime, elapsed)
     }
 
     fun start() {
         val now = System.currentTimeMillis()
+        val mode = _state.value.mode
         viewModelScope.launch {
             timerStateRepo.saveStartTime(now)
+            timerStateRepo.saveBreakReminderSent(false)
+        }
+        if (mode == TimerMode.Pomodoro) {
+            scheduleBreakAlarm(now)
         }
         startTimer(now, 0)
     }
@@ -58,6 +85,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     fun stop() {
         timerJob?.cancel()
         timerJob = null
+        cancelBreakAlarm()
         viewModelScope.launch {
             timerStateRepo.clear()
         }
@@ -108,6 +136,41 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
                 _state.update { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
             }
         }
+    }
+
+    private fun scheduleBreakAlarm(startTimeMillis: Long) {
+        val triggerTime = startTimeMillis + 25 * 60 * 1000L
+        val alarmManager = getApplication<Application>().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(getApplication(), AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            getApplication(),
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        if (alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                pendingIntent,
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+        }
+    }
+
+    private fun cancelBreakAlarm() {
+        val alarmManager = getApplication<Application>().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(getApplication(), AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            getApplication(),
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        alarmManager.cancel(pendingIntent)
+        pendingIntent.cancel()
     }
 
     override fun onCleared() {

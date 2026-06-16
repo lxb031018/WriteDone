@@ -396,6 +396,11 @@ fun HomeScreen(
                             context.startActivity(this)
                         }
                     },
+                    onExactAlarmPermission = {
+                        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                            context.startActivity(this)
+                        }
+                    },
                     modifier = Modifier.align(Alignment.CenterStart),
                 )
             }

@@ -24,6 +24,7 @@ fun SettingsDrawer(
     onUserAgreement: () -> Unit,
     onPrivacyPolicy: () -> Unit,
     onNotificationPermission: () -> Unit,
+    onExactAlarmPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -44,6 +45,10 @@ fun SettingsDrawer(
         DrawerItem(
             text = "通知权限",
             onClick = onNotificationPermission,
+        )
+        DrawerItem(
+            text = "精确闹钟权限",
+            onClick = onExactAlarmPermission,
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader("协议与政策")
