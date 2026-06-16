@@ -6,7 +6,7 @@ enum class AmbientStatus { Normal, Active }
  * 1:1 port of Flutter `lib/features/ambient/ambient_state.dart`.
  *
  * State machine:
- *   - idle → enter() / scheduleEntry() → Active (no breath yet)
+ *   - idle → enter() → Active (no breath yet)
  *   - Active → delay(1500ms) → Active + breathingEnabled = true
  *   - Active → exit() → Normal
  */

@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
  * 1:1 port of Flutter `lib/features/ambient/ambient_controller.dart`.
  *
  * State machine:
- *   - enter() / scheduleEntry(delayMs) → Active (no breath)
+ *   - enter() → Active (no breath)
  *   - Active → delay(1500ms) → Active + breathingEnabled = true
  *   - exit() → Normal
  */
@@ -39,15 +39,6 @@ class AmbientController {
                 status = AmbientStatus.Active,
                 breathingEnabled = true,
             )
-        }
-    }
-
-    /** Delay [delayMs] then call [enter]. */
-    fun scheduleEntry(delayMs: Long) {
-        timerJob?.cancel()
-        timerJob = scope.launch {
-            delay(delayMs)
-            enter()
         }
     }
 
