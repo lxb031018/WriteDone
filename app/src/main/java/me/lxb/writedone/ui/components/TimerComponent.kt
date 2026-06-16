@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,8 +32,11 @@ import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
+import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.viewmodel.TimerMode
+import me.lxb.writedone.viewmodel.TimerStatus
 import me.lxb.writedone.viewmodel.TimerUiState
 
 /**
@@ -57,10 +61,25 @@ fun TimerComponent(
     state: TimerUiState,
     mode: TimerMode,
     onToggle: () -> Unit,
+    ambientController: AmbientController,
     modifier: Modifier = Modifier,
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val view = LocalView.current
+
+    // 1:1 port of Flutter `TimerController._startTimer` ambient trigger:
+    // scheduleEntry(15 - elapsed) on idle→running, exit() on running→idle.
+    var wasRunning by remember { mutableStateOf(false) }
+    LaunchedEffect(state.status) {
+        if (state.status == TimerStatus.Running) {
+            if (!wasRunning) ambientController.scheduleEntry(15_000L)
+            wasRunning = true
+        } else if (state.status == TimerStatus.Idle) {
+            if (wasRunning) ambientController.exit()
+            wasRunning = false
+        }
+    }
+    val breathingAlpha = LocalBreathingAlpha.current
 
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed) 0.618f else 1.0f,
@@ -133,32 +152,34 @@ fun TimerComponent(
             },
         contentAlignment = Alignment.Center,
     ) {
-        // Layer 1: white highlight shadow (Flutter `_shadows[1]`)
-        BasicText(
-            text = text,
-            style = baseStyle.copy(
-                shadow = Shadow(
-                    offset = Offset(-1.5f, -1.5f),
-                    blurRadius = 1f,
-                    color = Color(0x99FFFFFF),
+        BreathingWrapper(enabled = true, alpha = breathingAlpha) {
+            // Layer 1: white highlight shadow (Flutter `_shadows[1]`)
+            BasicText(
+                text = text,
+                style = baseStyle.copy(
+                    shadow = Shadow(
+                        offset = Offset(-1.5f, -1.5f),
+                        blurRadius = 1f,
+                        color = Color(0x99FFFFFF),
+                    ),
                 ),
-            ),
-            autoSize = autoSize,
-            modifier = pressScaleModifier,
-        )
-        // Layer 2: main drop shadow + gradient fill (Flutter `_shadows[0]`)
-        BasicText(
-            text = text,
-            style = baseStyle.copy(
-                shadow = Shadow(
-                    offset = Offset(0f, 6f),
-                    blurRadius = 12f,
-                    color = Color(0x4D000000),
+                autoSize = autoSize,
+                modifier = pressScaleModifier,
+            )
+            // Layer 2: main drop shadow + gradient fill (Flutter `_shadows[0]`)
+            BasicText(
+                text = text,
+                style = baseStyle.copy(
+                    shadow = Shadow(
+                        offset = Offset(0f, 6f),
+                        blurRadius = 12f,
+                        color = Color(0x4D000000),
+                    ),
                 ),
-            ),
-            autoSize = autoSize,
-            modifier = pressScaleModifier,
-        )
+                autoSize = autoSize,
+                modifier = pressScaleModifier,
+            )
+        }
     }
 }
 

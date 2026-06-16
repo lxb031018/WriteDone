@@ -10,6 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.data.repository.SettingsRepository
 import me.lxb.writedone.ui.screens.calendar.CalendarPage
 import me.lxb.writedone.ui.screens.legal.AgreementDialog
@@ -27,6 +29,7 @@ import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.home.HomeScreen
 import me.lxb.writedone.ui.screens.settings.AboutPage
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.WriteDoneTheme
 import me.lxb.writedone.viewmodel.CompletedViewModel
 import me.lxb.writedone.viewmodel.SettingsViewModel
@@ -38,6 +41,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var completedViewModel: CompletedViewModel
     private lateinit var settingsViewModel: SettingsViewModel
     private lateinit var settingsRepo: SettingsRepository
+    private lateinit var ambientController: AmbientController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,9 +51,21 @@ class MainActivity : ComponentActivity() {
         completedViewModel = ViewModelProvider(this)[CompletedViewModel::class.java]
         settingsViewModel = ViewModelProvider(this)[SettingsViewModel::class.java]
         settingsRepo = SettingsRepository(applicationContext)
+        ambientController = AmbientController()
 
         setContent {
-            WriteDoneTheme {
+            val ambientProgress = androidx.compose.runtime.remember {
+                mutableFloatStateOf(0f)
+            }.floatValue
+            // We can't read LocalAmbientProgress inside WriteDoneTheme (it provides it),
+            // so we read from a side-state holder. Keep ambientController as the
+            // single source of truth — HomeScreen drives the actual animation
+            // and sets LocalAmbientProgress for children.
+            androidx.compose.runtime.SideEffect {
+                // Placeholder for future: could read ambientController.state.value
+                // directly if we need theme crossfade outside HomeScreen.
+            }
+            WriteDoneTheme(ambientProgress = ambientProgress) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = AppColors.bg,
@@ -59,10 +75,16 @@ class MainActivity : ComponentActivity() {
                         completedViewModel = completedViewModel,
                         settingsViewModel = settingsViewModel,
                         settingsRepo = settingsRepo,
+                        ambientController = ambientController,
                     )
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        ambientController.dispose()
+        super.onDestroy()
     }
 }
 
@@ -74,6 +96,7 @@ private fun WriteDoneApp(
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
     settingsRepo: SettingsRepository,
+    ambientController: AmbientController,
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Home) }
     var showAgreement by remember { mutableStateOf(false) }
@@ -112,6 +135,7 @@ private fun WriteDoneApp(
                 timerViewModel = timerViewModel,
                 completedViewModel = completedViewModel,
                 settingsViewModel = settingsViewModel,
+                ambientController = ambientController,
                 onNavigateToCalendar = {
                     calendarDate = completedState.selectedDate
                     currentScreen = Screen.Calendar

@@ -3,6 +3,8 @@ package me.lxb.writedone.ui.screens.home
 import android.content.res.Configuration
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,8 +24,15 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -42,14 +51,17 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import me.lxb.writedone.ambient.AmbientController
+import me.lxb.writedone.ambient.AmbientStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.settings.SettingsDrawer
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
+import me.lxb.writedone.ui.theme.LocalAmbientProgress
+import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.viewmodel.CompletedViewModel
 import me.lxb.writedone.viewmodel.SettingsViewModel
-import me.lxb.writedone.viewmodel.TimerStatus
 import me.lxb.writedone.viewmodel.TimerViewModel
 import kotlin.math.roundToInt
 
@@ -64,12 +76,20 @@ import kotlin.math.roundToInt
  *     that snaps with `tween(300, FastOutSlowInEasing)`.
  *
  *   - Flutter: offset_drawer = w * (1 - t), offset_main = -w * t.
+ *
+ * Ambient (1:1 port of Flutter `_themeCtrl` + `_breathingCtrl` + `ThemeProgress`):
+ *   - `themeAnim` drives a 1.5s easeInOut crossfade between light and dark themes,
+ *     exposed as `LocalAmbientProgress.current` (t ∈ [0,1]) for `Color.lerp` calls
+ *     in feature widgets.
+ *   - `breathingAnim` is a 4s `0.15 ↔ 0.7` easeInOut sine loop, exposed as
+ *     `LocalBreathingAlpha.current` for `BreathingWrapper` consumers.
  */
 @Composable
 fun HomeScreen(
     timerViewModel: TimerViewModel,
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
+    ambientController: AmbientController,
     onNavigateToCalendar: () -> Unit,
     onNavigateToAbout: () -> Unit,
     onNavigateToUserAgreement: () -> Unit,
@@ -90,9 +110,39 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val drawerAnim = remember { Animatable(0f) }
 
-    // Ambient breathing: after 15s of timer running
-    val breathingEnabled =
-        timerState.status == TimerStatus.Running && timerState.elapsedSeconds >= 15
+    // ── Ambient state machine ──
+    val ambientState by ambientController.state.collectAsState()
+
+    // Theme transition: 1.5s easeInOut (Flutter `_themeCtrl`).
+    val themeAnim = remember { Animatable(0f) }
+    LaunchedEffect(ambientState.status) {
+        themeAnim.animateTo(
+            targetValue = if (ambientState.status == AmbientStatus.Active) 1f else 0f,
+            animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+        )
+    }
+
+    // Breathing alpha: 4s 0.15↔0.7 easeInOutSine (Flutter `_breathingAnim`).
+    val breathingAnim = remember { Animatable(0.15f) }
+    LaunchedEffect(ambientState.breathingEnabled) {
+        if (ambientState.breathingEnabled) {
+            breathingAnim.animateTo(
+                targetValue = 0.7f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+            )
+        } else {
+            breathingAnim.stop()
+            breathingAnim.snapTo(0.15f)
+        }
+    }
+    val breathingAlpha: State<Float> = breathingAnim.asState()
+    val ambientProgress = themeAnim.value
+
+    // Inline breathing flag (kept for breathingEnabled propagation to children).
+    val breathingEnabled = ambientState.breathingEnabled
 
     fun animateDrawerTo(target: Float) {
         scope.launch {
@@ -103,158 +153,188 @@ fun HomeScreen(
         }
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .onSizeChanged { screenWidthPx = it.width.toFloat() }
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        val target = if (drawerAnim.value > 0.5f) 1f else 0f
-                        animateDrawerTo(target)
-                    },
-                ) { _, dragAmount ->
-                    scope.launch {
-                        val delta = -dragAmount / screenWidthPx
-                        drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
-                    }
-                }
-            },
+    CompositionLocalProvider(
+        LocalAmbientProgress provides ambientProgress,
+        LocalBreathingAlpha provides breathingAlpha,
     ) {
-        // ── Layer 1: Drawer ──
-        // Flutter: offset = w * (1 - t)
-        // t=0(closed): offset = w (offscreen right), t=1(open): offset = 0 (visible)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .offset { IntOffset((drawerWidthPx * (1f - drawerAnim.value)).roundToInt(), 0) }
-                .clipToBounds(),
-        ) {
-            SettingsDrawer(
-                settingsViewModel = settingsViewModel,
-                onClose = { animateDrawerTo(0f) },
-                onCalendar = onNavigateToCalendar,
-                onAbout = onNavigateToAbout,
-                onUserAgreement = onNavigateToUserAgreement,
-                onPrivacyPolicy = onNavigateToPrivacyPolicy,
-                modifier = Modifier.align(Alignment.CenterStart),
-            )
-        }
+        val bgColor = lerp(AppColors.bg, AppColors.darkBg, ambientProgress)
+        val landscapeDividerColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
 
-        // ── Scrim (tap to close) ──
-        if (drawerAnim.value > 0f) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(bgColor)
+                .onSizeChanged { screenWidthPx = it.width.toFloat() }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            val target = if (drawerAnim.value > 0.5f) 1f else 0f
+                            animateDrawerTo(target)
+                        },
+                    ) { _, dragAmount ->
+                        scope.launch {
+                            val delta = -dragAmount / screenWidthPx
+                            drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
+                        }
+                    }
+                },
+        ) {
+            // ── Layer 1: Drawer ──
+            // Flutter: offset = w * (1 - t)
+            // t=0(closed): offset = w (offscreen right), t=1(open): offset = 0 (visible)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = drawerAnim.value * 0.5f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { animateDrawerTo(0f) },
-                    ),
-            )
-        }
+                    .offset { IntOffset((drawerWidthPx * (1f - drawerAnim.value)).roundToInt(), 0) }
+                    .clipToBounds(),
+            ) {
+                SettingsDrawer(
+                    settingsViewModel = settingsViewModel,
+                    onClose = { animateDrawerTo(0f) },
+                    onCalendar = onNavigateToCalendar,
+                    onAbout = onNavigateToAbout,
+                    onUserAgreement = onNavigateToUserAgreement,
+                    onPrivacyPolicy = onNavigateToPrivacyPolicy,
+                    modifier = Modifier.align(Alignment.CenterStart),
+                )
+            }
 
-        // ── Layer 2: Main Content ──
-        // Flutter: offset = -w * t
-        // t=0(closed): offset = 0, t=1(open): offset = -w (shifted left)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .offset { IntOffset((-drawerWidthPx * drawerAnim.value).roundToInt(), 0) }
-                .background(Color.Transparent),
-        ) {
-            Column(
+            // ── Scrim (tap to close) ──
+            if (drawerAnim.value > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = drawerAnim.value * 0.5f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { animateDrawerTo(0f) },
+                        ),
+                )
+            }
+
+            // ── Layer 2: Main Content ──
+            // Flutter: offset = -w * t
+            // t=0(closed): offset = 0, t=1(open): offset = -w (shifted left)
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(AppColors.bg)
-                    .statusBarsPadding(),
+                    .offset { IntOffset((-drawerWidthPx * drawerAnim.value).roundToInt(), 0) }
+                    .background(Color.Transparent),
             ) {
-                if (isLandscape) {
-                    // Flutter home.dart _buildLandscape
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(bgColor)
+                        .statusBarsPadding(),
+                ) {
+                    // Top bar with hamburger button (mirrors Flutter Scaffold.drawer affordance)
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f),
+                            .fillMaxWidth()
+                            .padding(start = Dimens.gapSm, end = Dimens.pageH),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Left column: Completed list
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .padding(
-                                    start = Dimens.pageH,
-                                    top = Dimens.gap,
-                                    end = Dimens.gap,
-                                    bottom = 0.dp,
-                                ),
+                        IconButton(
+                            onClick = { animateDrawerTo(1f) },
                         ) {
-                            CompletedSection(
-                                notes = completedState.notes,
-                                headerText = "已完成 — ${completedState.notes.size}",
-                                showHeader = true,
-                                breathingEnabled = breathingEnabled,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                        VerticalDivider(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .fillMaxHeight(),
-                            color = lerp(AppColors.border, AppColors.darkBorder, 0f),
-                            thickness = 1.dp,
-                        )
-                        // Right column: Timer + Input
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .verticalScroll(rememberScrollState())
-                                .padding(
-                                    start = Dimens.gap,
-                                    top = Dimens.gap,
-                                    end = Dimens.pageH,
-                                    bottom = Dimens.pageBottom,
-                                ),
-                        ) {
-                            Spacer(Modifier.height(Dimens.gapMd))
-                            TimerInputCard(
-                                timerViewModel = timerViewModel,
-                                completedViewModel = completedViewModel,
-                                breathingEnabled = breathingEnabled,
-                                modifier = Modifier.fillMaxWidth(),
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "打开设置",
+                                tint = AppColors.textSecondary,
                             )
                         }
                     }
-                } else {
-                    // Portrait
-                    TimerInputCard(
-                        timerViewModel = timerViewModel,
-                        completedViewModel = completedViewModel,
-                        breathingEnabled = breathingEnabled,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = Dimens.pageH,
-                                top = Dimens.gapMd,
-                                end = Dimens.pageH,
-                            ),
-                    )
 
-                    Spacer(Modifier.height(Dimens.gapLg))
+                    if (isLandscape) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f),
+                        ) {
+                            // Left column: Completed list
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .padding(
+                                        start = Dimens.pageH,
+                                        top = Dimens.gap,
+                                        end = Dimens.gap,
+                                        bottom = 0.dp,
+                                    ),
+                            ) {
+                                CompletedSection(
+                                    notes = completedState.notes,
+                                    headerText = "已完成 — ${completedState.notes.size}",
+                                    showHeader = true,
+                                    breathingEnabled = breathingEnabled,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                            VerticalDivider(
+                                modifier = Modifier
+                                    .width(1.dp)
+                                    .fillMaxHeight(),
+                                color = landscapeDividerColor,
+                                thickness = 1.dp,
+                            )
+                            // Right column: Timer + Input
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(
+                                        start = Dimens.gap,
+                                        top = Dimens.gap,
+                                        end = Dimens.pageH,
+                                        bottom = Dimens.pageBottom,
+                                    ),
+                            ) {
+                                Spacer(Modifier.height(Dimens.gapMd))
+                                TimerInputCard(
+                                    timerViewModel = timerViewModel,
+                                    completedViewModel = completedViewModel,
+                                    ambientController = ambientController,
+                                    breathingEnabled = breathingEnabled,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        }
+                    } else {
+                        // Portrait
+                        TimerInputCard(
+                            timerViewModel = timerViewModel,
+                            completedViewModel = completedViewModel,
+                            ambientController = ambientController,
+                            breathingEnabled = breathingEnabled,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    start = Dimens.pageH,
+                                    top = Dimens.gapMd,
+                                    end = Dimens.pageH,
+                                ),
+                        )
 
-                    CompletedSection(
-                        notes = completedState.notes,
-                        headerText = "已完成 — ${completedState.notes.size}",
-                        showHeader = true,
-                        breathingEnabled = breathingEnabled,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Dimens.pageH)
-                            .weight(1f),
-                    )
+                        Spacer(Modifier.height(Dimens.gapLg))
+
+                        CompletedSection(
+                            notes = completedState.notes,
+                            headerText = "已完成 — ${completedState.notes.size}",
+                            showHeader = true,
+                            breathingEnabled = breathingEnabled,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Dimens.pageH)
+                                .weight(1f),
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+// Required imports for icons + drawing tools referenced above.

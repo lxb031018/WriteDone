@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.googlefonts.Font
@@ -29,6 +30,8 @@ import me.lxb.writedone.R
 import me.lxb.writedone.data.model.CompletedNote
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
+import me.lxb.writedone.ui.theme.LocalAmbientProgress
+import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.util.FormatUtils
 import java.util.Calendar
 import java.util.Date
@@ -55,6 +58,9 @@ fun CompletedSection(
         ),
     )
 
+    val t = LocalAmbientProgress.current
+    val emptyTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
+
     Column(modifier = modifier.fillMaxSize()) {
         if (showHeader) {
             SectionHeader(text = headerText, breathingEnabled = breathingEnabled)
@@ -66,7 +72,7 @@ fun CompletedSection(
                 text = emptyText,
                 fontFamily = handwritingFont,
                 fontSize = 14.sp,
-                color = AppColors.textMuted,
+                color = emptyTextColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(vertical = Dimens.gapLg)
@@ -104,20 +110,25 @@ fun SectionHeader(
         ),
     )
 
-    BreathingWrapper(enabled = breathingEnabled) {
+    val t = LocalAmbientProgress.current
+    val breathingAlpha = LocalBreathingAlpha.current
+    val headerTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
+    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
+
+    BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HorizontalDivider(color = AppColors.border, thickness = 1.dp)
+            HorizontalDivider(color = dividerColor, thickness = 1.dp)
             Text(
                 text = text,
                 modifier = Modifier.padding(horizontal = Dimens.gap),
                 fontFamily = handwritingFont,
                 fontSize = 14.sp,
-                color = AppColors.textMuted,
+                color = headerTextColor,
             )
-            HorizontalDivider(color = AppColors.border, thickness = 1.dp)
+            HorizontalDivider(color = dividerColor, thickness = 1.dp)
         }
     }
 }
@@ -129,11 +140,19 @@ fun CompletedCard(
 ) {
     val seed = remember { abs(note.id.toInt()) + note.content.hashCode() }
     val rng = remember { Random(seed.toLong()) }
-    // Rotation in **degrees** (Modifier.rotate expects degrees, not radians).
     val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
     val colorIndex = remember { rng.nextInt(AppColors.macaronPalette.size) }
 
-    val bgColor = AppColors.macaronPalette[colorIndex]
+    val t = LocalAmbientProgress.current
+    val breathingAlpha = LocalBreathingAlpha.current
+    val bgColor = lerp(
+        AppColors.macaronPalette[colorIndex],
+        AppColors.darkMacaronPalette[colorIndex],
+        t,
+    )
+    val headerTextColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), t)
+    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
+    val textColor = lerp(AppColors.text, AppColors.darkText, t)
 
     val handwritingFont = FontFamily(
         Font(
@@ -159,7 +178,7 @@ fun CompletedCard(
     Box(
         modifier = Modifier.fillMaxWidth(),
     ) {
-        BreathingWrapper(enabled = breathingEnabled) {
+        BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -172,16 +191,16 @@ fun CompletedCard(
                     text = headerText,
                     fontFamily = handwritingFont,
                     fontSize = 13.sp,
-                    color = AppColors.textMuted,
+                    color = headerTextColor,
                 )
                 Spacer(Modifier.height(Dimens.gap))
-                HorizontalDivider(color = AppColors.border, thickness = 1.dp)
+                HorizontalDivider(color = dividerColor, thickness = 1.dp)
                 Spacer(Modifier.height(Dimens.gap))
                 Text(
                     text = note.content,
                     fontFamily = handwritingFont,
                     fontSize = 22.sp,
-                    color = AppColors.text,
+                    color = textColor,
                 )
             }
         }

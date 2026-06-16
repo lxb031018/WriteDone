@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.first
+import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.data.repository.SettingsRepository
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.viewmodel.CompletedViewModel
@@ -31,6 +32,7 @@ import java.util.Date
 fun TimerInputCard(
     timerViewModel: TimerViewModel,
     completedViewModel: CompletedViewModel,
+    ambientController: AmbientController,
     breathingEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -98,6 +100,7 @@ fun TimerInputCard(
                 state = timerState,
                 mode = mode,
                 onToggle = { timerViewModel.toggleTimer() },
+                ambientController = ambientController,
                 modifier = Modifier.fillMaxSize(),
             )
         }

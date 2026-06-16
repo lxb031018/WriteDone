@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -26,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
+import me.lxb.writedone.ui.theme.LocalAmbientProgress
+import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.util.FormatUtils
 import java.util.Calendar
 import java.util.Date
@@ -43,10 +46,22 @@ fun StickyNoteInput(
 ) {
     val seed = remember { abs(java.util.Objects.hash(value)) }
     val rng = remember { Random(seed.toLong()) }
-    // Rotation in **degrees** (Modifier.rotate expects degrees, not radians).
     val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
     val colorIndex = remember { rng.nextInt(AppColors.macaronPalette.size) }
-    val bgColor = AppColors.macaronPalette[colorIndex]
+
+    val t = LocalAmbientProgress.current
+    val breathingAlpha = LocalBreathingAlpha.current
+
+    val bgColor = lerp(
+        AppColors.macaronPalette[colorIndex],
+        AppColors.darkMacaronPalette[colorIndex],
+        t,
+    )
+    val headerColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), t)
+    val borderColor = lerp(AppColors.border, AppColors.darkBorder, t)
+    val textColor = lerp(AppColors.text, AppColors.darkText, t)
+    val hintColor = lerp(AppColors.textMuted.copy(alpha = 0.4f), AppColors.darkTextMuted, t)
+    val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, t)
 
     val handwritingFont = FontFamily(
         Font(
@@ -79,7 +94,7 @@ fun StickyNoteInput(
     }
 
     Box(modifier = modifier.fillMaxWidth()) {
-        BreathingWrapper(enabled = breathingEnabled) {
+        BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,10 +107,10 @@ fun StickyNoteInput(
                     text = headerText,
                     fontFamily = handwritingFont,
                     fontSize = 13.sp,
-                    color = AppColors.textMuted,
+                    color = headerColor,
                 )
                 Spacer(Modifier.height(Dimens.gap))
-                HorizontalDivider(color = AppColors.border, thickness = 1.dp)
+                HorizontalDivider(color = borderColor, thickness = 1.dp)
                 Spacer(Modifier.height(Dimens.gap))
                 BasicTextField(
                     value = value,
@@ -103,9 +118,9 @@ fun StickyNoteInput(
                     textStyle = TextStyle(
                         fontFamily = handwritingFont,
                         fontSize = 22.sp,
-                        color = AppColors.text,
+                        color = textColor,
                     ),
-                    cursorBrush = SolidColor(AppColors.accent),
+                    cursorBrush = SolidColor(cursorColor),
                     modifier = Modifier.fillMaxWidth(),
                     decorationBox = { innerTextField ->
                         Box {
@@ -114,7 +129,7 @@ fun StickyNoteInput(
                                     text = "准备好了嘛^_^",
                                     fontFamily = handwritingFont,
                                     fontSize = 22.sp,
-                                    color = AppColors.textMuted.copy(alpha = 0.4f),
+                                    color = hintColor,
                                 )
                             }
                             innerTextField()
