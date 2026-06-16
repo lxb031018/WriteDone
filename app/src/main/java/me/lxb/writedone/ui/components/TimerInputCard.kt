@@ -79,7 +79,16 @@ fun TimerInputCard(
 
     LaunchedEffect(pagerState.currentPage) {
         val mode = if (pagerState.currentPage % 2 == 0) TimerMode.Normal else TimerMode.Pomodoro
-        timerViewModel.syncMode(mode)
+        if (mode != timerViewModel.state.value.mode) {
+            timerViewModel.syncMode(mode)
+        }
+    }
+
+    LaunchedEffect(timerViewModel.state.value.mode) {
+        val targetMod = if (timerViewModel.state.value.mode == TimerMode.Pomodoro) 1 else 0
+        if (pagerState.currentPage % 2 != targetMod) {
+            pagerState.scrollToPage(pagerState.currentPage + (targetMod - pagerState.currentPage % 2))
+        }
     }
 
     Column(modifier = modifier) {
@@ -90,8 +99,7 @@ fun TimerInputCard(
                 .height(120.dp),
             userScrollEnabled = true,
         ) { page ->
-            val isPomodoro = page % 2 == 1
-            if (isPomodoro && showPomodoroActions) {
+            if (timerViewModel.state.value.mode == TimerMode.Pomodoro && showPomodoroActions) {
                 TimerCompleteActions(
                     onSkip = { showPomodoroActions = false },
                     onBreak = { showPomodoroActions = false },
@@ -100,7 +108,7 @@ fun TimerInputCard(
             } else {
                 TimerComponent(
                     state = timerState,
-                    mode = if (isPomodoro) TimerMode.Pomodoro else TimerMode.Normal,
+                    mode = timerViewModel.state.value.mode,
                     onToggle = { timerViewModel.toggleTimer() },
                     ambientController = ambientController,
                     modifier = Modifier.fillMaxSize(),
