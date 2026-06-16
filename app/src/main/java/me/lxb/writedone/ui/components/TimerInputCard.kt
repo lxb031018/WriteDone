@@ -12,15 +12,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.first
 import me.lxb.writedone.ambient.AmbientController
-import me.lxb.writedone.data.repository.SettingsRepository
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.viewmodel.CompletedViewModel
 import me.lxb.writedone.viewmodel.TimerMode
@@ -43,13 +39,8 @@ fun TimerInputCard(
     var prevState by remember { mutableStateOf(timerState) }
     var showPomodoroActions by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current.applicationContext
-    val initialMode by produceState(initialValue = 0) {
-        val repo = SettingsRepository(context)
-        value = if (repo.timerModePomodoro.first()) 1 else 0
-    }
     val pagerState = rememberPagerState(
-        initialPage = 10000 + initialMode,
+        initialPage = 10000 + if (timerViewModel.state.value.mode == TimerMode.Pomodoro) 1 else 0,
         pageCount = { Int.MAX_VALUE },
     )
 
