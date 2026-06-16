@@ -16,7 +16,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,15 +64,10 @@ fun CompletedSection(
     val emptyTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
 
     val listState = rememberLazyListState()
-    val hasBeenInitialized = remember { mutableStateOf(false) }
 
     LaunchedEffect(notes.firstOrNull()?.id) {
-        val topId = notes.firstOrNull()?.id
-        if (topId != null && hasBeenInitialized.value) {
+        if (notes.isNotEmpty()) {
             listState.animateScrollToItem(0)
-        }
-        if (topId != null) {
-            hasBeenInitialized.value = true
         }
     }
 
