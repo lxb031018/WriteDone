@@ -28,6 +28,8 @@ data class TimerUiState(
     val elapsedSeconds: Int = 0,
     val startTimeMillis: Long? = null,
     val mode: TimerMode = TimerMode.Normal,
+    val pomodoroCumulativeSeconds: Int = 0,
+    val breakButtonVisible: Boolean = false,
 )
 
 class TimerViewModel(application: Application) : AndroidViewModel(application) {
@@ -85,15 +87,35 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stop() {
+        val current = _state.value
         timerJob?.cancel()
         timerJob = null
         cancelBreakAlarm()
         viewModelScope.launch {
             timerStateRepo.clear()
         }
-        _state.update {
-            TimerUiState(mode = it.mode)
+        if (current.mode == TimerMode.Pomodoro) {
+            val newCumulative = current.pomodoroCumulativeSeconds + current.elapsedSeconds
+            _state.update {
+                TimerUiState(
+                    mode = it.mode,
+                    pomodoroCumulativeSeconds = newCumulative,
+                    breakButtonVisible = newCumulative >= 20,
+                )
+            }
+        } else {
+            _state.update { TimerUiState(mode = it.mode) }
         }
+    }
+
+    fun takeBreak() {
+        timerJob?.cancel()
+        timerJob = null
+        cancelBreakAlarm()
+        viewModelScope.launch {
+            timerStateRepo.clear()
+        }
+        _state.update { TimerUiState(mode = it.mode) }
     }
 
     fun toggleTimer() {
@@ -133,9 +155,22 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
         timerJob = viewModelScope.launch {
+            var alarmCancelled = false
             while (true) {
                 delay(1000L)
-                _state.update { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
+                _state.update { current ->
+                    val newElapsed = current.elapsedSeconds + 1
+                    val total = current.pomodoroCumulativeSeconds + newElapsed
+                    val showBreak = current.mode == TimerMode.Pomodoro && total >= 20
+                    if (showBreak && !alarmCancelled) {
+                        cancelBreakAlarm()
+                        alarmCancelled = true
+                    }
+                    current.copy(
+                        elapsedSeconds = newElapsed,
+                        breakButtonVisible = showBreak,
+                    )
+                }
             }
         }
     }

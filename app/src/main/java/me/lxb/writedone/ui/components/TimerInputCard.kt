@@ -37,7 +37,6 @@ fun TimerInputCard(
     var inputText by remember { mutableStateOf("") }
     var createdAt by remember { mutableStateOf<Date?>(null) }
     var prevState by remember { mutableStateOf(timerState) }
-    var showPomodoroActions by remember { mutableStateOf(false) }
 
     val pagerState = rememberPagerState(
         initialPage = 10000 + if (timerViewModel.state.value.mode == TimerMode.Pomodoro) 1 else 0,
@@ -69,12 +68,8 @@ fun TimerInputCard(
                 inputText = ""
             }
             createdAt = null
-            if (pagerState.currentPage % 2 == 1) {
-                showPomodoroActions = true
-            }
         } else if (prev.status == TimerStatus.Idle && timerState.status == TimerStatus.Running) {
             createdAt = Date()
-            showPomodoroActions = false
         }
     }
 
@@ -104,10 +99,9 @@ fun TimerInputCard(
                 .height(120.dp),
             userScrollEnabled = true,
         ) { page ->
-            if (timerViewModel.state.value.mode == TimerMode.Pomodoro && showPomodoroActions) {
+            if (timerState.mode == TimerMode.Pomodoro && timerState.breakButtonVisible) {
                 TimerCompleteActions(
-                    onSkip = { showPomodoroActions = false },
-                    onBreak = { showPomodoroActions = false },
+                    onBreak = { timerViewModel.takeBreak() },
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
