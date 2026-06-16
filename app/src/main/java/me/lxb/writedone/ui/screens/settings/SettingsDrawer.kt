@@ -2,6 +2,7 @@ package me.lxb.writedone.ui.screens.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,109 +11,108 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 
 @Composable
 fun SettingsDrawer(
-    onClose: () -> Unit,
-    onAbout: () -> Unit,
     onUserAgreement: () -> Unit,
     onPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val handwritingFont = FontFamily(
-        Font(
-            googleFont = GoogleFont("ZCOOL KuaiLe"),
-            fontProvider = GoogleFont.Provider(
-                providerAuthority = "com.google.android.gms.fonts",
-                providerPackage = "com.google.android.gms",
-                certificates = R.array.com_google_android_gms_fonts_certs,
-            ),
-        ),
-    )
-
     Column(
         modifier = modifier
-            .width(280.dp)
+            .fillMaxWidth()
             .fillMaxHeight()
-            .padding(Dimens.pageH)
             .verticalScroll(rememberScrollState()),
     ) {
-        Spacer(Modifier.height(32.dp))
-        Text(
-            text = "WriteDone",
-            fontFamily = handwritingFont,
-            fontSize = 28.sp,
-            color = AppColors.text,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "粒时",
-            fontFamily = handwritingFont,
-            fontSize = 16.sp,
-            color = AppColors.textMuted,
-        )
-        Spacer(Modifier.height(32.dp))
-        HorizontalDivider(color = AppColors.border)
+        Spacer(Modifier.height(24.dp))
+        Header("设置")
         Spacer(Modifier.height(16.dp))
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = AppColors.border,
+        )
+        Spacer(Modifier.height(12.dp))
+        SectionHeader("协议与政策")
+        DrawerItem(
+            icon = Icons.Filled.List,
+            title = "用户协议",
+            onClick = onUserAgreement,
+        )
+        DrawerItem(
+            icon = Icons.Filled.Lock,
+            title = "隐私政策",
+            onClick = onPrivacyPolicy,
+        )
+    }
+}
 
-        // About
-        Text(
-            text = "ⓘ 关于",
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onAbout() }
-                .padding(vertical = Dimens.gap),
-            fontFamily = handwritingFont,
-            fontSize = 16.sp,
-            color = AppColors.text,
-        )
-        Spacer(Modifier.height(8.dp))
-        HorizontalDivider(color = AppColors.border)
-        Spacer(Modifier.height(16.dp))
+@Composable
+private fun Header(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        fontSize = 18.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = AppColors.text,
+    )
+}
 
-        // ── 协议与政策 ──
-        Text(
-            text = "协议与政策",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Dimens.gapSm),
-            fontFamily = handwritingFont,
-            fontSize = 14.sp,
-            color = AppColors.textMuted,
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = Dimens.gapSm),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = AppColors.textMuted,
+    )
+}
+
+@Composable
+private fun DrawerItem(icon: ImageVector, title: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = Dimens.gap),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = AppColors.textMuted,
+            modifier = Modifier.padding(end = 12.dp),
         )
-        Spacer(Modifier.height(8.dp))
         Text(
-            text = "用户协议",
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onUserAgreement() }
-                .padding(vertical = Dimens.gap),
-            fontFamily = handwritingFont,
+            text = title,
             fontSize = 16.sp,
             color = AppColors.text,
+            modifier = Modifier.weight(1f),
         )
-        Text(
-            text = "隐私政策",
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onPrivacyPolicy() }
-                .padding(vertical = Dimens.gap),
-            fontFamily = handwritingFont,
-            fontSize = 16.sp,
-            color = AppColors.text,
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = AppColors.textMuted,
         )
     }
 }

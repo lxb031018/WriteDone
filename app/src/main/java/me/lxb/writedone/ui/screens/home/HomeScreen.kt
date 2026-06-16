@@ -86,7 +86,6 @@ fun HomeScreen(
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
     ambientController: AmbientController,
-    onNavigateToAbout: () -> Unit,
     onNavigateToUserAgreement: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
@@ -98,8 +97,6 @@ fun HomeScreen(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val density = LocalDensity.current
-    val drawerWidthDp = 280.dp
-    val drawerWidthPx = with(density) { drawerWidthDp.toPx() }
 
     var screenWidthPx by remember { mutableFloatStateOf(1f) }
     val scope = rememberCoroutineScope()
@@ -255,39 +252,7 @@ fun HomeScreen(
                     }
                 },
         ) {
-            // ── Layer 1: Drawer ──
-            // Flutter: offset = w * (1 - t)  where w = SCREEN width (not drawer width)
-            // t=0(closed): offset = w (offscreen right), t=1(open): offset = 0 (visible)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset { IntOffset((screenWidthPx * (1f - drawerAnim.value)).roundToInt(), 0) }
-                    .clipToBounds(),
-            ) {
-                SettingsDrawer(
-                    onClose = { animateDrawerTo(0f) },
-                    onAbout = onNavigateToAbout,
-                    onUserAgreement = onNavigateToUserAgreement,
-                    onPrivacyPolicy = onNavigateToPrivacyPolicy,
-                    modifier = Modifier.align(Alignment.CenterStart),
-                )
-            }
-
-            // ── Scrim (tap to close) ──
-            if (drawerAnim.value > 0f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = drawerAnim.value * 0.5f))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { animateDrawerTo(0f) },
-                        ),
-                )
-            }
-
-            // ── Layer 2: Main Content ──
+            // ── Layer 1: Main Content ──
             // Flutter: offset = -w * t  where w = SCREEN width (so Main is fully off-screen when t=1)
             // t=0(closed): offset = 0, t=1(open): offset = -w (shifted left off-screen)
             Box(
@@ -388,6 +353,36 @@ fun HomeScreen(
                         )
                     }
                 }
+            }
+
+            // ── Scrim (tap to close) ──
+            if (drawerAnim.value > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = drawerAnim.value * 0.5f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { animateDrawerTo(0f) },
+                        ),
+                )
+            }
+
+            // ── Drawer ──
+            // Flutter: offset = w * (1 - t)  where w = SCREEN width
+            // t=0(closed): offset = w (offscreen right), t=1(open): offset = 0 (visible)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset { IntOffset((screenWidthPx * (1f - drawerAnim.value)).roundToInt(), 0) }
+                    .clipToBounds(),
+            ) {
+                SettingsDrawer(
+                    onUserAgreement = onNavigateToUserAgreement,
+                    onPrivacyPolicy = onNavigateToPrivacyPolicy,
+                    modifier = Modifier.align(Alignment.CenterStart),
+                )
             }
 
             // ── Layer 3: Calendar Overlay (slides in from LEFT) ──

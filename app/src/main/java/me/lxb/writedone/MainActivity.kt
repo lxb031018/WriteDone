@@ -136,7 +136,6 @@ private fun WriteDoneApp(
                 completedViewModel = completedViewModel,
                 settingsViewModel = settingsViewModel,
                 ambientController = ambientController,
-                onNavigateToAbout = { currentScreen = Screen.About },
                 onNavigateToUserAgreement = { currentScreen = Screen.UserAgreement },
                 onNavigateToPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
             )
