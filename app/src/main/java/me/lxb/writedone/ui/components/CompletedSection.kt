@@ -124,14 +124,11 @@ fun SectionHeader(
     val t = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
     val headerTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
-    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
-
     BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HorizontalDivider(color = dividerColor, thickness = 1.dp)
             Text(
                 text = text,
                 modifier = Modifier.padding(horizontal = Dimens.gap),
@@ -139,7 +136,6 @@ fun SectionHeader(
                 fontSize = 14.sp,
                 color = headerTextColor,
             )
-            HorizontalDivider(color = dividerColor, thickness = 1.dp)
         }
     }
 }
