@@ -43,6 +43,7 @@ fun TimerInputCard(
         initialPage = 10000 + if (timerViewModel.state.value.mode == TimerMode.Pomodoro) 1 else 0,
         pageCount = { Int.MAX_VALUE },
     )
+    var previousPage by remember { mutableStateOf(pagerState.currentPage) }
 
     LaunchedEffect(Unit) {
         inputText = completedViewModel.draftRepo.load()
@@ -77,11 +78,15 @@ fun TimerInputCard(
         }
     }
 
+    // 用户滑动翻页时同步 pager → ViewModel
     LaunchedEffect(pagerState.currentPage) {
-        val mode = if (pagerState.currentPage % 2 == 0) TimerMode.Normal else TimerMode.Pomodoro
-        if (mode != timerViewModel.state.value.mode) {
-            timerViewModel.syncMode(mode)
+        if (pagerState.currentPage != previousPage) {
+            val mode = if (pagerState.currentPage % 2 == 0) TimerMode.Normal else TimerMode.Pomodoro
+            if (mode != timerViewModel.state.value.mode) {
+                timerViewModel.syncMode(mode)
+            }
         }
+        previousPage = pagerState.currentPage
     }
 
     LaunchedEffect(timerViewModel.state.value.mode) {
