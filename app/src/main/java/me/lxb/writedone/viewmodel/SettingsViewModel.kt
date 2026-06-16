@@ -11,13 +11,4 @@ import me.lxb.writedone.data.repository.SettingsRepository
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepo = SettingsRepository(application)
-
-    val lockScreenEnabled: StateFlow<Boolean> = settingsRepo.lockScreenEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
-    fun setLockScreenEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsRepo.setLockScreenEnabled(enabled)
-        }
-    }
 }

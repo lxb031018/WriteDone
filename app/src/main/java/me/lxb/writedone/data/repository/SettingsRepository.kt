@@ -14,29 +14,12 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings_p
 class SettingsRepository(private val context: Context) {
 
     companion object {
-        private val LOCK_SCREEN_KEY = booleanPreferencesKey("lock_screen_enabled")
         private val TIMER_MODE_KEY = booleanPreferencesKey("timer_mode_pomodoro")
         private val AGREEMENT_ACCEPTED_KEY = booleanPreferencesKey("agreement_accepted")
     }
 
-    val lockScreenEnabled: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
-        prefs[LOCK_SCREEN_KEY] ?: true
-    }
-
     val timerModePomodoro: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
         prefs[TIMER_MODE_KEY] ?: false
-    }
-
-    fun isLockScreenEnabled(): Boolean {
-        return runBlocking {
-            context.settingsDataStore.data.first()[LOCK_SCREEN_KEY] ?: true
-        }
-    }
-
-    suspend fun setLockScreenEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { prefs ->
-            prefs[LOCK_SCREEN_KEY] = enabled
-        }
     }
 
     suspend fun setTimerModePomodoro(pomodoro: Boolean) {

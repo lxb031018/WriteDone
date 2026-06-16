@@ -21,7 +21,6 @@ data class TimerUiState(
     val elapsedSeconds: Int = 0,
     val startTimeMillis: Long? = null,
     val mode: TimerMode = TimerMode.Normal,
-    val lockScreenEnabled: Boolean = true,
 )
 
 class TimerViewModel(application: Application) : AndroidViewModel(application) {
@@ -34,11 +33,6 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     private var timerJob: Job? = null
 
     init {
-        viewModelScope.launch {
-            settingsRepo.lockScreenEnabled.collect { enabled ->
-                _state.update { it.copy(lockScreenEnabled = enabled) }
-            }
-        }
         viewModelScope.launch {
             settingsRepo.timerModePomodoro.collect { pomodoro ->
                 _state.update { it.copy(mode = if (pomodoro) TimerMode.Pomodoro else TimerMode.Normal) }
@@ -68,7 +62,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
             timerStateRepo.clear()
         }
         _state.update {
-            TimerUiState(mode = it.mode, lockScreenEnabled = it.lockScreenEnabled)
+            TimerUiState(mode = it.mode)
         }
     }
 
@@ -96,12 +90,6 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(mode = mode) }
         viewModelScope.launch {
             settingsRepo.setTimerModePomodoro(mode == TimerMode.Pomodoro)
-        }
-    }
-
-    fun setLockScreenEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsRepo.setLockScreenEnabled(enabled)
         }
     }
 

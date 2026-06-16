@@ -46,9 +46,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalView
 import kotlinx.coroutines.launch
 import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.ambient.AmbientStatus
+import me.lxb.writedone.viewmodel.TimerStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
@@ -156,6 +158,12 @@ fun HomeScreen(
     // Inline breathing flag (kept for breathingEnabled propagation to children).
     val breathingEnabled = ambientState.breathingEnabled
 
+    // Keep screen on when timer is running AND in landscape (matches Flutter behavior).
+    val view = LocalView.current
+    LaunchedEffect(timerState.status, isLandscape) {
+        view.keepScreenOn = timerState.status == TimerStatus.Running && isLandscape
+    }
+
     // Y threshold (in px) above which a horizontal drag opens the drawer (legacy).
     // Below this Y, drag is routed by direction: rightward → calendar, leftward → drawer.
     val drawerDragThresholdPx = with(density) { 250.dp.toPx() }
@@ -257,7 +265,6 @@ fun HomeScreen(
                     .clipToBounds(),
             ) {
                 SettingsDrawer(
-                    settingsViewModel = settingsViewModel,
                     onClose = { animateDrawerTo(0f) },
                     onAbout = onNavigateToAbout,
                     onUserAgreement = onNavigateToUserAgreement,
