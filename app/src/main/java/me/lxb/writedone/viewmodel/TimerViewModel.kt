@@ -53,7 +53,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
         val mode = _state.value.mode
         if (mode == TimerMode.Pomodoro) {
-            val workSeconds = 25 * 60
+            val workSeconds = 20
             if (elapsed < workSeconds) {
                 scheduleBreakAlarm(startTime)
             } else {
@@ -139,7 +139,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun scheduleBreakAlarm(startTimeMillis: Long) {
-        val triggerTime = startTimeMillis + 25 * 60 * 1000L
+        val triggerTime = startTimeMillis + 20 * 1000L
         val alarmManager = getApplication<Application>().getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(getApplication(), AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -155,8 +155,10 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
                 pendingIntent,
             )
         } else {
-            @Suppress("DEPRECATION")
-            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+            alarmManager.setAlarmClock(
+                AlarmManager.AlarmClockInfo(triggerTime, null),
+                pendingIntent,
+            )
         }
     }
 

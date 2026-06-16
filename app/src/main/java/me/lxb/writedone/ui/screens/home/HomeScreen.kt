@@ -2,6 +2,7 @@ package me.lxb.writedone.ui.screens.home
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
 import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.core.Animatable
@@ -398,6 +399,12 @@ fun HomeScreen(
                     },
                     onExactAlarmPermission = {
                         Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                            context.startActivity(this)
+                        }
+                    },
+                    onAutoStartPermission = {
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
                             context.startActivity(this)
                         }
                     },
