@@ -16,6 +16,7 @@ class TimerStateRepository(private val context: Context) {
     companion object {
         private val START_TIME_KEY = longPreferencesKey("timer_start_time")
         private val BREAK_REMINDER_SENT_KEY = booleanPreferencesKey("break_reminder_sent")
+        private val BREAK_REMINDER_PENDING_REPEAT_KEY = booleanPreferencesKey("break_reminder_pending_repeat")
     }
 
     fun loadStartTime(): Long? {
@@ -42,10 +43,39 @@ class TimerStateRepository(private val context: Context) {
         }
     }
 
+    fun loadBreakReminderPendingRepeat(): Boolean {
+        return runBlocking {
+            context.timerDataStore.data.first()[BREAK_REMINDER_PENDING_REPEAT_KEY] ?: false
+        }
+    }
+
+    fun saveBreakReminderPendingRepeatSync(sent: Boolean) {
+        runBlocking {
+            context.timerDataStore.edit { prefs ->
+                prefs[BREAK_REMINDER_PENDING_REPEAT_KEY] = sent
+            }
+        }
+    }
+
+    fun saveBreakReminderSentSync(sent: Boolean) {
+        runBlocking {
+            context.timerDataStore.edit { prefs ->
+                prefs[BREAK_REMINDER_SENT_KEY] = sent
+            }
+        }
+    }
+
+    suspend fun saveBreakReminderPendingRepeat(sent: Boolean) {
+        context.timerDataStore.edit { prefs ->
+            prefs[BREAK_REMINDER_PENDING_REPEAT_KEY] = sent
+        }
+    }
+
     suspend fun clear() {
         context.timerDataStore.edit { prefs ->
             prefs.remove(START_TIME_KEY)
             prefs.remove(BREAK_REMINDER_SENT_KEY)
+            prefs.remove(BREAK_REMINDER_PENDING_REPEAT_KEY)
         }
     }
 }

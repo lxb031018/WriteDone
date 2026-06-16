@@ -76,6 +76,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             timerStateRepo.saveStartTime(now)
             timerStateRepo.saveBreakReminderSent(false)
+            timerStateRepo.saveBreakReminderPendingRepeat(false)
         }
         if (mode == TimerMode.Pomodoro) {
             scheduleBreakAlarm(now)

@@ -8,22 +8,21 @@ import android.content.Context
 import android.content.Intent
 import me.lxb.writedone.data.repository.TimerStateRepository
 
-class AlarmReceiver : BroadcastReceiver() {
+class UnlockFallbackCheckReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        NotificationHelper.createChannel(context)
         val repo = TimerStateRepository(context)
+        if (!repo.loadBreakReminderPendingRepeat()) return
         val keyguard = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         if (keyguard.isDeviceLocked) {
-            repo.saveBreakReminderPendingRepeatSync(true)
-            NotificationHelper.showBreakReminder(context)
-            scheduleFallback(context)
-        } else {
-            repo.saveBreakReminderSentSync(true)
-            NotificationHelper.showBreakReminder(context)
+            scheduleNext(context)
+            return
         }
+        repo.saveBreakReminderPendingRepeatSync(false)
+        NotificationHelper.createChannel(context)
+        NotificationHelper.showBreakReminder(context)
     }
 
-    private fun scheduleFallback(context: Context) {
+    private fun scheduleNext(context: Context) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, UnlockFallbackCheckReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
