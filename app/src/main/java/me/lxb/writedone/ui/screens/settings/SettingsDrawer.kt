@@ -23,6 +23,7 @@ import me.lxb.writedone.ui.theme.Dimens
 fun SettingsDrawer(
     onUserAgreement: () -> Unit,
     onPrivacyPolicy: () -> Unit,
+    onNotificationPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -37,6 +38,12 @@ fun SettingsDrawer(
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = AppColors.border,
+        )
+        Spacer(Modifier.height(12.dp))
+        SectionHeader("通知")
+        DrawerItem(
+            text = "通知权限",
+            onClick = onNotificationPermission,
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader("协议与政策")

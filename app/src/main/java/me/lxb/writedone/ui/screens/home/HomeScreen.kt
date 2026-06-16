@@ -1,6 +1,9 @@
 package me.lxb.writedone.ui.screens.home
 
+import android.content.Intent
 import android.content.res.Configuration
+import android.provider.Settings
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -99,6 +102,7 @@ fun HomeScreen(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val density = LocalDensity.current
+    val context = LocalContext.current
 
     var screenWidthPx by remember { mutableFloatStateOf(1f) }
     val scope = rememberCoroutineScope()
@@ -386,6 +390,12 @@ fun HomeScreen(
                 SettingsDrawer(
                     onUserAgreement = { showUserAgreement = true },
                     onPrivacyPolicy = { showPrivacyPolicy = true },
+                    onNotificationPermission = {
+                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            context.startActivity(this)
+                        }
+                    },
                     modifier = Modifier.align(Alignment.CenterStart),
                 )
             }
