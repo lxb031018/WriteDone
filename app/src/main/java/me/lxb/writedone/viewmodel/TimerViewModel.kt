@@ -32,7 +32,7 @@ data class TimerUiState(
     val breakButtonVisible: Boolean = false,
 )
 
-class TimerViewModel(
+class TimerViewModel @JvmOverloads constructor(
     application: Application,
     private val timerStateRepo: TimerStateRepository = TimerStateRepository(application),
     private val settingsRepo: SettingsRepository = SettingsRepository(application),
