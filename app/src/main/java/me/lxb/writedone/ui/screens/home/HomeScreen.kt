@@ -159,11 +159,20 @@ fun HomeScreen(
             breathingAnim.snapTo(0.15f)
         }
     }
-    val breathingAlpha: State<Float> = breathingAnim.asState()
+    val breathingAlpha: State<Float>? = if (ambientState.breathingEnabled) breathingAnim.asState() else null
     val ambientProgress = themeAnim.value
 
     // Inline breathing flag (kept for breathingEnabled propagation to children).
     val breathingEnabled = ambientState.breathingEnabled
+
+    // Enter ambient (dark mode + breathing) only when timer is running AND in landscape.
+    LaunchedEffect(timerState.status, isLandscape) {
+        if (timerState.status == TimerStatus.Running && isLandscape) {
+            ambientController.enter()
+        } else {
+            ambientController.exit()
+        }
+    }
 
     // Keep screen on when timer is running AND in landscape (matches Flutter behavior).
     val view = LocalView.current
@@ -327,7 +336,6 @@ fun HomeScreen(
                                 TimerInputCard(
                                     timerViewModel = timerViewModel,
                                     completedViewModel = completedViewModel,
-                                    ambientController = ambientController,
                                     breathingEnabled = breathingEnabled,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
@@ -338,7 +346,6 @@ fun HomeScreen(
                         TimerInputCard(
                             timerViewModel = timerViewModel,
                             completedViewModel = completedViewModel,
-                            ambientController = ambientController,
                             breathingEnabled = breathingEnabled,
                             modifier = Modifier
                                 .fillMaxWidth()

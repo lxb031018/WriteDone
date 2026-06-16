@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,11 +31,9 @@ import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
-import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.viewmodel.TimerMode
-import me.lxb.writedone.viewmodel.TimerStatus
 import me.lxb.writedone.viewmodel.TimerUiState
 
 /**
@@ -61,24 +58,11 @@ fun TimerComponent(
     state: TimerUiState,
     mode: TimerMode,
     onToggle: () -> Unit,
-    ambientController: AmbientController,
     modifier: Modifier = Modifier,
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val view = LocalView.current
 
-    // 1:1 port of Flutter `TimerController._startTimer` ambient trigger:
-    // scheduleEntry(15 - elapsed) on idle→running, exit() on running→idle.
-    var wasRunning by remember { mutableStateOf(false) }
-    LaunchedEffect(state.status) {
-        if (state.status == TimerStatus.Running) {
-            if (!wasRunning) ambientController.scheduleEntry(15_000L)
-            wasRunning = true
-        } else if (state.status == TimerStatus.Idle) {
-            if (wasRunning) ambientController.exit()
-            wasRunning = false
-        }
-    }
     val breathingAlpha = LocalBreathingAlpha.current
 
     val pressScale by animateFloatAsState(
