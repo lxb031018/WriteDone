@@ -41,6 +41,17 @@ fun TimerInputCard(
     var inputText by remember { mutableStateOf("") }
     var createdAt by remember { mutableStateOf<Date?>(null) }
     var prevState by remember { mutableStateOf(timerState) }
+    var showPomodoroActions by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current.applicationContext
+    val initialMode by produceState(initialValue = 0) {
+        val repo = SettingsRepository(context)
+        value = if (repo.timerModePomodoro.first()) 1 else 0
+    }
+    val pagerState = rememberPagerState(
+        initialPage = 10000 + initialMode,
+        pageCount = { Int.MAX_VALUE },
+    )
 
     LaunchedEffect(Unit) {
         inputText = completedViewModel.draftRepo.load()
@@ -66,24 +77,17 @@ fun TimerInputCard(
                 inputText = ""
             }
             createdAt = null
+            if (pagerState.currentPage % 2 == 1) {
+                showPomodoroActions = true
+            }
         } else if (prev.status == TimerStatus.Idle && timerState.status == TimerStatus.Running) {
             createdAt = Date()
+            showPomodoroActions = false
         }
     }
 
-    // Async load of pomodoro mode — no main-thread block (was `runBlocking` before).
-    val context = LocalContext.current.applicationContext
-    val initialPage by produceState(initialValue = 0) {
-        val repo = SettingsRepository(context)
-        value = if (repo.timerModePomodoro.first()) 1 else 0
-    }
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { 2 },
-    )
-
     LaunchedEffect(pagerState.currentPage) {
-        val mode = if (pagerState.currentPage == 1) TimerMode.Pomodoro else TimerMode.Normal
+        val mode = if (pagerState.currentPage % 2 == 0) TimerMode.Normal else TimerMode.Pomodoro
         timerViewModel.syncMode(mode)
     }
 
@@ -95,14 +99,22 @@ fun TimerInputCard(
                 .height(120.dp),
             userScrollEnabled = true,
         ) { page ->
-            val mode = if (page == 1) TimerMode.Pomodoro else TimerMode.Normal
-            TimerComponent(
-                state = timerState,
-                mode = mode,
-                onToggle = { timerViewModel.toggleTimer() },
-                ambientController = ambientController,
-                modifier = Modifier.fillMaxSize(),
-            )
+            val isPomodoro = page % 2 == 1
+            if (isPomodoro && showPomodoroActions) {
+                TimerCompleteActions(
+                    onSkip = { showPomodoroActions = false },
+                    onBreak = { showPomodoroActions = false },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                TimerComponent(
+                    state = timerState,
+                    mode = if (isPomodoro) TimerMode.Pomodoro else TimerMode.Normal,
+                    onToggle = { timerViewModel.toggleTimer() },
+                    ambientController = ambientController,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         Spacer(Modifier.height(Dimens.gapLg))
