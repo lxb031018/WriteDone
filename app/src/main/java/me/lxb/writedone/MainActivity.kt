@@ -140,10 +140,6 @@ private fun WriteDoneApp(
         }
         Screen.Calendar -> {
             CalendarPage(
-                onBack = { date ->
-                    completedViewModel.selectDate(date)
-                    currentScreen = Screen.Home
-                },
                 selectedDate = calendarDate,
                 notes = completedState.notes,
                 onDateSelected = { date ->

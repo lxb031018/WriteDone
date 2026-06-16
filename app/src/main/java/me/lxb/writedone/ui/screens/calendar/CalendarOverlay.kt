@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,16 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -64,7 +58,6 @@ fun CalendarOverlay(
 ) {
     val scope = rememberCoroutineScope()
     val t = LocalAmbientProgress.current
-    val headerColor = lerp(AppColors.text, AppColors.darkText, t)
     val dateLabelColor = lerp(AppColors.text, AppColors.darkText, t)
     val emptyColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
     val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
@@ -108,41 +101,13 @@ fun CalendarOverlay(
                     }
                 }
             },
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding(),
         ) {
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .fillMaxSize()
+                    .statusBarsPadding(),
             ) {
-                IconButton(onClick = {
-                    scope.launch {
-                        calendarAnim.animateTo(
-                            targetValue = 0f,
-                            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
-                        )
-                    }
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "返回",
-                        tint = headerColor,
-                    )
-                }
-                Text(
-                    text = "日历",
-                    fontFamily = handwritingFont,
-                    fontSize = 18.sp,
-                    color = headerColor,
-                )
-            }
-
-            HorizontalDivider(color = dividerColor)
+                HorizontalDivider(color = dividerColor)
 
             Column(
                 modifier = Modifier
