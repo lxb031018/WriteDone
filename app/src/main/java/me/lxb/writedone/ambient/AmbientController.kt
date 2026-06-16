@@ -18,12 +18,12 @@ import kotlinx.coroutines.launch
  *   - Active → delay(1500ms) → Active + breathingEnabled = true
  *   - exit() → Normal
  */
-class AmbientController {
+class AmbientController(
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+) {
     companion object {
-        private const val BREATHING_START_DELAY_MS = 1500L
+        internal const val BREATHING_START_DELAY_MS = 1500L
     }
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var timerJob: Job? = null
 
     private val _state = MutableStateFlow(AmbientState())

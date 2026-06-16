@@ -32,9 +32,11 @@ data class TimerUiState(
     val breakButtonVisible: Boolean = false,
 )
 
-class TimerViewModel(application: Application) : AndroidViewModel(application) {
-    private val timerStateRepo = TimerStateRepository(application)
-    private val settingsRepo = SettingsRepository(application)
+class TimerViewModel(
+    application: Application,
+    private val timerStateRepo: TimerStateRepository = TimerStateRepository(application),
+    private val settingsRepo: SettingsRepository = SettingsRepository(application),
+) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(TimerUiState())
     val state: StateFlow<TimerUiState> = _state.asStateFlow()
