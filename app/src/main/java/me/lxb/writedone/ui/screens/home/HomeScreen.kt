@@ -51,6 +51,7 @@ import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.ambient.AmbientStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.ui.components.TimerInputCard
+import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
 import me.lxb.writedone.ui.screens.settings.SettingsDrawer
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
@@ -67,11 +68,8 @@ import kotlin.math.roundToInt
  * Layout:
  *   - Portrait: top-to-bottom (TimerInputCard → CompletedSection).
  *   - Landscape: left-right (Completed | VerticalDivider | TimerInputCard).
- *   - Drawer slides in from the left; both layers driven by a single
- *     `detectHorizontalDragGestures` on the root Box and an `Animatable`
- *     that snaps with `tween(300, FastOutSlowInEasing)`.
- *
- *   - Flutter: offset_drawer = w * (1 - t), offset_main = -w * t.
+ *   - Drawer slides in from the right, pushing the main content left.
+ *   - Calendar overlay slides in from the left, on top of everything.
  *
  * Ambient (1:1 port of Flutter `_themeCtrl` + `_breathingCtrl` + `ThemeProgress`):
  *   - `themeAnim` drives a 1.5s easeInOut crossfade between light and dark themes,
@@ -86,7 +84,6 @@ fun HomeScreen(
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
     ambientController: AmbientController,
-    onNavigateToCalendar: () -> Unit,
     onNavigateToAbout: () -> Unit,
     onNavigateToUserAgreement: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
@@ -105,6 +102,25 @@ fun HomeScreen(
     var screenWidthPx by remember { mutableFloatStateOf(1f) }
     val scope = rememberCoroutineScope()
     val drawerAnim = remember { Animatable(0f) }
+    val calendarAnim = remember { Animatable(0f) }
+
+    fun animateDrawerTo(target: Float) {
+        scope.launch {
+            drawerAnim.animateTo(
+                targetValue = target,
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+            )
+        }
+    }
+
+    fun animateCalendarTo(target: Float) {
+        scope.launch {
+            calendarAnim.animateTo(
+                targetValue = target,
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+            )
+        }
+    }
 
     // ── Ambient state machine ──
     val ambientState by ambientController.state.collectAsState()
@@ -140,14 +156,11 @@ fun HomeScreen(
     // Inline breathing flag (kept for breathingEnabled propagation to children).
     val breathingEnabled = ambientState.breathingEnabled
 
-    fun animateDrawerTo(target: Float) {
-        scope.launch {
-            drawerAnim.animateTo(
-                targetValue = target,
-                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
-            )
-        }
-    }
+    // Y threshold (in px) above which a horizontal drag opens the drawer (legacy).
+    // Below this Y, drag is routed by direction: rightward → calendar, leftward → drawer.
+    val drawerDragThresholdPx = with(density) { 250.dp.toPx() }
+    var dragStartY by remember { mutableFloatStateOf(0f) }
+    var lastDragDirection by remember { mutableFloatStateOf(0f) }
 
     CompositionLocalProvider(
         LocalAmbientProgress provides ambientProgress,
@@ -163,14 +176,73 @@ fun HomeScreen(
                 .onSizeChanged { screenWidthPx = it.width.toFloat() }
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
+                        onDragStart = { offset ->
+                            dragStartY = offset.y
+                            lastDragDirection = 0f
+                        },
                         onDragEnd = {
-                            val target = if (drawerAnim.value > 0.5f) 1f else 0f
-                            animateDrawerTo(target)
+                            if (drawerAnim.value > 0.001f) {
+                                val target = if (drawerAnim.value > 0.5f) 1f else 0f
+                                animateDrawerTo(target)
+                                animateCalendarTo(0f)
+                            } else {
+                                when {
+                                    dragStartY < drawerDragThresholdPx -> {
+                                        val target = if (drawerAnim.value > 0.5f) 1f else 0f
+                                        animateDrawerTo(target)
+                                    }
+                                    lastDragDirection > 0f -> {
+                                        val target = if (calendarAnim.value > 0.5f) 1f else 0f
+                                        animateCalendarTo(target)
+                                        animateDrawerTo(0f)
+                                    }
+                                    lastDragDirection < 0f -> {
+                                        val target = if (drawerAnim.value > 0.5f) 1f else 0f
+                                        animateDrawerTo(target)
+                                        animateCalendarTo(0f)
+                                    }
+                                    else -> {
+                                        animateDrawerTo(0f)
+                                        animateCalendarTo(0f)
+                                    }
+                                }
+                            }
                         },
                     ) { _, dragAmount ->
-                        scope.launch {
-                            val delta = -dragAmount / screenWidthPx
-                            drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
+                        if (drawerAnim.value > 0.001f) {
+                            if (dragAmount != 0f) {
+                                lastDragDirection = if (dragAmount > 0f) 1f else -1f
+                            }
+                            scope.launch {
+                                val delta = -dragAmount / screenWidthPx
+                                drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
+                            }
+                        } else {
+                            when {
+                                dragStartY < drawerDragThresholdPx -> {
+                                    if (dragAmount != 0f) {
+                                        lastDragDirection = if (dragAmount > 0f) 1f else -1f
+                                    }
+                                    scope.launch {
+                                        val delta = -dragAmount / screenWidthPx
+                                        drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
+                                    }
+                                }
+                                dragAmount > 0f -> {
+                                    lastDragDirection = 1f
+                                    scope.launch {
+                                        val delta = dragAmount / screenWidthPx
+                                        calendarAnim.snapTo((calendarAnim.value + delta).coerceIn(0f, 1f))
+                                    }
+                                }
+                                dragAmount < 0f -> {
+                                    lastDragDirection = -1f
+                                    scope.launch {
+                                        val delta = -dragAmount / screenWidthPx
+                                        drawerAnim.snapTo((drawerAnim.value + delta).coerceIn(0f, 1f))
+                                    }
+                                }
+                            }
                         }
                     }
                 },
@@ -187,7 +259,6 @@ fun HomeScreen(
                 SettingsDrawer(
                     settingsViewModel = settingsViewModel,
                     onClose = { animateDrawerTo(0f) },
-                    onCalendar = onNavigateToCalendar,
                     onAbout = onNavigateToAbout,
                     onUserAgreement = onNavigateToUserAgreement,
                     onPrivacyPolicy = onNavigateToPrivacyPolicy,
@@ -311,8 +382,19 @@ fun HomeScreen(
                     }
                 }
             }
+
+            // ── Layer 3: Calendar Overlay (slides in from LEFT) ──
+            // Self-contained with its own swipe-to-close gesture handler.
+            if (calendarAnim.value > 0f) {
+                CalendarOverlay(
+                    calendarAnim = calendarAnim,
+                    screenWidthPx = screenWidthPx,
+                    bgColor = bgColor,
+                    selectedDate = completedState.selectedDate,
+                    notes = completedState.notes,
+                    onDateSelected = { completedViewModel.selectDate(it) },
+                )
+            }
         }
     }
 }
-
-// Required imports for icons + drawing tools referenced above.

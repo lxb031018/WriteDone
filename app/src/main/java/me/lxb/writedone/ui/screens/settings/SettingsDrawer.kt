@@ -36,7 +36,6 @@ import me.lxb.writedone.viewmodel.SettingsViewModel
 fun SettingsDrawer(
     settingsViewModel: SettingsViewModel,
     onClose: () -> Unit,
-    onCalendar: () -> Unit,
     onAbout: () -> Unit,
     onUserAgreement: () -> Unit,
     onPrivacyPolicy: () -> Unit,
@@ -102,21 +101,6 @@ fun SettingsDrawer(
             )
         }
         Spacer(Modifier.height(16.dp))
-        HorizontalDivider(color = AppColors.border)
-        Spacer(Modifier.height(16.dp))
-
-        // Calendar
-        Text(
-            text = "日历",
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onCalendar() }
-                .padding(vertical = Dimens.gap),
-            fontFamily = handwritingFont,
-            fontSize = 16.sp,
-            color = AppColors.text,
-        )
-        Spacer(Modifier.height(8.dp))
         HorizontalDivider(color = AppColors.border)
         Spacer(Modifier.height(16.dp))
 

@@ -136,10 +136,6 @@ private fun WriteDoneApp(
                 completedViewModel = completedViewModel,
                 settingsViewModel = settingsViewModel,
                 ambientController = ambientController,
-                onNavigateToCalendar = {
-                    calendarDate = completedState.selectedDate
-                    currentScreen = Screen.Calendar
-                },
                 onNavigateToAbout = { currentScreen = Screen.About },
                 onNavigateToUserAgreement = { currentScreen = Screen.UserAgreement },
                 onNavigateToPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
