@@ -101,6 +101,7 @@ private fun WriteDoneApp(
     var currentScreen by remember { mutableStateOf(Screen.Home) }
     var showAgreement by remember { mutableStateOf(false) }
     var agreementChecked by remember { mutableStateOf(false) }
+    var pendingAgreement by remember { mutableStateOf(false) }
     var calendarDate by remember { mutableStateOf(Date()) }
     val completedState = completedViewModel.state.collectAsStateWithLifecycle().value
     val coroutineScope = rememberCoroutineScope()
@@ -109,8 +110,15 @@ private fun WriteDoneApp(
     LaunchedEffect(Unit) {
         if (!settingsRepo.isAgreementAccepted()) {
             showAgreement = true
+            pendingAgreement = true
         }
         agreementChecked = true
+    }
+
+    LaunchedEffect(currentScreen) {
+        if (currentScreen == Screen.Home && pendingAgreement) {
+            showAgreement = true
+        }
     }
 
     if (!agreementChecked) return
@@ -122,10 +130,17 @@ private fun WriteDoneApp(
                     settingsRepo.setAgreementAccepted(true)
                 }
                 showAgreement = false
+                pendingAgreement = false
             },
             onDisagree = { (context as? Activity)?.finish() },
-            onShowUserAgreement = { currentScreen = Screen.UserAgreement },
-            onShowPrivacyPolicy = { currentScreen = Screen.PrivacyPolicy },
+            onShowUserAgreement = {
+                showAgreement = false
+                currentScreen = Screen.UserAgreement
+            },
+            onShowPrivacyPolicy = {
+                showAgreement = false
+                currentScreen = Screen.PrivacyPolicy
+            },
         )
     }
 
