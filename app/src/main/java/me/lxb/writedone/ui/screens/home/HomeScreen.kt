@@ -1,14 +1,15 @@
 package me.lxb.writedone.ui.screens.home
 
+import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,7 +54,12 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalView
 import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlin.math.pow
+import kotlin.math.sin
 import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.ambient.AmbientStatus
 import me.lxb.writedone.viewmodel.TimerStatus
@@ -81,12 +87,11 @@ import kotlin.math.roundToInt
  *   - Drawer slides in from the right, pushing the main content left.
  *   - Calendar overlay slides in from the left, on top of everything.
  *
- * Ambient (1:1 port of Flutter `_themeCtrl` + `_breathingCtrl` + `ThemeProgress`):
+ * Ambient:
  *   - `themeAnim` drives a 1.5s easeInOut crossfade between light and dark themes,
- *     exposed as `LocalAmbientProgress.current` (t ∈ [0,1]) for `Color.lerp` calls
- *     in feature widgets.
- *   - `breathingAnim` is a 4s `0.15 ↔ 0.7` easeInOut sine loop, exposed as
- *     `LocalBreathingAlpha.current` for `BreathingWrapper` consumers.
+ *     exposed as `LocalAmbientProgress.current` (t ∈ [0,1]) for `Color.lerp` calls.
+ *   - Breathing alpha runs at ~10fps via `delay(100)` + smoothstep, decoupled from
+ *     Choreographer, exposed as `LocalBreathingAlpha.current` for `BreathingWrapper`.
  */
 @Composable
 fun HomeScreen(
@@ -96,7 +101,6 @@ fun HomeScreen(
     ambientController: AmbientController,
     modifier: Modifier = Modifier,
 ) {
-    val timerState by timerViewModel.state.collectAsState()
     val completedState by completedViewModel.state.collectAsState()
 
     val configuration = LocalConfiguration.current
@@ -143,41 +147,49 @@ fun HomeScreen(
         )
     }
 
-    // Breathing alpha: 4s 0.15↔0.7 easeInOutSine (Flutter `_breathingAnim`).
-    val breathingAnim = remember { Animatable(0.15f) }
-    LaunchedEffect(ambientState.breathingEnabled) {
-        if (ambientState.breathingEnabled) {
-            breathingAnim.animateTo(
-                targetValue = 0.7f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-            )
-        } else {
-            breathingAnim.stop()
-            breathingAnim.snapTo(0.15f)
+    // Breathing alpha: |sin(t)|³ narrow-peak curve via lookup table at ~10fps.
+    val breathingAlphaValue = remember { mutableFloatStateOf(0f) }
+    val lookupTable = remember {
+        FloatArray(256) { i ->
+            val a = (i / 255f) * kotlin.math.PI.toFloat()
+            sin(a).pow(3)
         }
     }
-    val breathingAlpha: State<Float>? = if (ambientState.breathingEnabled) breathingAnim.asState() else null
+    LaunchedEffect(ambientState.breathingEnabled) {
+        if (ambientState.breathingEnabled) {
+            val periodMs = 4000L
+            while (true) {
+                delay(100L)
+                val t = (System.currentTimeMillis() % periodMs) / periodMs.toFloat()
+                breathingAlphaValue.floatValue = lookupTable[(t * 255).toInt()]
+            }
+        } else {
+            breathingAlphaValue.floatValue = 0f
+        }
+    }
+    val breathingAlpha: State<Float>? = if (ambientState.breathingEnabled) breathingAlphaValue else null
     val ambientProgress = themeAnim.value
 
     // Inline breathing flag (kept for breathingEnabled propagation to children).
     val breathingEnabled = ambientState.breathingEnabled
 
-    // Enter ambient (dark mode + breathing) only when timer is running AND in landscape.
-    LaunchedEffect(timerState.status, isLandscape) {
-        if (timerState.status == TimerStatus.Running && isLandscape) {
-            ambientController.enter()
-        } else {
-            ambientController.exit()
-        }
-    }
-
-    // Keep screen on when timer is running AND in landscape (matches Flutter behavior).
+    // Keep screen on + ambient mode + status bar: subscribe to timer status (Idle↔Running only).
     val view = LocalView.current
-    LaunchedEffect(timerState.status, isLandscape) {
-        view.keepScreenOn = timerState.status == TimerStatus.Running && isLandscape
+    val window = (context as? Activity)?.window
+    LaunchedEffect(isLandscape, ambientController, view) {
+        timerViewModel.state
+            .map { it.status }
+            .distinctUntilChanged()
+            .collect { status ->
+                val active = status == TimerStatus.Running && isLandscape
+                view.keepScreenOn = active
+                if (active) ambientController.enter() else ambientController.exit()
+                if (active) {
+                    window?.let { WindowInsetsControllerCompat(it, view).hide(WindowInsetsCompat.Type.statusBars()) }
+                } else {
+                    window?.let { WindowInsetsControllerCompat(it, view).show(WindowInsetsCompat.Type.statusBars()) }
+                }
+            }
     }
 
     // Y threshold (in px) above which a horizontal drag opens the drawer (legacy).
@@ -190,8 +202,8 @@ fun HomeScreen(
         LocalAmbientProgress provides ambientProgress,
         LocalBreathingAlpha provides breathingAlpha,
     ) {
-        val bgColor = lerp(AppColors.bg, AppColors.darkBg, ambientProgress)
-        val landscapeDividerColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
+        val bgColor = remember(ambientProgress) { lerp(AppColors.bg, AppColors.darkBg, ambientProgress) }
+        val landscapeDividerColor = remember(ambientProgress) { lerp(AppColors.border, AppColors.darkBorder, ambientProgress) }
 
         Box(
             modifier = modifier
