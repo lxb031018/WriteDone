@@ -158,7 +158,7 @@ fun CalendarGrid(
                             isRangeStart || isRangeEnd || isStartOnly -> AppColors.accentDeep
                             inRange -> AppColors.accentDeep
                             isSelected -> AppColors.accentDeep
-                            else -> AppColors.text
+                            else -> if (hasNotes(cellDate)) AppColors.text else AppColors.textMuted
                         }
 
                         Box(

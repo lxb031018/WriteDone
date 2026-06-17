@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,23 @@ fun CalendarPage(
     var reviewMode by remember { mutableStateOf(false) }
     var reviewStart by remember { mutableStateOf<Date?>(null) }
     var reviewEnd by remember { mutableStateOf<Date?>(null) }
+    var noteDateSet by remember { mutableStateOf(setOf<Long>()) }
+
+    LaunchedEffect(Unit) {
+        val repo = NoteRepository(context)
+        val all = repo.getByDateRange(0L, Long.MAX_VALUE)
+        val cal = Calendar.getInstance()
+        noteDateSet = all.mapTo(mutableSetOf()) {
+            cal.timeInMillis.let { _ ->
+                cal.time = Date(it.createdAt)
+                cal.set(Calendar.HOUR_OF_DAY, 0)
+                cal.set(Calendar.MINUTE, 0)
+                cal.set(Calendar.SECOND, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                cal.timeInMillis
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -63,7 +81,7 @@ fun CalendarPage(
         CalendarGrid(
             selectedDate = selectedDate,
             onDateSelected = onDateSelected,
-            hasNotes = { false },
+            hasNotes = { it.time in noteDateSet },
             reviewMode = reviewMode,
             reviewRangeStart = reviewStart,
             reviewRangeEnd = reviewEnd,
