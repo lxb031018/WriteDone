@@ -11,4 +11,11 @@ import me.lxb.writedone.data.repository.SettingsRepository
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepo = SettingsRepository(application)
+
+    val autoDimBrightness: StateFlow<Boolean> = settingsRepo.autoDimBrightness
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setAutoDimBrightness(enabled: Boolean) {
+        viewModelScope.launch { settingsRepo.setAutoDimBrightness(enabled) }
+    }
 }

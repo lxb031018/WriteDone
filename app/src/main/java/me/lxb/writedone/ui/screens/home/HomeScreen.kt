@@ -102,6 +102,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     val completedState by completedViewModel.state.collectAsState()
+    val autoDimBrightness by settingsViewModel.autoDimBrightness.collectAsState()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -187,7 +188,9 @@ fun HomeScreen(
                 window?.let { win ->
                     if (active) {
                         WindowInsetsControllerCompat(win, view).hide(WindowInsetsCompat.Type.statusBars())
-                        win.attributes = win.attributes.apply { screenBrightness = 0f }
+                        if (autoDimBrightness) {
+                            win.attributes = win.attributes.apply { screenBrightness = 0f }
+                        }
                     } else {
                         WindowInsetsControllerCompat(win, view).show(WindowInsetsCompat.Type.statusBars())
                         win.attributes = win.attributes.apply { screenBrightness = -1f }
@@ -420,6 +423,8 @@ fun HomeScreen(
                     .clipToBounds(),
             ) {
                 SettingsDrawer(
+                    autoDimBrightness = autoDimBrightness,
+                    onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
                     onUserAgreement = { showUserAgreement = true },
                     onPrivacyPolicy = { showPrivacyPolicy = true },
                     onNotificationPermission = {

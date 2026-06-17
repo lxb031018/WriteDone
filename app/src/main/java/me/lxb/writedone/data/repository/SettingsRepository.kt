@@ -16,6 +16,7 @@ class SettingsRepository(private val context: Context) {
     companion object {
         private val TIMER_MODE_KEY = booleanPreferencesKey("timer_mode_pomodoro")
         private val AGREEMENT_ACCEPTED_KEY = booleanPreferencesKey("agreement_accepted")
+        private val AUTO_DIM_BRIGHTNESS_KEY = booleanPreferencesKey("auto_dim_brightness")
     }
 
     val timerModePomodoro: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
@@ -25,6 +26,16 @@ class SettingsRepository(private val context: Context) {
     suspend fun setTimerModePomodoro(pomodoro: Boolean) {
         context.settingsDataStore.edit { prefs ->
             prefs[TIMER_MODE_KEY] = pomodoro
+        }
+    }
+
+    val autoDimBrightness: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
+        prefs[AUTO_DIM_BRIGHTNESS_KEY] ?: false
+    }
+
+    suspend fun setAutoDimBrightness(enabled: Boolean) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[AUTO_DIM_BRIGHTNESS_KEY] = enabled
         }
     }
 

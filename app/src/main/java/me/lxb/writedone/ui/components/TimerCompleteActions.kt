@@ -45,7 +45,7 @@ fun TimerCompleteActions(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "不卷了，休息一下\n〜(￣▽￣〜)",
+            text = "不卷了，休息5分钟\n〜(￣▽￣〜)",
             fontFamily = handwritingFont,
             fontSize = 28.sp,
             lineHeight = 36.sp,
@@ -55,7 +55,7 @@ fun TimerCompleteActions(
             modifier = Modifier.offset(x = 2.dp, y = 2.dp),
         )
         Text(
-            text = "不卷了，休息一下\n〜(￣▽￣〜)",
+            text = "不卷了，休息5分钟\n〜(￣▽￣〜)",
             fontFamily = handwritingFont,
             fontSize = 28.sp,
             lineHeight = 36.sp,
