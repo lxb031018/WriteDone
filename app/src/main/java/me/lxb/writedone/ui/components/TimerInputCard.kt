@@ -102,7 +102,7 @@ fun TimerInputCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp),
-            userScrollEnabled = !isLandscape,
+            userScrollEnabled = timerState.status == TimerStatus.Idle,
         ) { page ->
             if (timerState.mode == TimerMode.Pomodoro && timerState.breakButtonVisible) {
                 TimerCompleteActions(
