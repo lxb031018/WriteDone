@@ -217,7 +217,8 @@ fun HomeScreen(
                 .fillMaxSize()
                 .background(bgColor)
                 .onSizeChanged { screenWidthPx = it.width.toFloat() }
-                .pointerInput(Unit) {
+                .pointerInput(isLandscape) {
+                    if (isLandscape) return@pointerInput
                     detectHorizontalDragGestures(
                         onDragStart = { offset ->
                             dragStartY = offset.y
@@ -363,6 +364,7 @@ fun HomeScreen(
                                 TimerInputCard(
                                     timerViewModel = timerViewModel,
                                     completedViewModel = completedViewModel,
+                                    isLandscape = true,
                                     breathingEnabled = breathingEnabled,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
@@ -373,6 +375,7 @@ fun HomeScreen(
                         TimerInputCard(
                             timerViewModel = timerViewModel,
                             completedViewModel = completedViewModel,
+                            isLandscape = false,
                             breathingEnabled = breathingEnabled,
                             modifier = Modifier
                                 .fillMaxWidth()

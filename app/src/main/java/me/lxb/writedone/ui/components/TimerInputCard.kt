@@ -27,6 +27,7 @@ import java.util.Date
 fun TimerInputCard(
     timerViewModel: TimerViewModel,
     completedViewModel: CompletedViewModel,
+    isLandscape: Boolean,
     breathingEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -95,7 +96,7 @@ fun TimerInputCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp),
-            userScrollEnabled = true,
+            userScrollEnabled = !isLandscape,
         ) { page ->
             if (timerState.mode == TimerMode.Pomodoro && timerState.breakButtonVisible) {
                 TimerCompleteActions(
@@ -116,10 +117,11 @@ fun TimerInputCard(
 
         StickyNoteInput(
             value = inputText,
-            onValueChange = { inputText = it },
+            onValueChange = { if (!isLandscape) inputText = it },
             createdAt = createdAt,
             durationSeconds = null,
             breathingEnabled = breathingEnabled,
+            enabled = !isLandscape,
             modifier = Modifier.fillMaxWidth(),
         )
     }

@@ -42,6 +42,7 @@ fun StickyNoteInput(
     createdAt: Date?,
     durationSeconds: Int?,
     breathingEnabled: Boolean,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val seed = remember { abs(java.util.Objects.hash(value)) }
@@ -112,19 +113,21 @@ fun StickyNoteInput(
                 Spacer(Modifier.height(Dimens.gap))
                 HorizontalDivider(color = borderColor, thickness = 1.dp)
                 Spacer(Modifier.height(Dimens.gap))
+                val readOnly = !enabled
                 BasicTextField(
                     value = value,
                     onValueChange = { if (it.length <= 60) onValueChange(it) },
+                    readOnly = readOnly,
                     textStyle = TextStyle(
                         fontFamily = handwritingFont,
                         fontSize = 22.sp,
                         color = textColor,
                     ),
-                    cursorBrush = SolidColor(cursorColor),
+                    cursorBrush = if (readOnly) SolidColor(cursorColor.copy(alpha = 0f)) else SolidColor(cursorColor),
                     modifier = Modifier.fillMaxWidth(),
                     decorationBox = { innerTextField ->
                         Box {
-                            if (value.isEmpty()) {
+                            if (value.isEmpty() && !readOnly) {
                                 Text(
                                     text = "准备好了嘛^_^",
                                     fontFamily = handwritingFont,
