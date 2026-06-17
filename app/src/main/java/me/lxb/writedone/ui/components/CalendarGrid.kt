@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,10 +24,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import me.lxb.writedone.data.repository.NoteRepository
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.Dimens
@@ -37,14 +42,39 @@ import java.util.Date
 fun CalendarGrid(
     selectedDate: Date,
     onDateSelected: (Date) -> Unit,
-    hasNotes: (Date) -> Boolean,
     reviewMode: Boolean = false,
     reviewRangeStart: Date? = null,
     reviewRangeEnd: Date? = null,
     onReviewDateSelected: (Date) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     var displayMonth by remember { mutableStateOf(Calendar.getInstance().apply { time = selectedDate }) }
+    var noteDays by remember { mutableStateOf(setOf<Long>()) }
+
+    val year = displayMonth.get(Calendar.YEAR)
+    val month = displayMonth.get(Calendar.MONTH)
+    LaunchedEffect(year, month) {
+        val cal = Calendar.getInstance()
+        cal.set(year, month, 1, 0, 0, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val startMs = cal.timeInMillis
+        cal.add(Calendar.MONTH, 1)
+        val endMs = cal.timeInMillis
+
+        val notes = withContext(Dispatchers.IO) {
+            NoteRepository(context).getByDateRange(startMs, endMs)
+        }
+        val cal2 = Calendar.getInstance()
+        noteDays = notes.mapTo(mutableSetOf()) {
+            cal2.time = Date(it.createdAt)
+            cal2.set(Calendar.HOUR_OF_DAY, 0)
+            cal2.set(Calendar.MINUTE, 0)
+            cal2.set(Calendar.SECOND, 0)
+            cal2.set(Calendar.MILLISECOND, 0)
+            cal2.timeInMillis
+        }
+    }
 
     fun daysInMonth(cal: Calendar): Int {
         return cal.getActualMaximum(Calendar.DAY_OF_MONTH)
@@ -102,12 +132,8 @@ fun CalendarGrid(
             Calendar.getInstance().apply { time = selectedDate }
         }
 
-        val rangeStartMs = reviewRangeStart?.let {
-            calForComparison(it)
-        }
-        val rangeEndMs = reviewRangeEnd?.let {
-            calForComparison(it)
-        }
+        val rangeStartMs = reviewRangeStart?.let { calForComparison(it) }
+        val rangeEndMs = reviewRangeEnd?.let { calForComparison(it) }
 
         for (row in 0 until rows) {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -158,7 +184,8 @@ fun CalendarGrid(
                             isRangeStart || isRangeEnd || isStartOnly -> AppColors.accentDeep
                             inRange -> AppColors.accentDeep
                             isSelected -> AppColors.accentDeep
-                            else -> if (hasNotes(cellDate)) AppColors.text else AppColors.textMuted
+                            cellMs in noteDays -> AppColors.text
+                            else -> AppColors.textMuted
                         }
 
                         Box(
