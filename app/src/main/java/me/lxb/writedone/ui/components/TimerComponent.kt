@@ -27,8 +27,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
@@ -74,18 +72,7 @@ fun TimerComponent(
         label = "timerScale",
     )
 
-    val handleeFont = remember {
-        FontFamily(
-            Font(
-                googleFont = GoogleFont("Handlee"),
-                fontProvider = GoogleFont.Provider(
-                    providerAuthority = "com.google.android.gms.fonts",
-                    providerPackage = "com.google.android.gms",
-                    certificates = R.array.com_google_android_gms_fonts_certs,
-                ),
-            ),
-        )
-    }
+    val timerFont = remember { FontFamily(Font(R.font.handlee)) }
 
     val textBrush = if (mode == TimerMode.Pomodoro) {
         Brush.linearGradient(
@@ -100,7 +87,7 @@ fun TimerComponent(
     val text = formatHms(state.elapsedSeconds)
     val glowColor = if (mode == TimerMode.Pomodoro) AppColors.pomodoro else Color(0xFF9E9E9E)
     val baseStyle = TextStyle(
-        fontFamily = handleeFont,
+        fontFamily = timerFont,
         brush = textBrush,
         fontSize = 200.sp,
         fontWeight = FontWeight.Normal,
@@ -142,7 +129,7 @@ fun TimerComponent(
             BasicText(
                 text = text,
                 style = TextStyle(
-                    fontFamily = handleeFont,
+                    fontFamily = timerFont,
                     color = glowColor,
                     fontSize = 200.sp,
                     fontWeight = FontWeight.Normal,

@@ -18,14 +18,10 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
@@ -63,17 +59,6 @@ fun StickyNoteInput(
     val textColor = lerp(AppColors.text, AppColors.darkText, t)
     val hintColor = lerp(AppColors.textMuted.copy(alpha = 0.4f), AppColors.darkTextMuted, t)
     val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, t)
-
-    val handwritingFont = FontFamily(
-        Font(
-            googleFont = GoogleFont("ZCOOL KuaiLe"),
-            fontProvider = GoogleFont.Provider(
-                providerAuthority = "com.google.android.gms.fonts",
-                providerPackage = "com.google.android.gms",
-                certificates = R.array.com_google_android_gms_fonts_certs,
-            ),
-        ),
-    )
 
     val headerText = remember(createdAt, durationSeconds) {
         buildString {

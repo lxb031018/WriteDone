@@ -33,16 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.BackHandler
-import me.lxb.writedone.R
 import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
+import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
@@ -52,17 +48,6 @@ import me.lxb.writedone.ui.theme.Dimens
 fun AboutPage(onBack: () -> Unit) {
     var showUserAgreement by remember { mutableStateOf(false) }
     var showPrivacyPolicy by remember { mutableStateOf(false) }
-
-    val handwritingFont = FontFamily(
-        Font(
-            googleFont = GoogleFont("ZCOOL KuaiLe"),
-            fontProvider = GoogleFont.Provider(
-                providerAuthority = "com.google.android.gms.fonts",
-                providerPackage = "com.google.android.gms",
-                certificates = R.array.com_google_android_gms_fonts_certs,
-            ),
-        ),
-    )
 
     Box {
         Scaffold(

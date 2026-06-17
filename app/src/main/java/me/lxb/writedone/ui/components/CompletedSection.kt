@@ -21,15 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.lxb.writedone.R
 import me.lxb.writedone.data.model.CompletedNote
+import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
@@ -49,17 +45,6 @@ fun CompletedSection(
     breathingEnabled: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    val handwritingFont = FontFamily(
-        Font(
-            googleFont = GoogleFont("ZCOOL KuaiLe"),
-            fontProvider = GoogleFont.Provider(
-                providerAuthority = "com.google.android.gms.fonts",
-                providerPackage = "com.google.android.gms",
-                certificates = R.array.com_google_android_gms_fonts_certs,
-            ),
-        ),
-    )
-
     val t = LocalAmbientProgress.current
     val emptyTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
 
@@ -110,17 +95,6 @@ fun SectionHeader(
     text: String,
     breathingEnabled: Boolean,
 ) {
-    val handwritingFont = FontFamily(
-        Font(
-            googleFont = GoogleFont("ZCOOL KuaiLe"),
-            fontProvider = GoogleFont.Provider(
-                providerAuthority = "com.google.android.gms.fonts",
-                providerPackage = "com.google.android.gms",
-                certificates = R.array.com_google_android_gms_fonts_certs,
-            ),
-        ),
-    )
-
     val t = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
     val headerTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
@@ -160,17 +134,6 @@ fun CompletedCard(
     val headerTextColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), t)
     val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
     val textColor = lerp(AppColors.text, AppColors.darkText, t)
-
-    val handwritingFont = FontFamily(
-        Font(
-            googleFont = GoogleFont("ZCOOL KuaiLe"),
-            fontProvider = GoogleFont.Provider(
-                providerAuthority = "com.google.android.gms.fonts",
-                providerPackage = "com.google.android.gms",
-                certificates = R.array.com_google_android_gms_fonts_certs,
-            ),
-        ),
-    )
 
     val headerText = remember(note) {
         val cal = Calendar.getInstance().apply { time = Date(note.createdAt) }

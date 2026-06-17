@@ -23,16 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.Dimens
 import java.util.Calendar
 import java.util.Date
@@ -45,17 +41,6 @@ fun CalendarGrid(
     modifier: Modifier = Modifier,
 ) {
     var displayMonth by remember { mutableStateOf(Calendar.getInstance().apply { time = selectedDate }) }
-
-    val handwritingFont = FontFamily(
-        Font(
-            googleFont = GoogleFont("ZCOOL KuaiLe"),
-            fontProvider = GoogleFont.Provider(
-                providerAuthority = "com.google.android.gms.fonts",
-                providerPackage = "com.google.android.gms",
-                certificates = R.array.com_google_android_gms_fonts_certs,
-            ),
-        ),
-    )
 
     fun daysInMonth(cal: Calendar): Int {
         return cal.getActualMaximum(Calendar.DAY_OF_MONTH)
