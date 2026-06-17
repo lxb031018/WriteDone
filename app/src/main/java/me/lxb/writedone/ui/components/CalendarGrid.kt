@@ -24,6 +24,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,9 +47,9 @@ fun CalendarGrid(
     selectedDate: Date,
     onDateSelected: (Date) -> Unit,
     reviewMode: Boolean = false,
-    reviewRangeStart: Date? = null,
-    reviewRangeEnd: Date? = null,
-    onReviewDateSelected: (Date) -> Unit = {},
+    selectedDates: Set<Long> = emptySet(),
+    onToggleDate: ((Date) -> Unit)? = null,
+    onRangeSelected: ((Date, Date) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -78,6 +82,34 @@ fun CalendarGrid(
 
     fun daysInMonth(cal: Calendar): Int {
         return cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    }
+
+    val totalDays = daysInMonth(displayMonth)
+    val firstDayOffset = (displayMonth.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY + 7) % 7
+    val rows = (totalDays + firstDayOffset + 6) / 7
+
+    // Drag preview state
+    var dragAnchorMs by remember { mutableStateOf<Long?>(null) }
+    var dragCurrentMs by remember { mutableStateOf<Long?>(null) }
+    var gridWidth by remember { mutableStateOf(0) }
+
+    fun positionToDate(y: Float, x: Float): Date? {
+        if (gridWidth <= 0) return null
+        val cellW = gridWidth / 7f
+        val cellH = cellW
+        val col = (x / cellW).toInt().coerceIn(0, 6)
+        val row = (y / cellH).toInt().coerceIn(0, rows - 1)
+        val dayNum = row * 7 + col - firstDayOffset + 1
+        if (dayNum < 1 || dayNum > totalDays) return null
+        return Calendar.getInstance().apply {
+            set(Calendar.YEAR, displayMonth.get(Calendar.YEAR))
+            set(Calendar.MONTH, displayMonth.get(Calendar.MONTH))
+            set(Calendar.DAY_OF_MONTH, dayNum)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -124,117 +156,132 @@ fun CalendarGrid(
             }
         }
 
-        val totalDays = daysInMonth(displayMonth)
-        val firstDayOffset = (displayMonth.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY + 7) % 7
-        val rows = (totalDays + firstDayOffset + 6) / 7
-
         val selectedCal = remember(selectedDate) {
             Calendar.getInstance().apply { time = selectedDate }
         }
 
-        val rangeStartMs = reviewRangeStart?.let { calForComparison(it) }
-        val rangeEndMs = reviewRangeEnd?.let { calForComparison(it) }
-
-        for (row in 0 until rows) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (col in 0 until 7) {
-                    val dayNum = row * 7 + col - firstDayOffset + 1
-                    if (dayNum in 1..totalDays) {
-                        val cellDate = Calendar.getInstance().apply {
-                            set(Calendar.YEAR, displayMonth.get(Calendar.YEAR))
-                            set(Calendar.MONTH, displayMonth.get(Calendar.MONTH))
-                            set(Calendar.DAY_OF_MONTH, dayNum)
-                            set(Calendar.HOUR_OF_DAY, 0)
-                            set(Calendar.MINUTE, 0)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                        }.time
-                        val cellMs = cellDate.time
-
-                        val isSelected = !reviewMode &&
-                            selectedCal.get(Calendar.YEAR) == displayMonth.get(Calendar.YEAR) &&
-                            selectedCal.get(Calendar.MONTH) == displayMonth.get(Calendar.MONTH) &&
-                            selectedCal.get(Calendar.DAY_OF_MONTH) == dayNum
-
-                        val hasStart = reviewMode && rangeStartMs != null
-                        val hasBoth = hasStart && rangeEndMs != null
-                        val inRange = hasBoth &&
-                            cellMs >= minOf(rangeStartMs!!, rangeEndMs!!) &&
-                            cellMs <= maxOf(rangeStartMs!!, rangeEndMs!!)
-
-                        val isRangeStart = hasBoth && cellMs == rangeStartMs
-                        val isRangeEnd = hasBoth && cellMs == rangeEndMs
-                        val isStartOnly = hasStart && !hasBoth && cellMs == rangeStartMs
-
-                        val bgModifier = when {
-                            inRange && !isRangeStart && !isRangeEnd ->
-                                Modifier.background(AppColors.accent.copy(alpha = 0.12f))
-                            else -> Modifier
-                        }
-
-                        val circleModifier = when {
-                            isRangeStart || isRangeEnd || isStartOnly ->
-                                Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.35f))
-                            isSelected ->
-                                Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.3f))
-                            else -> Modifier
-                        }
-
-                        val textColor = when {
-                            isRangeStart || isRangeEnd || isStartOnly -> AppColors.accentDeep
-                            inRange -> AppColors.accentDeep
-                            isSelected -> AppColors.accentDeep
-                            cellMs in noteDays -> AppColors.text
-                            else -> AppColors.textMuted
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .padding(2.dp)
-                                .then(bgModifier)
-                                .then(circleModifier)
-                                .clickable {
-                                    if (reviewMode) onReviewDateSelected(cellDate)
-                                    else onDateSelected(cellDate)
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = dayNum.toString(),
-                                fontSize = 16.sp,
-                                color = textColor,
-                                fontWeight = if (inRange || isStartOnly || isSelected) FontWeight.Bold else FontWeight.Normal,
-                                textAlign = TextAlign.Center,
-                            )
-                            if (isRangeStart) {
-                                Text(
-                                    text = "始",
-                                    fontSize = 8.sp,
-                                    color = AppColors.accentDeep,
-                                    modifier = Modifier.align(Alignment.BottomCenter),
-                                )
-                            }
-                            if (isStartOnly) {
-                                Text(
-                                    text = "始",
-                                    fontSize = 8.sp,
-                                    color = AppColors.accentDeep,
-                                    modifier = Modifier.align(Alignment.BottomCenter),
-                                )
-                            }
-                            if (isRangeEnd) {
-                                Text(
-                                    text = "终",
-                                    fontSize = 8.sp,
-                                    color = AppColors.accentDeep,
-                                    modifier = Modifier.align(Alignment.BottomCenter),
-                                )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .onSizeChanged { gridWidth = it.width }
+                .then(
+                    if (reviewMode) {
+                        Modifier.pointerInput(firstDayOffset, totalDays, rows, gridWidth) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown()
+                                val anchorDate = positionToDate(down.position.y, down.position.x)
+                                if (anchorDate == null) {
+                                    down.consume()
+                                    return@awaitEachGesture
+                                }
+                                val anchorMs = calForComparison(anchorDate)
+                                dragAnchorMs = anchorMs
+                                dragCurrentMs = anchorMs
+                                var isDrag = false
+                                var endDate: Date = anchorDate
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull() ?: break
+                                    if (!isDrag) {
+                                        val dx = change.position.x - down.position.x
+                                        val dy = change.position.y - down.position.y
+                                        if (dx * dx + dy * dy > 64f) {
+                                            isDrag = true
+                                        }
+                                    }
+                                    if (isDrag) {
+                                        val date = positionToDate(change.position.y, change.position.x)
+                                        if (date != null) {
+                                            dragCurrentMs = calForComparison(date)
+                                            endDate = date
+                                        }
+                                    }
+                                    change.consume()
+                                } while (event.changes.any { it.pressed })
+                                dragAnchorMs = null
+                                dragCurrentMs = null
+                                if (isDrag) {
+                                    onRangeSelected?.invoke(anchorDate, endDate)
+                                } else {
+                                    onToggleDate?.invoke(anchorDate)
+                                }
                             }
                         }
-                    } else {
-                        Box(modifier = Modifier.weight(1f).aspectRatio(1f))
+                    } else Modifier
+                ),
+        ) {
+            for (row in 0 until rows) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    for (col in 0 until 7) {
+                        val dayNum = row * 7 + col - firstDayOffset + 1
+                        if (dayNum in 1..totalDays) {
+                            val cellDate = Calendar.getInstance().apply {
+                                set(Calendar.YEAR, displayMonth.get(Calendar.YEAR))
+                                set(Calendar.MONTH, displayMonth.get(Calendar.MONTH))
+                                set(Calendar.DAY_OF_MONTH, dayNum)
+                                set(Calendar.HOUR_OF_DAY, 0)
+                                set(Calendar.MINUTE, 0)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }.time
+                            val cellMs = cellDate.time
+
+                            val isSelected = !reviewMode &&
+                                selectedCal.get(Calendar.YEAR) == displayMonth.get(Calendar.YEAR) &&
+                                selectedCal.get(Calendar.MONTH) == displayMonth.get(Calendar.MONTH) &&
+                                selectedCal.get(Calendar.DAY_OF_MONTH) == dayNum
+
+                            val inDragRange = dragAnchorMs != null && dragCurrentMs != null &&
+                                cellMs in dragAnchorMs!!.coerceAtMost(dragCurrentMs!!)..dragAnchorMs!!.coerceAtLeast(dragCurrentMs!!)
+
+                            val isSelectedOrPreview = cellMs in selectedDates || inDragRange
+
+                            val bgModifier = when {
+                                inDragRange && cellMs != dragAnchorMs && cellMs != dragCurrentMs ->
+                                    Modifier.background(AppColors.accent.copy(alpha = 0.12f))
+                                else -> Modifier
+                            }
+
+                            val circleModifier = when {
+                                inDragRange && (cellMs == dragAnchorMs || cellMs == dragCurrentMs) ->
+                                    Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.35f))
+                                isSelectedOrPreview ->
+                                    Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.3f))
+                                else -> Modifier
+                            }
+
+                            val textColor = when {
+                                isSelectedOrPreview -> AppColors.accentDeep
+                                isSelected -> AppColors.accentDeep
+                                cellMs in noteDays -> AppColors.text
+                                else -> AppColors.textMuted
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                    .padding(2.dp)
+                                    .then(bgModifier)
+                                    .then(circleModifier)
+                                    .then(
+                                        if (!reviewMode) Modifier.clickable {
+                                            onDateSelected(cellDate)
+                                        } else Modifier
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = dayNum.toString(),
+                                    fontSize = 16.sp,
+                                    color = textColor,
+                                    fontWeight = if (isSelectedOrPreview || isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        } else {
+                            Box(modifier = Modifier.weight(1f).aspectRatio(1f))
+                        }
                     }
                 }
             }

@@ -51,6 +51,37 @@ object ExportFormatter {
         return sb.toString()
     }
 
+    fun formatMultipleDates(notesByDate: Map<String, List<CompletedNote>>): String {
+        if (notesByDate.isEmpty()) return "没有选中日期"
+
+        val sb = StringBuilder()
+        sb.appendLine("===== 选中日期记录 =====")
+        sb.appendLine()
+
+        val sortedDates = notesByDate.keys.sortedBy { it }
+        var totalAll = 0
+        var hasAny = false
+
+        for (dateStr in sortedDates) {
+            val dayNotes = notesByDate[dateStr] ?: continue
+            if (dayNotes.isEmpty()) continue
+            hasAny = true
+            val dayDate = Date(dayNotes.first().createdAt)
+            sb.appendLine("--- ${dateStr} (${dayOfWeekFmt.format(dayDate)}) ---")
+            val dayTotal = appendNotes(sb, dayNotes.sortedBy { it.createdAt })
+            totalAll += dayTotal
+            sb.appendLine()
+        }
+
+        if (!hasAny) return "选中日期均无记录"
+
+        if (totalAll > 0) {
+            sb.appendLine("总计时：${FormatUtils.duration(totalAll)}")
+        }
+        sb.appendLine("共选中：${notesByDate.size}天")
+        return sb.toString()
+    }
+
     private fun appendNotes(sb: StringBuilder, notes: List<CompletedNote>): Int {
         var total = 0
         for (note in notes) {

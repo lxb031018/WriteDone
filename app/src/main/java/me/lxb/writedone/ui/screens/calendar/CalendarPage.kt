@@ -41,8 +41,10 @@ import me.lxb.writedone.ui.components.CompletedCard
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.util.ExportFormatter
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CalendarPage(
@@ -52,8 +54,7 @@ fun CalendarPage(
 ) {
     val context = LocalContext.current
     var reviewMode by remember { mutableStateOf(false) }
-    var reviewStart by remember { mutableStateOf<Date?>(null) }
-    var reviewEnd by remember { mutableStateOf<Date?>(null) }
+    var selectedDates by remember { mutableStateOf(setOf<Long>()) }
 
     Column(
         modifier = Modifier
@@ -64,22 +65,26 @@ fun CalendarPage(
             selectedDate = selectedDate,
             onDateSelected = onDateSelected,
             reviewMode = reviewMode,
-            reviewRangeStart = reviewStart,
-            reviewRangeEnd = reviewEnd,
-            onReviewDateSelected = { date ->
-                if (reviewStart == null || (reviewStart != null && reviewEnd != null)) {
-                    reviewStart = date
-                    reviewEnd = null
-                } else {
-                    reviewEnd = date
-                }
+            selectedDates = selectedDates,
+            onToggleDate = { date ->
+                val ms = calForComparison(date)
+                selectedDates = if (ms in selectedDates) selectedDates - ms
+                else selectedDates + ms
+            },
+            onRangeSelected = { start, end ->
+                val startMs = calForComparison(start)
+                val endMs = calForComparison(end)
+                val range = generateSequence(startMs.coerceAtMost(endMs)) {
+                    if (it < startMs.coerceAtLeast(endMs)) it + 86400000L else null
+                }.toSet()
+                selectedDates = selectedDates + range
             },
             modifier = Modifier.padding(horizontal = Dimens.pageH),
         )
 
         Spacer(Modifier.height(Dimens.gapMd))
 
-        // ── Review button area ──
+        // ── Multi-select action area ──
         if (reviewMode) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -92,8 +97,7 @@ fun CalendarPage(
                         .background(AppColors.border, RoundedCornerShape(Dimens.gap))
                         .clickable {
                             reviewMode = false
-                            reviewStart = null
-                            reviewEnd = null
+                            selectedDates = emptySet()
                         }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
@@ -110,25 +114,24 @@ fun CalendarPage(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = Dimens.pageH)
-                        .background(AppColors.accent, RoundedCornerShape(Dimens.gap))
-                        .clickable {
-                            val start = reviewStart
-                            val end = reviewEnd ?: reviewStart
-                            if (start != null && end != null) {
-                                exportRange(context, start, end)
-                            }
+                        .background(
+                            if (selectedDates.isNotEmpty()) AppColors.accent else AppColors.border,
+                            RoundedCornerShape(Dimens.gap),
+                        )
+                        .clickable(enabled = selectedDates.isNotEmpty()) {
+                            exportSelectedDates(context, selectedDates)
                             reviewMode = false
-                            reviewStart = null
-                            reviewEnd = null
+                            selectedDates = emptySet()
                         }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "确定",
+                        text = if (selectedDates.isNotEmpty()) "复制选中（${selectedDates.size}天）"
+                        else "复制选中",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
+                        color = if (selectedDates.isNotEmpty()) Color.White else AppColors.textMuted,
                         fontFamily = handwritingFont,
                     )
                 }
@@ -140,8 +143,7 @@ fun CalendarPage(
                     .padding(horizontal = Dimens.pageH)
                     .clickable {
                         reviewMode = true
-                        reviewStart = null
-                        reviewEnd = null
+                        selectedDates = emptySet()
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
@@ -177,27 +179,32 @@ fun CalendarPage(
     }
 }
 
-private fun exportRange(context: Context, startDate: Date, endDate: Date) {
+private fun exportSelectedDates(context: Context, selectedDates: Set<Long>) {
+    if (selectedDates.isEmpty()) return
     val repo = NoteRepository(context)
-    val startCal = Calendar.getInstance().apply { time = startDate }
-    startCal.set(Calendar.HOUR_OF_DAY, 0)
-    startCal.set(Calendar.MINUTE, 0)
-    startCal.set(Calendar.SECOND, 0)
-    startCal.set(Calendar.MILLISECOND, 0)
-    val startMillis = startCal.timeInMillis
+    val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.CHINESE)
+    val notesByDate = mutableMapOf<String, List<CompletedNote>>()
 
-    val endCal = Calendar.getInstance().apply { time = endDate }
-    endCal.set(Calendar.HOUR_OF_DAY, 0)
-    endCal.set(Calendar.MINUTE, 0)
-    endCal.set(Calendar.SECOND, 0)
-    endCal.set(Calendar.MILLISECOND, 0)
-    endCal.add(Calendar.DAY_OF_MONTH, 1)
-    val endMillis = endCal.timeInMillis
+    for (dateMs in selectedDates.sorted()) {
+        val endMs = dateMs + 86400000L
+        val dayNotes = repo.getByDateRange(dateMs, endMs)
+        val dateStr = dateFmt.format(Date(dateMs))
+        notesByDate[dateStr] = dayNotes
+    }
 
-    val notes = repo.getByDateRange(startMillis, endMillis)
-    val text = ExportFormatter.formatRange(notes, startDate, endDate)
+    val text = ExportFormatter.formatMultipleDates(notesByDate)
 
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("Time Records", text))
     Toast.makeText(context, "已复制到剪贴板", Toast.LENGTH_SHORT).show()
+}
+
+private fun calForComparison(date: Date): Long {
+    return Calendar.getInstance().apply {
+        time = date
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 }
