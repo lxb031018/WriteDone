@@ -17,6 +17,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -52,6 +54,14 @@ class MainActivity : ComponentActivity() {
         settingsViewModel = ViewModelProvider(this)[SettingsViewModel::class.java]
         settingsRepo = SettingsRepository(applicationContext)
         ambientController = AmbientController()
+
+        lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> timerViewModel.onResume()
+                Lifecycle.Event.ON_PAUSE -> timerViewModel.onPause()
+                else -> {}
+            }
+        })
 
         setContent {
             val ambientProgress = androidx.compose.runtime.remember {

@@ -41,6 +41,10 @@ class TimerViewModel @JvmOverloads constructor(
     private val _state = MutableStateFlow(TimerUiState())
     val state: StateFlow<TimerUiState> = _state.asStateFlow()
 
+    companion object {
+        const val WORK_SECONDS = 1500 // 25 minutes
+    }
+
     private var timerJob: Job? = null
 
     init {
@@ -58,8 +62,7 @@ class TimerViewModel @JvmOverloads constructor(
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
         val mode = _state.value.mode
         if (mode == TimerMode.Pomodoro) {
-            val workSeconds = 20
-            if (elapsed < workSeconds) {
+            if (elapsed < WORK_SECONDS) {
                 scheduleBreakAlarm(startTime)
             } else {
                 if (!timerStateRepo.loadBreakReminderSent()) {
@@ -102,7 +105,7 @@ class TimerViewModel @JvmOverloads constructor(
                 TimerUiState(
                     mode = it.mode,
                     pomodoroCumulativeSeconds = newCumulative,
-                    breakButtonVisible = newCumulative >= 20,
+                    breakButtonVisible = newCumulative >= WORK_SECONDS,
                 )
             }
         } else {
@@ -129,11 +132,16 @@ class TimerViewModel @JvmOverloads constructor(
         }
     }
 
+    fun onPause() {
+        timerJob?.cancel()
+        timerJob = null
+    }
+
     fun onResume() {
         val startTime = _state.value.startTimeMillis ?: return
         if (_state.value.status != TimerStatus.Running) return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
-        _state.update { it.copy(elapsedSeconds = elapsed) }
+        startTimer(startTime, elapsed)
     }
 
     fun setMode(mode: TimerMode) {
@@ -163,7 +171,7 @@ class TimerViewModel @JvmOverloads constructor(
                 _state.update { current ->
                     val newElapsed = current.elapsedSeconds + 1
                     val total = current.pomodoroCumulativeSeconds + newElapsed
-                    val showBreak = current.mode == TimerMode.Pomodoro && total >= 20
+                    val showBreak = current.mode == TimerMode.Pomodoro && total >= WORK_SECONDS
                     if (showBreak && !alarmCancelled) {
                         cancelBreakAlarm()
                         alarmCancelled = true
@@ -178,7 +186,7 @@ class TimerViewModel @JvmOverloads constructor(
     }
 
     private fun scheduleBreakAlarm(startTimeMillis: Long) {
-        val triggerTime = startTimeMillis + 20 * 1000L
+        val triggerTime = startTimeMillis + WORK_SECONDS * 1000L
         val alarmManager = getApplication<Application>().getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(getApplication(), AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(

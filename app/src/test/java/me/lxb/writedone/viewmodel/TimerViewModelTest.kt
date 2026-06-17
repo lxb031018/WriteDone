@@ -146,7 +146,7 @@ class TimerViewModelTest {
     // ── Break button visibility ──
 
     @Test
-    fun `break button appears when cumulative reaches 20`() {
+    fun `break button appears when cumulative reaches 1500 (25 min)`() {
         val vm = createPomodoroViewModel()
 
         // Simulate multiple cycles with manual state manipulation

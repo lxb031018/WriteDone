@@ -1,8 +1,6 @@
 package me.lxb.writedone.notification
 
-import android.app.AlarmManager
 import android.app.KeyguardManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,34 +14,9 @@ class AlarmReceiver : BroadcastReceiver() {
         if (keyguard.isDeviceLocked) {
             repo.saveBreakReminderPendingRepeatSync(true)
             NotificationHelper.showBreakReminder(context)
-            scheduleFallback(context)
         } else {
             repo.saveBreakReminderSentSync(true)
             NotificationHelper.showBreakReminder(context)
-        }
-    }
-
-    private fun scheduleFallback(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, UnlockFallbackCheckReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            100,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-        val triggerTime = System.currentTimeMillis() + 30_000L
-        if (alarmManager.canScheduleExactAlarms()) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent,
-            )
-        } else {
-            alarmManager.setAlarmClock(
-                AlarmManager.AlarmClockInfo(triggerTime, null),
-                pendingIntent,
-            )
         }
     }
 }

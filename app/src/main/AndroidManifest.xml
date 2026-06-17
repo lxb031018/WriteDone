@@ -37,9 +37,6 @@
                 <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".notification.UnlockFallbackCheckReceiver"
-            android:exported="false" />
     </application>
 
 </manifest>

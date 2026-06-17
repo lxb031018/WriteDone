@@ -46,7 +46,7 @@ class FormatHmsTest {
     }
 
     @Test
-    fun `pomodoro test threshold 20 seconds`() {
-        assertEquals("00:00:20", formatHms(20))
+    fun `pomodoro test threshold 25 minutes`() {
+        assertEquals("00:25:00", formatHms(1500))
     }
 }
