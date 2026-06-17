@@ -184,10 +184,14 @@ fun HomeScreen(
                 val active = status == TimerStatus.Running && isLandscape
                 view.keepScreenOn = active
                 if (active) ambientController.enter() else ambientController.exit()
-                if (active) {
-                    window?.let { WindowInsetsControllerCompat(it, view).hide(WindowInsetsCompat.Type.statusBars()) }
-                } else {
-                    window?.let { WindowInsetsControllerCompat(it, view).show(WindowInsetsCompat.Type.statusBars()) }
+                window?.let { win ->
+                    if (active) {
+                        WindowInsetsControllerCompat(win, view).hide(WindowInsetsCompat.Type.statusBars())
+                        win.attributes = win.attributes.apply { screenBrightness = 0f }
+                    } else {
+                        WindowInsetsControllerCompat(win, view).show(WindowInsetsCompat.Type.statusBars())
+                        win.attributes = win.attributes.apply { screenBrightness = -1f }
+                    }
                 }
             }
     }
