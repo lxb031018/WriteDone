@@ -30,6 +30,7 @@ import me.lxb.writedone.ui.theme.LocalAmbientProgress
 fun SettingsDrawer(
     autoDimBrightness: Boolean,
     onToggleAutoDim: (Boolean) -> Unit,
+    onExport: () -> Unit,
     onUserAgreement: () -> Unit,
     onPrivacyPolicy: () -> Unit,
     onNotificationPermission: () -> Unit,
@@ -59,6 +60,12 @@ fun SettingsDrawer(
             text = "横屏自动降低亮度",
             checked = autoDimBrightness,
             onCheckedChange = onToggleAutoDim,
+        )
+        Spacer(Modifier.height(12.dp))
+        SectionHeader("数据")
+        DrawerItem(
+            text = "导出时间记录",
+            onClick = onExport,
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader("通知")

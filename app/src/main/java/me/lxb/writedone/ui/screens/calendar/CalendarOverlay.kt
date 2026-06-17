@@ -19,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,7 +35,6 @@ import me.lxb.writedone.ui.components.CompletedCard
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
-import java.util.Calendar
 import java.util.Date
 
 @Composable
@@ -51,14 +49,8 @@ fun CalendarOverlay(
 ) {
     val scope = rememberCoroutineScope()
     val t = LocalAmbientProgress.current
-    val dateLabelColor = lerp(AppColors.text, AppColors.darkText, t)
     val emptyColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
     val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
-
-    val dateLabel = remember(selectedDate, notes) {
-        val cal = Calendar.getInstance().apply { time = selectedDate }
-        "${cal.get(Calendar.YEAR)}年${cal.get(Calendar.MONTH) + 1}月${cal.get(Calendar.DAY_OF_MONTH)}日   共${notes.size}条"
-    }
 
     Box(
         modifier = modifier
@@ -102,21 +94,7 @@ fun CalendarOverlay(
                     modifier = Modifier.padding(horizontal = Dimens.pageH),
                 )
 
-                Spacer(Modifier.height(Dimens.gapMd))
-                HorizontalDivider(color = dividerColor)
-                Spacer(Modifier.height(Dimens.gapMd))
-
-                Text(
-                    text = dateLabel,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Dimens.pageH),
-                    fontFamily = handwritingFont,
-                    fontSize = 16.sp,
-                    color = dateLabelColor,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(Dimens.gapMd))
+                Spacer(Modifier.height(Dimens.gap))
 
                 if (notes.isEmpty()) {
                     Text(

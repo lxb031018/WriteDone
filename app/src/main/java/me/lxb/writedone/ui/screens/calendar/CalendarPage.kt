@@ -8,12 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,7 +20,6 @@ import me.lxb.writedone.ui.components.CalendarGrid
 import me.lxb.writedone.ui.components.CompletedCard
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
-import java.util.Calendar
 import java.util.Date
 
 @Composable
@@ -32,11 +28,6 @@ fun CalendarPage(
     notes: List<CompletedNote>,
     onDateSelected: (Date) -> Unit,
 ) {
-    val dateLabel = remember(selectedDate) {
-        val cal = Calendar.getInstance().apply { time = selectedDate }
-        "${cal.get(Calendar.YEAR)}年${cal.get(Calendar.MONTH) + 1}月${cal.get(Calendar.DAY_OF_MONTH)}日   共${notes.size}条"
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,21 +40,7 @@ fun CalendarPage(
             modifier = Modifier.padding(horizontal = Dimens.pageH),
         )
 
-        Spacer(Modifier.height(Dimens.gapMd))
-        HorizontalDivider()
-        Spacer(Modifier.height(Dimens.gapMd))
-
-        Text(
-            text = dateLabel,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.pageH),
-            fontFamily = handwritingFont,
-            fontSize = 16.sp,
-            color = AppColors.text,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(Dimens.gapMd))
+        Spacer(Modifier.height(Dimens.gap))
 
         if (notes.isEmpty()) {
             Text(

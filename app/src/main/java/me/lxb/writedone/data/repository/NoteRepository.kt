@@ -24,4 +24,8 @@ class NoteRepository(context: Context) {
         val endMillis = cal.timeInMillis
         return db.getNotesByDateRange(startMillis, endMillis)
     }
+
+    fun getByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote> {
+        return db.getNotesByDateRange(startMillis, endMillis)
+    }
 }
