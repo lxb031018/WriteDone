@@ -12,15 +12,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +49,7 @@ fun CompletedSection(
     headerText: String = "已完成 — ${notes.size}",
     showHeader: Boolean = true,
     breathingEnabled: Boolean = false,
+    onNoteBodyChange: ((Long, String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val t = LocalAmbientProgress.current
@@ -82,7 +89,11 @@ fun CompletedSection(
                     items = notes,
                     key = { _, note -> note.id },
                 ) { _, note ->
-                    CompletedCard(note = note, breathingEnabled = breathingEnabled)
+                    CompletedCard(
+                        note = note,
+                        breathingEnabled = breathingEnabled,
+                        onBodyChange = onNoteBodyChange,
+                    )
                     Spacer(Modifier.height(Dimens.gap))
                 }
             }
@@ -118,6 +129,7 @@ fun SectionHeader(
 fun CompletedCard(
     note: CompletedNote,
     breathingEnabled: Boolean,
+    onBodyChange: ((Long, String) -> Unit)? = null,
 ) {
     val seed = remember { abs(note.id.toInt()) + note.content.hashCode() }
     val rng = remember { Random(seed.toLong()) }
@@ -134,6 +146,7 @@ fun CompletedCard(
     val headerTextColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), t)
     val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
     val textColor = lerp(AppColors.text, AppColors.darkText, t)
+    val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, t)
 
     val headerText = remember(note) {
         val cal = Calendar.getInstance().apply { time = Date(note.createdAt) }
@@ -144,6 +157,9 @@ fun CompletedCard(
             append("用时:${FormatUtils.duration(note.durationSeconds)}")
         }
     }
+
+    var bodyText by remember(note.id) { mutableStateOf(note.body) }
+    val isBodyEditable = onBodyChange != null
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -167,11 +183,37 @@ fun CompletedCard(
                 HorizontalDivider(color = dividerColor, thickness = 1.dp)
                 Spacer(Modifier.height(Dimens.gap))
                 Text(
-                    text = note.content,
+                    text = "title:${note.content}",
                     fontFamily = handwritingFont,
                     fontSize = 22.sp,
                     color = textColor,
                 )
+                if (isBodyEditable || note.body.isNotEmpty()) {
+                    Spacer(Modifier.height(Dimens.gap))
+                    if (isBodyEditable) {
+                        BasicTextField(
+                            value = bodyText,
+                            onValueChange = { newValue ->
+                                bodyText = newValue
+                                onBodyChange(note.id, newValue)
+                            },
+                            textStyle = TextStyle(
+                                fontFamily = handwritingFont,
+                                fontSize = 22.sp,
+                                color = textColor,
+                            ),
+                            cursorBrush = SolidColor(cursorColor),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        Text(
+                            text = note.body,
+                            fontFamily = handwritingFont,
+                            fontSize = 22.sp,
+                            color = textColor,
+                        )
+                    }
+                }
             }
         }
     }

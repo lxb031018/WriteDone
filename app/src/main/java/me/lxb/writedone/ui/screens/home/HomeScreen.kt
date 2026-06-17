@@ -337,6 +337,7 @@ fun HomeScreen(
                                     headerText = "已完成 — ${completedState.notes.size}",
                                     showHeader = true,
                                     breathingEnabled = breathingEnabled,
+                                    onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
                                     modifier = Modifier.fillMaxSize(),
                                 )
                             }
@@ -393,6 +394,7 @@ fun HomeScreen(
                             headerText = "已完成 — ${completedState.notes.size}",
                             showHeader = true,
                             breathingEnabled = breathingEnabled,
+                            onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = Dimens.pageH)

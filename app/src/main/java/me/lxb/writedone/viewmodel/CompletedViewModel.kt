@@ -35,6 +35,15 @@ class CompletedViewModel(application: Application) : AndroidViewModel(applicatio
         loadByDate(date)
     }
 
+    fun updateNoteBody(id: Long, body: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            noteRepo.updateBody(id, body)
+            _state.update { st ->
+                st.copy(notes = st.notes.map { if (it.id == id) it.copy(body = body) else it })
+            }
+        }
+    }
+
     fun addNote(content: String, createdAt: Date, durationSeconds: Int) {
         if (content.isBlank()) return
         val note = CompletedNote(

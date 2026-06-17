@@ -9,6 +9,10 @@ import java.util.Date
 class NoteRepository(context: Context) {
     private val db = AppDatabase(context)
 
+    fun updateBody(id: Long, body: String) {
+        db.updateNoteBody(id, body)
+    }
+
     fun insert(note: CompletedNote): Long {
         return db.insertNote(note)
     }

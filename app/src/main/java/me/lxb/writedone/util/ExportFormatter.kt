@@ -56,7 +56,11 @@ object ExportFormatter {
         for (note in notes) {
             val startTime = timeFmt.format(Date(note.createdAt))
             val endTime = timeFmt.format(Date(note.createdAt + note.durationSeconds * 1000L))
-            sb.appendLine("$startTime - $endTime | ${note.content}")
+            sb.append("$startTime - $endTime | ${note.content}")
+            if (note.body.isNotBlank()) {
+                sb.append(" (${note.body})")
+            }
+            sb.appendLine()
             total += note.durationSeconds
         }
         sb.appendLine("Total: ${FormatUtils.duration(total)}")
