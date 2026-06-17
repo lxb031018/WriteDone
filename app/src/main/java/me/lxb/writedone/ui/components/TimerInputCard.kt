@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import me.lxb.writedone.ui.theme.Dimens
@@ -52,14 +51,10 @@ fun TimerInputCard(
         completedViewModel.draftRepo.save(inputText)
     }
 
-    // Continuous tracker: update prevState on every timerState change (no restart overhead)
-    LaunchedEffect(Unit) {
-        snapshotFlow { timerState }.collect { next -> prevState = next }
-    }
-
     // Save logic: only on Idle↔Running transition
     LaunchedEffect(timerState.status) {
         val prev = prevState
+        prevState = timerState
 
         if (prev.status == TimerStatus.Running && timerState.status == TimerStatus.Idle) {
             val elapsed = prev.elapsedSeconds
