@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
+import android.view.View
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalView
 import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -178,6 +180,7 @@ fun HomeScreen(
     val view = LocalView.current
     val window = (context as? Activity)?.window
     LaunchedEffect(isLandscape, ambientController, view) {
+        var hideJob: Job? = null
         timerViewModel.state
             .map { it.status }
             .distinctUntilChanged()
@@ -186,13 +189,45 @@ fun HomeScreen(
                 view.keepScreenOn = active
                 if (active) ambientController.enter() else ambientController.exit()
                 window?.let { win ->
+                    val controller = WindowInsetsControllerCompat(win, view)
                     if (active) {
-                        WindowInsetsControllerCompat(win, view).hide(WindowInsetsCompat.Type.statusBars())
+                        controller.hide(WindowInsetsCompat.Type.statusBars())
                         if (autoDimBrightness) {
                             win.attributes = win.attributes.apply { screenBrightness = 0f }
                         }
+                        val decorView = win.decorView
+                        // Auto-hide status bar 1s after user pulls it down (legacy listener)
+                        @Suppress("DEPRECATION")
+                        decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+                            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+                                decorView.removeCallbacks(null)
+                                decorView.postDelayed({
+                                    WindowInsetsControllerCompat(win, view)
+                                        .hide(WindowInsetsCompat.Type.statusBars())
+                                }, 1000L)
+                            }
+                        }
+                        // Fallback polling for API 30+ where listener may not fire
+                        hideJob = launch {
+                            while (true) {
+                                delay(1000L)
+                                val insets = WindowInsetsCompat.toWindowInsetsCompat(
+                                    decorView.rootWindowInsets, decorView
+                                )
+                                if (insets.isVisible(WindowInsetsCompat.Type.statusBars())) {
+                                    delay(1000L)
+                                    WindowInsetsControllerCompat(win, view)
+                                        .hide(WindowInsetsCompat.Type.statusBars())
+                                }
+                            }
+                        }
                     } else {
-                        WindowInsetsControllerCompat(win, view).show(WindowInsetsCompat.Type.statusBars())
+                        @Suppress("DEPRECATION")
+                        win.decorView.setOnSystemUiVisibilityChangeListener(null)
+                        win.decorView.removeCallbacks(null)
+                        hideJob?.cancel()
+                        hideJob = null
+                        controller.show(WindowInsetsCompat.Type.statusBars())
                         win.attributes = win.attributes.apply { screenBrightness = -1f }
                     }
                 }
