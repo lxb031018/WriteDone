@@ -10,64 +10,58 @@ object ExportFormatter {
     private val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.CHINESE)
     private val dayOfWeekFmt = SimpleDateFormat("EEE", Locale.US)
 
-    fun formatDaily(notes: List<CompletedNote>, date: Date): String {
-        val sorted = notes.sortedBy { it.createdAt }
-        if (sorted.isEmpty()) {
-            return "No records for ${dateFmt.format(date)}."
+    fun formatRange(notes: List<CompletedNote>, startDate: Date, endDate: Date): String {
+        if (notes.isEmpty()) {
+            val label = if (startDate == endDate) dateFmt.format(startDate)
+            else "${dateFmt.format(startDate)} ~ ${dateFmt.format(endDate)}"
+            return "No records for $label."
         }
+
+        val sorted = notes.sortedBy { it.createdAt }
+        val isSingleDay = startDate == endDate ||
+            dateFmt.format(startDate) == dateFmt.format(endDate)
 
         val sb = StringBuilder()
-        sb.appendLine("===== Time Records =====")
-        sb.appendLine("Date: ${dateFmt.format(date)} (${dayOfWeekFmt.format(date)})")
-        sb.appendLine()
+        if (isSingleDay) {
+            sb.appendLine("===== Time Records =====")
+            sb.appendLine("Date: ${dateFmt.format(startDate)} (${dayOfWeekFmt.format(startDate)})")
+            sb.appendLine()
+            appendNotes(sb, sorted)
+        } else {
+            sb.appendLine("===== Time Records =====")
+            sb.appendLine("${dateFmt.format(startDate)} (${dayOfWeekFmt.format(startDate)}) ~ ${dateFmt.format(endDate)} (${dayOfWeekFmt.format(endDate)})")
+            sb.appendLine()
 
-        var totalSeconds = 0
-        for (note in sorted) {
-            val startTime = timeFmt.format(Date(note.createdAt))
-            val endTime = timeFmt.format(Date(note.createdAt + note.durationSeconds * 1000L))
-            sb.appendLine("$startTime - $endTime | ${note.content}")
-            totalSeconds += note.durationSeconds
+            val grouped = sorted.groupBy { dateFmt.format(Date(it.createdAt)) }
+            val sortedDates = grouped.keys.sortedBy { it }
+            var totalAll = 0
+
+            for (dateStr in sortedDates) {
+                val dayNotes = grouped[dateStr]!!.sortedBy { it.createdAt }
+                val dayDate = Date(dayNotes.first().createdAt)
+                sb.appendLine("--- ${dateFmt.format(dayDate)} (${dayOfWeekFmt.format(dayDate)}) ---")
+                val dayTotal = appendNotes(sb, dayNotes)
+                totalAll += dayTotal
+                sb.appendLine()
+            }
+
+            sb.appendLine("Total tracked: ${FormatUtils.duration(totalAll)}")
         }
-        sb.appendLine()
-        sb.appendLine("Total tracked: ${FormatUtils.duration(totalSeconds)}")
-
-        appendGaps(sb, sorted)
 
         return sb.toString()
     }
 
-    fun formatWeekly(notes: List<CompletedNote>, weekStart: Date, weekEnd: Date): String {
-        if (notes.isEmpty()) return "No records for this week."
-
-        val sb = StringBuilder()
-        sb.appendLine("===== Time Records (Weekly) =====")
-        sb.appendLine("${dateFmt.format(weekStart)} (${dayOfWeekFmt.format(weekStart)}) ~ ${dateFmt.format(weekEnd)} (${dayOfWeekFmt.format(weekEnd)})")
-        sb.appendLine()
-
-        val grouped = notes.groupBy { dateFmt.format(Date(it.createdAt)) }
-        val sortedDates = grouped.keys.sorted()
-        var weeklyTotal = 0
-
-        for (dateStr in sortedDates) {
-            val dayNotes = grouped[dateStr]!!.sortedBy { it.createdAt }
-            val dayDate = Date(dayNotes.first().createdAt)
-            sb.appendLine("--- ${dateFmt.format(dayDate)} (${dayOfWeekFmt.format(dayDate)}) ---")
-            var dayTotal = 0
-            for (note in dayNotes) {
-                val startTime = timeFmt.format(Date(note.createdAt))
-                val endTime = timeFmt.format(Date(note.createdAt + note.durationSeconds * 1000L))
-                sb.appendLine("$startTime - $endTime | ${note.content}")
-                dayTotal += note.durationSeconds
-            }
-            sb.appendLine("Day total: ${FormatUtils.duration(dayTotal)}")
-            appendGaps(sb, dayNotes)
-            sb.appendLine()
-            weeklyTotal += dayTotal
+    private fun appendNotes(sb: StringBuilder, notes: List<CompletedNote>): Int {
+        var total = 0
+        for (note in notes) {
+            val startTime = timeFmt.format(Date(note.createdAt))
+            val endTime = timeFmt.format(Date(note.createdAt + note.durationSeconds * 1000L))
+            sb.appendLine("$startTime - $endTime | ${note.content}")
+            total += note.durationSeconds
         }
-
-        sb.appendLine("Weekly total: ${FormatUtils.duration(weeklyTotal)}")
-
-        return sb.toString()
+        sb.appendLine("Total: ${FormatUtils.duration(total)}")
+        appendGaps(sb, notes)
+        return total
     }
 
     private fun appendGaps(sb: StringBuilder, sortedNotes: List<CompletedNote>) {
@@ -88,5 +82,4 @@ object ExportFormatter {
             }
         }
     }
-
 }

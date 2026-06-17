@@ -38,6 +38,10 @@ fun CalendarGrid(
     selectedDate: Date,
     onDateSelected: (Date) -> Unit,
     hasNotes: (Date) -> Boolean,
+    reviewMode: Boolean = false,
+    reviewRangeStart: Date? = null,
+    reviewRangeEnd: Date? = null,
+    onReviewDateSelected: (Date) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var displayMonth by remember { mutableStateOf(Calendar.getInstance().apply { time = selectedDate }) }
@@ -98,6 +102,13 @@ fun CalendarGrid(
             Calendar.getInstance().apply { time = selectedDate }
         }
 
+        val rangeStartMs = reviewRangeStart?.let {
+            calForComparison(it)
+        }
+        val rangeEndMs = reviewRangeEnd?.let {
+            calForComparison(it)
+        }
+
         for (row in 0 until rows) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 for (col in 0 until 7) {
@@ -112,32 +123,88 @@ fun CalendarGrid(
                             set(Calendar.SECOND, 0)
                             set(Calendar.MILLISECOND, 0)
                         }.time
+                        val cellMs = cellDate.time
 
-                        val isSelected = selectedCal.get(Calendar.YEAR) == displayMonth.get(Calendar.YEAR) &&
+                        val isSelected = !reviewMode &&
+                            selectedCal.get(Calendar.YEAR) == displayMonth.get(Calendar.YEAR) &&
                             selectedCal.get(Calendar.MONTH) == displayMonth.get(Calendar.MONTH) &&
                             selectedCal.get(Calendar.DAY_OF_MONTH) == dayNum
+
+                        val hasStart = reviewMode && rangeStartMs != null
+                        val hasBoth = hasStart && rangeEndMs != null
+                        val inRange = hasBoth &&
+                            cellMs >= minOf(rangeStartMs!!, rangeEndMs!!) &&
+                            cellMs <= maxOf(rangeStartMs!!, rangeEndMs!!)
+
+                        val isRangeStart = hasBoth && cellMs == rangeStartMs
+                        val isRangeEnd = hasBoth && cellMs == rangeEndMs
+                        val isStartOnly = hasStart && !hasBoth && cellMs == rangeStartMs
+
+                        val bgModifier = when {
+                            inRange && !isRangeStart && !isRangeEnd ->
+                                Modifier.background(AppColors.accent.copy(alpha = 0.12f))
+                            else -> Modifier
+                        }
+
+                        val circleModifier = when {
+                            isRangeStart || isRangeEnd || isStartOnly ->
+                                Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.35f))
+                            isSelected ->
+                                Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.3f))
+                            else -> Modifier
+                        }
+
+                        val textColor = when {
+                            isRangeStart || isRangeEnd || isStartOnly -> AppColors.accentDeep
+                            inRange -> AppColors.accentDeep
+                            isSelected -> AppColors.accentDeep
+                            else -> AppColors.text
+                        }
 
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .aspectRatio(1f)
                                 .padding(2.dp)
-                                .then(
-                                    if (isSelected) Modifier
-                                        .clip(CircleShape)
-                                        .background(AppColors.accent.copy(alpha = 0.3f))
-                                    else Modifier
-                                )
-                                .clickable { onDateSelected(cellDate) },
+                                .then(bgModifier)
+                                .then(circleModifier)
+                                .clickable {
+                                    if (reviewMode) onReviewDateSelected(cellDate)
+                                    else onDateSelected(cellDate)
+                                },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = dayNum.toString(),
                                 fontSize = 16.sp,
-                                color = if (isSelected) AppColors.accentDeep else AppColors.text,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = textColor,
+                                fontWeight = if (inRange || isStartOnly || isSelected) FontWeight.Bold else FontWeight.Normal,
                                 textAlign = TextAlign.Center,
                             )
+                            if (isRangeStart) {
+                                Text(
+                                    text = "始",
+                                    fontSize = 8.sp,
+                                    color = AppColors.accentDeep,
+                                    modifier = Modifier.align(Alignment.BottomCenter),
+                                )
+                            }
+                            if (isStartOnly) {
+                                Text(
+                                    text = "始",
+                                    fontSize = 8.sp,
+                                    color = AppColors.accentDeep,
+                                    modifier = Modifier.align(Alignment.BottomCenter),
+                                )
+                            }
+                            if (isRangeEnd) {
+                                Text(
+                                    text = "终",
+                                    fontSize = 8.sp,
+                                    color = AppColors.accentDeep,
+                                    modifier = Modifier.align(Alignment.BottomCenter),
+                                )
+                            }
                         }
                     } else {
                         Box(modifier = Modifier.weight(1f).aspectRatio(1f))
@@ -146,4 +213,14 @@ fun CalendarGrid(
             }
         }
     }
+}
+
+private fun calForComparison(date: Date): Long {
+    return Calendar.getInstance().apply {
+        time = date
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 }

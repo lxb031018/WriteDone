@@ -68,7 +68,6 @@ import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
 import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
 import me.lxb.writedone.ui.screens.legal.UserAgreementPage
-import me.lxb.writedone.ui.screens.export.ExportSheet
 import me.lxb.writedone.ui.screens.settings.SettingsDrawer
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
@@ -118,7 +117,6 @@ fun HomeScreen(
 
     var showUserAgreement by remember { mutableStateOf(false) }
     var showPrivacyPolicy by remember { mutableStateOf(false) }
-    var showExportSheet by remember { mutableStateOf(false) }
 
     fun animateDrawerTo(target: Float) {
         scope.launch {
@@ -430,7 +428,6 @@ fun HomeScreen(
                 SettingsDrawer(
                     autoDimBrightness = autoDimBrightness,
                     onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
-                    onExport = { showExportSheet = true },
                     onUserAgreement = { showUserAgreement = true },
                     onPrivacyPolicy = { showPrivacyPolicy = true },
                     onNotificationPermission = {
@@ -495,11 +492,6 @@ fun HomeScreen(
                 PrivacyPolicyPage(onBack = { showPrivacyPolicy = false })
             }
 
-            // ── Export overlay ──
-            if (showExportSheet) {
-                BackHandler { showExportSheet = false }
-                ExportSheet(onClose = { showExportSheet = false })
-            }
         }
     }
 }
