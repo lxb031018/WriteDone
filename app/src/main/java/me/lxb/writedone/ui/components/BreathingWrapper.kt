@@ -7,11 +7,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 
 /**
- * Ambient breathing effect: passive alpha wrapper.
+ * Ambient breathing effect: passive GPU-only alpha wrapper.
  *
- * Drives its alpha from [alpha] (a `State<Float>` from [me.lxb.writedone.theme.LocalBreathingAlpha])
- * instead of an internal animation, so the home-screen-level `Animatable` controls all wrappers
- * in lockstep (matches Flutter `BreathingWrapper(animation: breathing)`).
+ * Alpha is read inside `graphicsLayer` (draw-phase), so changes only trigger
+ * GPU re-draw — never recomposition. The alpha value is driven at ~10fps by a
+ * `LaunchedEffect` + `delay(100)` in HomeScreen, decoupled from Choreographer.
  *
  * `graphicsLayer { alpha = ... }` is the Compose analogue of Flutter's `Opacity` + `RepaintBoundary`:
  * composite-layer alpha, no layout pass.
@@ -27,8 +27,7 @@ fun BreathingWrapper(
         content()
         return
     }
-    val a = alpha.value
-    Box(modifier = modifier.graphicsLayer { this.alpha = a }) {
+    Box(modifier = modifier.graphicsLayer { this.alpha = alpha.value }) {
         content()
     }
 }
