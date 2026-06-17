@@ -98,6 +98,7 @@ fun TimerComponent(
     }
 
     val text = formatHms(state.elapsedSeconds)
+    val glowColor = if (mode == TimerMode.Pomodoro) AppColors.pomodoro else Color(0xFF9E9E9E)
     val baseStyle = TextStyle(
         fontFamily = handleeFont,
         brush = textBrush,
@@ -136,6 +137,32 @@ fun TimerComponent(
             },
         contentAlignment = Alignment.Center,
     ) {
+        // Layer 0: text edge glow (landscape ambient mode)
+        if (breathingAlpha != null) {
+            BasicText(
+                text = text,
+                style = TextStyle(
+                    fontFamily = handleeFont,
+                    color = glowColor,
+                    fontSize = 200.sp,
+                    fontWeight = FontWeight.Normal,
+                    shadow = Shadow(
+                        color = glowColor,
+                        offset = Offset.Zero,
+                        blurRadius = 24f,
+                    ),
+                ),
+                autoSize = autoSize,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        scaleX = pressScale
+                        scaleY = pressScale
+                        alpha = breathingAlpha.value * 0.6f
+                    },
+            )
+        }
+
         BreathingWrapper(enabled = true, alpha = breathingAlpha) {
             // Layer 1: white highlight shadow (Flutter `_shadows[1]`)
             BasicText(
