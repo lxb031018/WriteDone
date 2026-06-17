@@ -51,13 +51,9 @@ fun TimerInputCard(
         completedViewModel.draftRepo.save(inputText)
     }
 
-    // Save logic: only on Idle↔Running transition
-    LaunchedEffect(timerState.status) {
-        val prev = prevState
-        prevState = timerState
-
-        if (prev.status == TimerStatus.Running && timerState.status == TimerStatus.Idle) {
-            val elapsed = prev.elapsedSeconds
+    // Collect stop events from ViewModel to save note with correct elapsed time
+    LaunchedEffect(Unit) {
+        timerViewModel.stopEvents.collect { elapsed ->
             val content = inputText.trim()
             if (content.isNotEmpty()) {
                 completedViewModel.addNote(
@@ -67,6 +63,15 @@ fun TimerInputCard(
                 )
                 inputText = ""
             }
+        }
+    }
+
+    // Track createdAt on Idle↔Running transition
+    LaunchedEffect(timerState.status) {
+        val prev = prevState
+        prevState = timerState
+
+        if (prev.status == TimerStatus.Running && timerState.status == TimerStatus.Idle) {
             createdAt = null
         } else if (prev.status == TimerStatus.Idle && timerState.status == TimerStatus.Running) {
             createdAt = Date()

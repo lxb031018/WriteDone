@@ -10,8 +10,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -40,6 +43,9 @@ class TimerViewModel @JvmOverloads constructor(
 
     private val _state = MutableStateFlow(TimerUiState())
     val state: StateFlow<TimerUiState> = _state.asStateFlow()
+
+    private val _stopEvents = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val stopEvents: SharedFlow<Int> = _stopEvents.asSharedFlow()
 
     companion object {
         const val WORK_SECONDS = 1500 // 25 minutes
@@ -93,6 +99,7 @@ class TimerViewModel @JvmOverloads constructor(
 
     fun stop() {
         val current = _state.value
+        _stopEvents.tryEmit(current.elapsedSeconds)
         timerJob?.cancel()
         timerJob = null
         cancelBreakAlarm()
