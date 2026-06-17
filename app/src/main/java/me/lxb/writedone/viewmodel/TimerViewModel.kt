@@ -181,6 +181,11 @@ class TimerViewModel @JvmOverloads constructor(
                         breakButtonVisible = showBreak,
                     )
                 }
+                if (alarmCancelled) {
+                    NotificationHelper.createChannel(getApplication())
+                    NotificationHelper.showBreakReminder(getApplication())
+                    timerStateRepo.saveBreakReminderSent(true)
+                }
             }
         }
     }
