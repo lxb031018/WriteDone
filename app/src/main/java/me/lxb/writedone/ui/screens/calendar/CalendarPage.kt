@@ -120,9 +120,9 @@ fun CalendarPage(
                         .clickable(enabled = selectedDates.isNotEmpty()) {
                             scope.launch {
                                 copySelectedDatesAsJson(context, noteRepo, selectedDates)
+                                reviewMode = false
+                                selectedDates = emptySet()
                             }
-                            reviewMode = false
-                            selectedDates = emptySet()
                         }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
