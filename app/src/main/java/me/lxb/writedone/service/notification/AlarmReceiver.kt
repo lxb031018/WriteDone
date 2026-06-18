@@ -18,10 +18,13 @@ class AlarmReceiver : BroadcastReceiver() {
                 val keyguard = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
                 if (keyguard.isDeviceLocked) {
                     repo.saveBreakReminderPendingRepeat(true)
+                    NotificationHelper.showBreakReminder(context)
                 } else {
-                    repo.saveBreakReminderSent(true)
+                    if (!repo.loadBreakReminderSent()) {
+                        repo.saveBreakReminderSent(true)
+                        NotificationHelper.showBreakReminder(context)
+                    }
                 }
-                NotificationHelper.showBreakReminder(context)
             } finally {
                 pendingResult.finish()
             }

@@ -153,6 +153,14 @@ class TimerViewModel @Inject constructor(
         val startTime = _state.value.startTimeMillis ?: return
         if (_state.value.status != TimerStatus.Running) return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
+        if (_state.value.mode == TimerMode.Pomodoro && elapsed >= WORK_SECONDS) {
+            viewModelScope.launch {
+                if (!timerUseCase.getBreakReminderSent()) {
+                    NotificationHelper.showBreakReminder(getApplication())
+                    timerUseCase.setBreakReminderSent(true)
+                }
+            }
+        }
         startTimer(startTime, elapsed)
     }
 
@@ -173,24 +181,20 @@ class TimerViewModel @Inject constructor(
             )
         }
         timerJob = viewModelScope.launch {
-            var alarmCancelled = false
+            var breakNotified = false
             while (true) {
                 delay(1000L)
                 _state.update { current ->
                     val startMs = current.startTimeMillis ?: System.currentTimeMillis()
                     val newElapsed = ((System.currentTimeMillis() - startMs) / 1000).toInt()
                     val total = current.pomodoroCumulativeSeconds + newElapsed
-                    val showBreak = current.mode == TimerMode.Pomodoro && total >= WORK_SECONDS
-                    if (showBreak && !alarmCancelled) {
-                        cancelBreakAlarm()
-                        alarmCancelled = true
-                    }
                     current.copy(
                         elapsedSeconds = newElapsed,
-                        breakButtonVisible = showBreak,
+                        breakButtonVisible = current.mode == TimerMode.Pomodoro && total >= WORK_SECONDS,
                     )
                 }
-                if (alarmCancelled) {
+                if (_state.value.breakButtonVisible && !breakNotified) {
+                    breakNotified = true
                     NotificationHelper.showBreakReminder(getApplication())
                     timerUseCase.setBreakReminderSent(true)
                 }
