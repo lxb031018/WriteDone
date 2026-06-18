@@ -197,7 +197,11 @@ fun CalendarGrid(
                                     .then(
                                         if (reviewMode) {
                                             Modifier.combinedClickable(
-                                                onClick = { onToggleDate?.invoke(cellDate) }
+                                                onClick = {
+                                                    if (cellMs in noteDays) {
+                                                        onToggleDate?.invoke(cellDate)
+                                                    }
+                                                }
                                             )
                                         } else {
                                             Modifier.combinedClickable(
