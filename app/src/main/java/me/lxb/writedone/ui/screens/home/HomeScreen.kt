@@ -54,7 +54,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.BackHandler
+import me.lxb.writedone.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -64,6 +66,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import me.lxb.writedone.ambient.AmbientController
 import me.lxb.writedone.ambient.AmbientStatus
+import me.lxb.writedone.data.repository.NoteRepository
 import me.lxb.writedone.viewmodel.TimerStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.ui.components.TimerInputCard
@@ -101,6 +104,7 @@ fun HomeScreen(
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
     ambientController: AmbientController,
+    noteRepo: NoteRepository? = null,
     modifier: Modifier = Modifier,
 ) {
     val completedState by completedViewModel.state.collectAsState()
@@ -369,7 +373,7 @@ fun HomeScreen(
                             ) {
                                 CompletedSection(
                                     notes = completedState.notes,
-                                    headerText = "已完成 — ${completedState.notes.size}",
+                                    headerText = stringResource(R.string.completed_header, completedState.notes.size),
                                     showHeader = true,
                                     breathingEnabled = breathingEnabled,
                                     onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
@@ -426,7 +430,7 @@ fun HomeScreen(
 
                         CompletedSection(
                             notes = completedState.notes,
-                            headerText = "已完成 — ${completedState.notes.size}",
+                            headerText = stringResource(R.string.completed_header, completedState.notes.size),
                             showHeader = true,
                             breathingEnabled = breathingEnabled,
                             onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
@@ -515,6 +519,7 @@ fun HomeScreen(
                     bgColor = bgColor,
                     selectedDate = completedState.selectedDate,
                     notes = completedState.notes,
+                    noteRepo = noteRepo ?: error("noteRepo must be provided"),
                     onDateSelected = { completedViewModel.selectDate(it) },
                 )
             }

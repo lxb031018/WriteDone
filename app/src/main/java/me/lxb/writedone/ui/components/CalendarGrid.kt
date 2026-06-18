@@ -33,8 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.lxb.writedone.R
 import me.lxb.writedone.data.repository.NoteRepository
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
@@ -46,13 +48,13 @@ import java.util.Date
 fun CalendarGrid(
     selectedDate: Date,
     onDateSelected: (Date) -> Unit,
+    noteRepo: NoteRepository,
     reviewMode: Boolean = false,
     selectedDates: Set<Long> = emptySet(),
     onToggleDate: ((Date) -> Unit)? = null,
     onRangeSelected: ((Date, Date) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     var displayMonth by remember { mutableStateOf(Calendar.getInstance().apply { time = selectedDate }) }
     var noteDays by remember { mutableStateOf(setOf<Long>()) }
 
@@ -67,7 +69,7 @@ fun CalendarGrid(
         val endMs = cal.timeInMillis
 
         val notes = withContext(Dispatchers.IO) {
-            NoteRepository(context).getByDateRange(startMs, endMs)
+            noteRepo.getByDateRange(startMs, endMs)
         }
         val cal2 = Calendar.getInstance()
         noteDays = notes.mapTo(mutableSetOf()) {
@@ -88,7 +90,6 @@ fun CalendarGrid(
     val firstDayOffset = (displayMonth.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY + 7) % 7
     val rows = (totalDays + firstDayOffset + 6) / 7
 
-    // Drag preview state
     var dragAnchorMs by remember { mutableStateOf<Long?>(null) }
     var dragCurrentMs by remember { mutableStateOf<Long?>(null) }
     var gridWidth by remember { mutableStateOf(0) }
@@ -123,10 +124,10 @@ fun CalendarGrid(
                     add(Calendar.MONTH, -1)
                 }
             }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "上月")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.calendar_prev_month))
             }
             Text(
-                text = "${displayMonth.get(Calendar.YEAR)}年${displayMonth.get(Calendar.MONTH) + 1}月",
+                text = stringResource(R.string.calendar_month_header, displayMonth.get(Calendar.YEAR), displayMonth.get(Calendar.MONTH) + 1),
                 modifier = Modifier.weight(1f),
                 fontFamily = handwritingFont,
                 fontSize = 18.sp,
@@ -139,12 +140,20 @@ fun CalendarGrid(
                     add(Calendar.MONTH, 1)
                 }
             }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "下月")
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = stringResource(R.string.calendar_next_month))
             }
         }
 
         Row(modifier = Modifier.fillMaxWidth()) {
-            listOf("日", "一", "二", "三", "四", "五", "六").forEach { day ->
+            listOf(
+                stringResource(R.string.calendar_day_sun),
+                stringResource(R.string.calendar_day_mon),
+                stringResource(R.string.calendar_day_tue),
+                stringResource(R.string.calendar_day_wed),
+                stringResource(R.string.calendar_day_thu),
+                stringResource(R.string.calendar_day_fri),
+                stringResource(R.string.calendar_day_sat),
+            ).forEach { day ->
                 Text(
                     text = day,
                     modifier = Modifier.weight(1f),

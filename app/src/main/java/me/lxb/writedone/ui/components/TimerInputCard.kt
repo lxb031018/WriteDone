@@ -34,8 +34,6 @@ fun TimerInputCard(
     val timerState by timerViewModel.state.collectAsState()
 
     var inputText by remember { mutableStateOf("") }
-    var createdAt by remember { mutableStateOf<Date?>(null) }
-    var prevState by remember { mutableStateOf(timerState) }
 
     val pagerState = rememberPagerState(
         initialPage = 10000 + if (timerViewModel.state.value.mode == TimerMode.Pomodoro) 1 else 0,
@@ -53,28 +51,16 @@ fun TimerInputCard(
 
     // Collect stop events from ViewModel to save note with correct elapsed time
     LaunchedEffect(Unit) {
-        timerViewModel.stopEvents.collect { elapsed ->
+        timerViewModel.stopEvents.collect { (elapsed, startTimeMillis) ->
             val content = inputText.trim()
             if (content.isNotEmpty()) {
                 completedViewModel.addNote(
                     content = content,
-                    createdAt = createdAt ?: Date(),
+                    createdAt = Date(startTimeMillis),
                     durationSeconds = elapsed,
                 )
                 inputText = ""
             }
-        }
-    }
-
-    // Track createdAt on Idle↔Running transition
-    LaunchedEffect(timerState.status) {
-        val prev = prevState
-        prevState = timerState
-
-        if (prev.status == TimerStatus.Running && timerState.status == TimerStatus.Idle) {
-            createdAt = null
-        } else if (prev.status == TimerStatus.Idle && timerState.status == TimerStatus.Running) {
-            createdAt = Date()
         }
     }
 
@@ -124,7 +110,7 @@ fun TimerInputCard(
         StickyNoteInput(
             value = inputText,
             onValueChange = { if (!isLandscape) inputText = it },
-            createdAt = createdAt,
+            createdAt = timerState.startTimeMillis?.let { Date(it) },
             durationSeconds = null,
             breathingEnabled = breathingEnabled,
             enabled = !isLandscape,

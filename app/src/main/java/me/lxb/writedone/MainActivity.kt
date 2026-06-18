@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -19,10 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import me.lxb.writedone.ambient.AmbientController
+import me.lxb.writedone.data.repository.NoteRepository
 import me.lxb.writedone.data.repository.SettingsRepository
 import me.lxb.writedone.ui.screens.calendar.CalendarPage
 import me.lxb.writedone.ui.screens.legal.AgreementDialog
@@ -37,23 +39,22 @@ import me.lxb.writedone.viewmodel.CompletedViewModel
 import me.lxb.writedone.viewmodel.SettingsViewModel
 import me.lxb.writedone.viewmodel.TimerViewModel
 import java.util.Date
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var timerViewModel: TimerViewModel
-    private lateinit var completedViewModel: CompletedViewModel
-    private lateinit var settingsViewModel: SettingsViewModel
-    private lateinit var settingsRepo: SettingsRepository
-    private lateinit var ambientController: AmbientController
+    private val timerViewModel: TimerViewModel by viewModels()
+    private val completedViewModel: CompletedViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
+
+    @Inject lateinit var settingsRepo: SettingsRepository
+    @Inject lateinit var noteRepo: NoteRepository
+
+    private val ambientController = AmbientController()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        timerViewModel = ViewModelProvider(this)[TimerViewModel::class.java]
-        completedViewModel = ViewModelProvider(this)[CompletedViewModel::class.java]
-        settingsViewModel = ViewModelProvider(this)[SettingsViewModel::class.java]
-        settingsRepo = SettingsRepository(applicationContext)
-        ambientController = AmbientController()
 
         lifecycle.addObserver(LifecycleEventObserver { _, event ->
             when (event) {
@@ -67,14 +68,6 @@ class MainActivity : ComponentActivity() {
             val ambientProgress = androidx.compose.runtime.remember {
                 mutableFloatStateOf(0f)
             }.floatValue
-            // We can't read LocalAmbientProgress inside WriteDoneTheme (it provides it),
-            // so we read from a side-state holder. Keep ambientController as the
-            // single source of truth — HomeScreen drives the actual animation
-            // and sets LocalAmbientProgress for children.
-            androidx.compose.runtime.SideEffect {
-                // Placeholder for future: could read ambientController.state.value
-                // directly if we need theme crossfade outside HomeScreen.
-            }
             WriteDoneTheme(ambientProgress = ambientProgress) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -85,6 +78,7 @@ class MainActivity : ComponentActivity() {
                         completedViewModel = completedViewModel,
                         settingsViewModel = settingsViewModel,
                         settingsRepo = settingsRepo,
+                        noteRepo = noteRepo,
                         ambientController = ambientController,
                     )
                 }
@@ -106,6 +100,7 @@ private fun WriteDoneApp(
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
     settingsRepo: SettingsRepository,
+    noteRepo: NoteRepository,
     ambientController: AmbientController,
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Home) }
@@ -161,12 +156,14 @@ private fun WriteDoneApp(
                 completedViewModel = completedViewModel,
                 settingsViewModel = settingsViewModel,
                 ambientController = ambientController,
+                noteRepo = noteRepo,
             )
         }
         Screen.Calendar -> {
             CalendarPage(
                 selectedDate = calendarDate,
                 notes = completedState.notes,
+                noteRepo = noteRepo,
                 onDateSelected = { date ->
                     calendarDate = date
                     completedViewModel.selectDate(date)

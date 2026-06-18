@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import io.mockk.Runs
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -61,7 +62,7 @@ class TimerViewModelTest {
         every { PendingIntent.getBroadcast(any(), any(), any(), any()) } returns mockk(relaxed = true)
 
         timerStateRepo = mockk(relaxed = true)
-        every { timerStateRepo.loadStartTime() } returns null
+        coEvery { timerStateRepo.loadStartTime() } returns null
 
         settingsFlow = MutableStateFlow(false)
         settingsRepo = mockk(relaxed = true)

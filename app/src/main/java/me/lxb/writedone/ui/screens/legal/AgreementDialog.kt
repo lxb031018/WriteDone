@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.res.stringResource
+import me.lxb.writedone.R
 
 @Composable
 fun AgreementDialog(
@@ -62,33 +64,33 @@ fun AgreementDialog(
                     .padding(24.dp),
             ) {
                 Text(
-                    text = "欢迎使用 WriteDone",
+                    text = stringResource(R.string.agreement_welcome),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "WriteDone 是一款纯本地的离线时间管理工具，不联网、不收集任何个人信息，未集成任何第三方 SDK。",
+                    text = stringResource(R.string.agreement_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = "开始前，请阅读并同意以下文件：",
+                    text = stringResource(R.string.agreement_instruction),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.height(12.dp))
 
                 DocCard(
-                    title = "《用户协议》",
-                    summary = "约定您与开发者之间就使用本应用的权利和义务。",
+                    title = stringResource(R.string.agreement_user_agreement_title),
+                    summary = stringResource(R.string.agreement_user_agreement_summary),
                     onClick = onShowUserAgreement,
                 )
                 Spacer(Modifier.height(8.dp))
 
                 DocCard(
-                    title = "《隐私政策》",
-                    summary = "说明本应用如何处理您的信息。本应用不收集任何信息。",
+                    title = stringResource(R.string.agreement_privacy_policy_title),
+                    summary = stringResource(R.string.agreement_privacy_policy_summary),
                     onClick = onShowPrivacyPolicy,
                 )
                 Spacer(Modifier.height(20.dp))
@@ -102,7 +104,7 @@ fun AgreementDialog(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "我已阅读并同意上述协议",
+                        text = stringResource(R.string.agreement_confirm_text),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -113,14 +115,14 @@ fun AgreementDialog(
                     horizontalArrangement = Arrangement.End,
                 ) {
                     TextButton(onClick = onDisagree) {
-                        Text("不同意并退出")
+                        Text(stringResource(R.string.agreement_disagree))
                     }
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = onAgree,
                         enabled = agreed,
                     ) {
-                        Text("同意并继续")
+                        Text(stringResource(R.string.agreement_agree))
                     }
                 }
             }

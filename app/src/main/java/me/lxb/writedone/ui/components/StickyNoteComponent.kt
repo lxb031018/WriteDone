@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.Dimens
@@ -49,6 +51,12 @@ fun StickyNoteInput(
     val t = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
 
+    val dateFormatStr = stringResource(R.string.sticky_header_date)
+    val headerStart = stringResource(R.string.sticky_header_start)
+    val emptyDateStr = stringResource(R.string.sticky_header_empty_date)
+    val headerDuration = stringResource(R.string.sticky_header_duration)
+    val durationEmptyStr = stringResource(R.string.sticky_duration_empty)
+
     val bgColor = lerp(
         AppColors.macaronPalette[colorIndex],
         AppColors.darkMacaronPalette[colorIndex],
@@ -60,21 +68,21 @@ fun StickyNoteInput(
     val hintColor = lerp(AppColors.textMuted.copy(alpha = 0.4f), AppColors.darkTextMuted, t)
     val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, t)
 
-    val headerText = remember(createdAt, durationSeconds) {
+    val headerText = remember(createdAt, durationSeconds, dateFormatStr, headerStart, emptyDateStr, headerDuration, durationEmptyStr) {
         buildString {
             if (createdAt != null) {
                 val cal = Calendar.getInstance().apply { time = createdAt }
-                append("${cal.get(Calendar.YEAR)}年${cal.get(Calendar.MONTH) + 1}月${cal.get(Calendar.DAY_OF_MONTH)}日    ")
-                append("开始:${FormatUtils.time(createdAt)}")
+                append(String.format(dateFormatStr, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)))
+                append("$headerStart${FormatUtils.time(createdAt)}")
             } else {
-                append("--年--月--日    开始:--:--")
+                append(emptyDateStr)
             }
             if (durationSeconds != null) {
                 append("    ")
-                append("用时:${FormatUtils.duration(durationSeconds)}")
+                append("$headerDuration${FormatUtils.duration(durationSeconds)}")
             } else {
                 append("    ")
-                append("用时:--")
+                append(durationEmptyStr)
             }
         }
     }
@@ -114,7 +122,7 @@ fun StickyNoteInput(
                         Box {
                             if (value.isEmpty() && !readOnly) {
                                 Text(
-                                    text = "准备好了嘛^_^",
+                                    text = stringResource(R.string.sticky_placeholder),
                                     fontFamily = handwritingFont,
                                     fontSize = 22.sp,
                                     color = hintColor,

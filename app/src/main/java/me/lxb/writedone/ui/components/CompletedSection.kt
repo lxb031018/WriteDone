@@ -30,6 +30,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import me.lxb.writedone.R
 import me.lxb.writedone.data.model.CompletedNote
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.AppColors
@@ -45,8 +47,8 @@ import kotlin.random.Random
 @Composable
 fun CompletedSection(
     notes: List<CompletedNote>,
-    emptyText: String = "轻触上方计时器，开始第一件事",
-    headerText: String = "已完成 — ${notes.size}",
+    emptyText: String = stringResource(R.string.completed_empty_text),
+    headerText: String = stringResource(R.string.completed_header, notes.size),
     showHeader: Boolean = true,
     breathingEnabled: Boolean = false,
     onNoteBodyChange: ((Long, String) -> Unit)? = null,
@@ -131,6 +133,10 @@ fun CompletedCard(
     breathingEnabled: Boolean,
     onBodyChange: ((Long, String) -> Unit)? = null,
 ) {
+    val dateFormatStr = stringResource(R.string.sticky_header_date)
+    val headerStart = stringResource(R.string.sticky_header_start)
+    val headerDuration = stringResource(R.string.sticky_header_duration)
+
     val seed = remember { abs(note.id.toInt()) + note.content.hashCode() }
     val rng = remember { Random(seed.toLong()) }
     val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
@@ -148,13 +154,13 @@ fun CompletedCard(
     val textColor = lerp(AppColors.text, AppColors.darkText, t)
     val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, t)
 
-    val headerText = remember(note) {
+    val headerText = remember(note, dateFormatStr, headerStart, headerDuration) {
         val cal = Calendar.getInstance().apply { time = Date(note.createdAt) }
         buildString {
-            append("${cal.get(Calendar.YEAR)}年${cal.get(Calendar.MONTH) + 1}月${cal.get(Calendar.DAY_OF_MONTH)}日    ")
-            append("开始:${FormatUtils.time(Date(note.createdAt))}")
+            append(String.format(dateFormatStr, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)))
+            append("$headerStart${FormatUtils.time(Date(note.createdAt))}")
             append("    ")
-            append("用时:${FormatUtils.duration(note.durationSeconds)}")
+            append("$headerDuration${FormatUtils.duration(note.durationSeconds)}")
         }
     }
 

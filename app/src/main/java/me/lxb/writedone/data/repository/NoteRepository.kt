@@ -1,23 +1,21 @@
 package me.lxb.writedone.data.repository
 
-import android.content.Context
-import me.lxb.writedone.data.local.AppDatabase
+import me.lxb.writedone.data.local.CompletedNoteDao
 import me.lxb.writedone.data.model.CompletedNote
 import java.util.Calendar
 import java.util.Date
 
-class NoteRepository(context: Context) {
-    private val db = AppDatabase(context)
+class NoteRepository(private val dao: CompletedNoteDao) {
 
-    fun updateBody(id: Long, body: String) {
-        db.updateNoteBody(id, body)
+    suspend fun updateBody(id: Long, body: String) {
+        dao.updateNoteBody(id, body)
     }
 
-    fun insert(note: CompletedNote): Long {
-        return db.insertNote(note)
+    suspend fun insert(note: CompletedNote): Long {
+        return dao.insert(note)
     }
 
-    fun getByDate(date: Date): List<CompletedNote> {
+    suspend fun getByDate(date: Date): List<CompletedNote> {
         val cal = Calendar.getInstance().apply { time = date }
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
@@ -26,10 +24,10 @@ class NoteRepository(context: Context) {
         val startMillis = cal.timeInMillis
         cal.add(Calendar.DAY_OF_MONTH, 1)
         val endMillis = cal.timeInMillis
-        return db.getNotesByDateRange(startMillis, endMillis)
+        return dao.getByDateRange(startMillis, endMillis)
     }
 
-    fun getByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote> {
-        return db.getNotesByDateRange(startMillis, endMillis)
+    suspend fun getByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote> {
+        return dao.getByDateRange(startMillis, endMillis)
     }
 }

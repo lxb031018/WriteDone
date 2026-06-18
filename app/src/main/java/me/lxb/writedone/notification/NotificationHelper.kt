@@ -8,16 +8,16 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import me.lxb.writedone.MainActivity
+import me.lxb.writedone.R
 
 object NotificationHelper {
     const val CHANNEL_ID = "write_done_pomodoro"
-    const val CHANNEL_NAME = "番茄钟提醒"
     const val NOTIFICATION_ID = 1001
 
     fun createChannel(context: Context) {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            context.getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -39,8 +39,8 @@ object NotificationHelper {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("休息一下吧")
-            .setContentText("已经计时25分钟啦，该休息一下啦！")
+            .setContentTitle(context.getString(R.string.notification_break_title))
+            .setContentText(context.getString(R.string.notification_break_text))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

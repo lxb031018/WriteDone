@@ -33,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import me.lxb.writedone.R
 import me.lxb.writedone.data.model.CompletedNote
 import me.lxb.writedone.data.repository.NoteRepository
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
@@ -45,11 +47,15 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun CalendarPage(
     selectedDate: Date,
     notes: List<CompletedNote>,
+    noteRepo: NoteRepository,
     onDateSelected: (Date) -> Unit,
 ) {
     val context = LocalContext.current
@@ -64,6 +70,7 @@ fun CalendarPage(
         CalendarGrid(
             selectedDate = selectedDate,
             onDateSelected = onDateSelected,
+            noteRepo = noteRepo,
             reviewMode = reviewMode,
             selectedDates = selectedDates,
             onToggleDate = { date ->
@@ -84,7 +91,6 @@ fun CalendarPage(
 
         Spacer(Modifier.height(Dimens.gapMd))
 
-        // ── Multi-select action area ──
         if (reviewMode) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -103,7 +109,7 @@ fun CalendarPage(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "取消",
+                        text = stringResource(R.string.calendar_cancel),
                         fontSize = 16.sp,
                         color = AppColors.text,
                         fontFamily = handwritingFont,
@@ -119,7 +125,9 @@ fun CalendarPage(
                             RoundedCornerShape(Dimens.gap),
                         )
                         .clickable(enabled = selectedDates.isNotEmpty()) {
-                            exportSelectedDates(context, selectedDates)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                exportSelectedDates(context, noteRepo, selectedDates)
+                            }
                             reviewMode = false
                             selectedDates = emptySet()
                         }
@@ -127,8 +135,8 @@ fun CalendarPage(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = if (selectedDates.isNotEmpty()) "复制选中（${selectedDates.size}天）"
-                        else "复制选中",
+                        text = if (selectedDates.isNotEmpty()) stringResource(R.string.calendar_copy_selected_count, selectedDates.size)
+                        else stringResource(R.string.calendar_copy_selected),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = if (selectedDates.isNotEmpty()) Color.White else AppColors.textMuted,
@@ -149,7 +157,7 @@ fun CalendarPage(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "复盘",
+                    text = stringResource(R.string.calendar_review),
                     fontSize = 16.sp,
                     color = AppColors.textSecondary,
                     fontFamily = handwritingFont,
@@ -161,7 +169,7 @@ fun CalendarPage(
 
         if (notes.isEmpty()) {
             Text(
-                text = "这天还没有记录",
+                text = stringResource(R.string.calendar_no_records),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(Dimens.gapLg),
@@ -179,9 +187,8 @@ fun CalendarPage(
     }
 }
 
-private fun exportSelectedDates(context: Context, selectedDates: Set<Long>) {
+private suspend fun exportSelectedDates(context: Context, repo: NoteRepository, selectedDates: Set<Long>) {
     if (selectedDates.isEmpty()) return
-    val repo = NoteRepository(context)
     val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.CHINESE)
     val notesByDate = mutableMapOf<String, List<CompletedNote>>()
 
@@ -196,7 +203,7 @@ private fun exportSelectedDates(context: Context, selectedDates: Set<Long>) {
 
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("Time Records", text))
-    Toast.makeText(context, "已复制到剪贴板", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, context.getString(R.string.calendar_copied_toast), Toast.LENGTH_SHORT).show()
 }
 
 private fun calForComparison(date: Date): Long {

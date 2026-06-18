@@ -7,7 +7,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings_prefs")
 
@@ -39,10 +38,8 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
-    fun isAgreementAccepted(): Boolean {
-        return runBlocking {
-            context.settingsDataStore.data.first()[AGREEMENT_ACCEPTED_KEY] ?: false
-        }
+    suspend fun isAgreementAccepted(): Boolean {
+        return context.settingsDataStore.data.first()[AGREEMENT_ACCEPTED_KEY] ?: false
     }
 
     suspend fun setAgreementAccepted(accepted: Boolean) {

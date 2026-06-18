@@ -13,6 +13,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
@@ -29,8 +31,9 @@ fun TimerCompleteActions(
         modifier = modifier.fillMaxSize().clickable(onClick = onBreak),
         contentAlignment = Alignment.Center,
     ) {
+        val breakText = stringResource(R.string.timer_complete_break)
         Text(
-            text = "不卷了，休息5分钟\n〜(￣▽￣〜)",
+            text = breakText,
             fontFamily = handwritingFont,
             fontSize = 28.sp,
             lineHeight = 36.sp,
@@ -40,7 +43,7 @@ fun TimerCompleteActions(
             modifier = Modifier.offset(x = 2.dp, y = 2.dp),
         )
         Text(
-            text = "不卷了，休息5分钟\n〜(￣▽￣〜)",
+            text = breakText,
             fontFamily = handwritingFont,
             fontSize = 28.sp,
             lineHeight = 36.sp,

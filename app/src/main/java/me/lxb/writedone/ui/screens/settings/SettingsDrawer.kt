@@ -19,9 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
@@ -47,41 +49,41 @@ fun SettingsDrawer(
             .verticalScroll(rememberScrollState()),
     ) {
         Spacer(Modifier.height(24.dp))
-        Header("设置")
+        Header(stringResource(R.string.settings_title))
         Spacer(Modifier.height(16.dp))
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = lerp(AppColors.border, AppColors.darkBorder, t),
         )
         Spacer(Modifier.height(12.dp))
-        SectionHeader("显示")
+        SectionHeader(stringResource(R.string.settings_display))
         DrawerToggle(
-            text = "横屏自动降低亮度",
+            text = stringResource(R.string.settings_auto_dim),
             checked = autoDimBrightness,
             onCheckedChange = onToggleAutoDim,
         )
         Spacer(Modifier.height(12.dp))
-        SectionHeader("通知")
+        SectionHeader(stringResource(R.string.settings_notifications))
         DrawerItem(
-            text = "通知权限",
+            text = stringResource(R.string.settings_notification_permission),
             onClick = onNotificationPermission,
         )
         DrawerItem(
-            text = "精确闹钟权限",
+            text = stringResource(R.string.settings_exact_alarm_permission),
             onClick = onExactAlarmPermission,
         )
         DrawerItem(
-            text = "自启动权限",
+            text = stringResource(R.string.settings_auto_start_permission),
             onClick = onAutoStartPermission,
         )
         Spacer(Modifier.height(12.dp))
-        SectionHeader("协议与政策")
+        SectionHeader(stringResource(R.string.settings_legal))
         DrawerItem(
-            text = "用户协议",
+            text = stringResource(R.string.settings_user_agreement),
             onClick = onUserAgreement,
         )
         DrawerItem(
-            text = "隐私政策",
+            text = stringResource(R.string.settings_privacy_policy),
             onClick = onPrivacyPolicy,
         )
     }

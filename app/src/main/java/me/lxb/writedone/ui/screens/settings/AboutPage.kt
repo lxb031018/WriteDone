@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.res.stringResource
+import me.lxb.writedone.R
 import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.screens.legal.UserAgreementPage
@@ -53,10 +55,10 @@ fun AboutPage(onBack: () -> Unit) {
         Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("关于") },
+                title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.nav_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -83,7 +85,7 @@ fun AboutPage(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "每做完一件具体的事情，就提交一下吧。",
+                text = stringResource(R.string.about_subtitle),
                 fontFamily = handwritingFont,
                 fontSize = 16.sp,
                 color = AppColors.textMuted,
@@ -101,33 +103,33 @@ fun AboutPage(onBack: () -> Unit) {
             HorizontalDivider(color = AppColors.border)
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "灵感来自 git —— 在完全由自己掌控的时间里，把每天主动做的、有意义的事，像 git commit 一样记录下来。",
+                text = stringResource(R.string.about_inspiration),
                 color = AppColors.textMuted,
             )
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "📜 协议与政策",
+                text = stringResource(R.string.about_legal_header),
                 color = AppColors.textMuted,
                 fontSize = 13.sp,
             )
             Spacer(Modifier.height(8.dp))
 
             DocLinkCard(
-                title = "《WriteDone用户协议》",
-                summary = "约定你与开发者之间就使用本应用的权利和义务。",
+                title = stringResource(R.string.about_user_agreement_title),
+                summary = stringResource(R.string.about_user_agreement_summary),
                 onClick = { showUserAgreement = true },
             )
             Spacer(Modifier.height(8.dp))
             DocLinkCard(
-                title = "《WriteDone隐私政策》",
-                summary = "说明本应用如何处理你的信息。本应用不收集任何信息。",
+                title = stringResource(R.string.about_privacy_policy_title),
+                summary = stringResource(R.string.about_privacy_policy_summary),
                 onClick = { showPrivacyPolicy = true },
             )
 
             Spacer(Modifier.height(24.dp))
             Text(
-                text = "🔒 数据说明",
+                text = stringResource(R.string.about_data_header),
                 color = AppColors.textMuted,
                 fontSize = 13.sp,
             )
@@ -202,16 +204,13 @@ private fun DataNoteCard() {
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "你的数据只属于你",
+                text = stringResource(R.string.about_data_only_you),
                 fontSize = 14.sp,
                 color = AppColors.text,
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "· 不联网 · 不收集任何个人信息\n" +
-                        "· 未集成任何第三方 SDK\n" +
-                        "· 所有提交记录只保存在本机\n" +
-                        "· 卸载 App 数据即丢失, 请自行备份",
+                text = stringResource(R.string.about_data_details),
                 fontSize = 12.sp,
                 color = AppColors.textMuted,
             )

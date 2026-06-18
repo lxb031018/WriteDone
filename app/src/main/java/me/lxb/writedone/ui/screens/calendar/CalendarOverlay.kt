@@ -43,7 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.Dispatchers
+import me.lxb.writedone.R
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.lxb.writedone.data.model.CompletedNote
 import me.lxb.writedone.data.repository.NoteRepository
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
@@ -65,6 +69,7 @@ fun CalendarOverlay(
     bgColor: Color,
     selectedDate: Date,
     notes: List<CompletedNote>,
+    noteRepo: NoteRepository,
     onDateSelected: (Date) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -120,6 +125,7 @@ fun CalendarOverlay(
                 CalendarGrid(
                     selectedDate = selectedDate,
                     onDateSelected = onDateSelected,
+                    noteRepo = noteRepo,
                     reviewMode = reviewMode,
                     selectedDates = selectedDates,
                     onToggleDate = { date ->
@@ -140,7 +146,6 @@ fun CalendarOverlay(
 
                 Spacer(Modifier.height(Dimens.gapMd))
 
-                // ── Multi-select action area ──
                 if (reviewMode) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -159,7 +164,7 @@ fun CalendarOverlay(
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                text = "取消",
+                                text = stringResource(R.string.calendar_cancel),
                                 fontSize = 16.sp,
                                 color = lerp(AppColors.text, AppColors.darkText, t),
                                 fontFamily = handwritingFont,
@@ -175,7 +180,9 @@ fun CalendarOverlay(
                                     RoundedCornerShape(Dimens.gap),
                                 )
                                 .clickable(enabled = selectedDates.isNotEmpty()) {
-                                    exportSelectedDates(context, selectedDates)
+                                    scope.launch {
+                                        exportSelectedDates(context, noteRepo, selectedDates)
+                                    }
                                     reviewMode = false
                                     selectedDates = emptySet()
                                 }
@@ -183,8 +190,8 @@ fun CalendarOverlay(
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                text = if (selectedDates.isNotEmpty()) "复制选中（${selectedDates.size}天）"
-                                else "复制选中",
+                                text = if (selectedDates.isNotEmpty()) stringResource(R.string.calendar_copy_selected_count, selectedDates.size)
+                                else stringResource(R.string.calendar_copy_selected),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (selectedDates.isNotEmpty()) Color.White else disableText,
@@ -205,7 +212,7 @@ fun CalendarOverlay(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "复盘",
+                            text = stringResource(R.string.calendar_review),
                             fontSize = 16.sp,
                             color = reviewTextColor,
                             fontFamily = handwritingFont,
@@ -217,7 +224,7 @@ fun CalendarOverlay(
 
                 if (notes.isEmpty()) {
                     Text(
-                        text = "这天还没有记录",
+                        text = stringResource(R.string.calendar_no_records),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(Dimens.gapLg),
@@ -237,9 +244,8 @@ fun CalendarOverlay(
     }
 }
 
-private fun exportSelectedDates(context: Context, selectedDates: Set<Long>) {
+private suspend fun exportSelectedDates(context: Context, repo: NoteRepository, selectedDates: Set<Long>) {
     if (selectedDates.isEmpty()) return
-    val repo = NoteRepository(context)
     val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.CHINESE)
     val notesByDate = mutableMapOf<String, List<CompletedNote>>()
 
@@ -252,9 +258,11 @@ private fun exportSelectedDates(context: Context, selectedDates: Set<Long>) {
 
     val text = ExportFormatter.formatMultipleDates(notesByDate)
 
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboard.setPrimaryClip(ClipData.newPlainText("Time Records", text))
-    Toast.makeText(context, "已复制到剪贴板", Toast.LENGTH_SHORT).show()
+    withContext(Dispatchers.Main) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("Time Records", text))
+        Toast.makeText(context, context.getString(R.string.calendar_copied_toast), Toast.LENGTH_SHORT).show()
+    }
 }
 
 private fun calForComparison(date: Date): Long {

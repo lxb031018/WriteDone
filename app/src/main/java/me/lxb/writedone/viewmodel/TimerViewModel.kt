@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,9 +23,15 @@ import me.lxb.writedone.data.repository.SettingsRepository
 import me.lxb.writedone.data.repository.TimerStateRepository
 import me.lxb.writedone.notification.AlarmReceiver
 import me.lxb.writedone.notification.NotificationHelper
+import javax.inject.Inject
 
 enum class TimerStatus { Idle, Running }
 enum class TimerMode { Normal, Pomodoro }
+
+data class StopEvent(
+    val elapsedSeconds: Int,
+    val startTimeMillis: Long,
+)
 
 data class TimerUiState(
     val status: TimerStatus = TimerStatus.Idle,
@@ -35,20 +42,21 @@ data class TimerUiState(
     val breakButtonVisible: Boolean = false,
 )
 
-class TimerViewModel @JvmOverloads constructor(
+@HiltViewModel
+class TimerViewModel @Inject constructor(
     application: Application,
-    private val timerStateRepo: TimerStateRepository = TimerStateRepository(application),
-    private val settingsRepo: SettingsRepository = SettingsRepository(application),
+    private val timerStateRepo: TimerStateRepository,
+    private val settingsRepo: SettingsRepository,
 ) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(TimerUiState())
     val state: StateFlow<TimerUiState> = _state.asStateFlow()
 
-    private val _stopEvents = MutableSharedFlow<Int>(extraBufferCapacity = 1)
-    val stopEvents: SharedFlow<Int> = _stopEvents.asSharedFlow()
+    private val _stopEvents = MutableSharedFlow<StopEvent>(extraBufferCapacity = 1)
+    val stopEvents: SharedFlow<StopEvent> = _stopEvents.asSharedFlow()
 
     companion object {
-        const val WORK_SECONDS = 1500 // 25 minutes
+        const val WORK_SECONDS = 1500
     }
 
     private var timerJob: Job? = null
@@ -59,11 +67,13 @@ class TimerViewModel @JvmOverloads constructor(
                 _state.update { it.copy(mode = if (pomodoro) TimerMode.Pomodoro else TimerMode.Normal) }
             }
         }
-        restoreTimer()
+        viewModelScope.launch {
+            restoreTimer()
+        }
         NotificationHelper.createChannel(getApplication())
     }
 
-    private fun restoreTimer() {
+    private suspend fun restoreTimer() {
         val startTime = timerStateRepo.loadStartTime() ?: return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
         val mode = _state.value.mode
@@ -74,9 +84,7 @@ class TimerViewModel @JvmOverloads constructor(
                 if (!timerStateRepo.loadBreakReminderSent()) {
                     NotificationHelper.createChannel(getApplication())
                     NotificationHelper.showBreakReminder(getApplication())
-                    viewModelScope.launch {
-                        timerStateRepo.saveBreakReminderSent(true)
-                    }
+                    timerStateRepo.saveBreakReminderSent(true)
                 }
             }
         }
@@ -99,7 +107,10 @@ class TimerViewModel @JvmOverloads constructor(
 
     fun stop() {
         val current = _state.value
-        _stopEvents.tryEmit(current.elapsedSeconds)
+        _stopEvents.tryEmit(StopEvent(
+            elapsedSeconds = current.elapsedSeconds,
+            startTimeMillis = current.startTimeMillis ?: System.currentTimeMillis(),
+        ))
         timerJob?.cancel()
         timerJob = null
         cancelBreakAlarm()
