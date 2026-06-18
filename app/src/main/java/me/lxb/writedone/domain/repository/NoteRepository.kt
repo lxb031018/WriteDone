@@ -8,4 +8,5 @@ interface NoteRepository {
     suspend fun insert(note: CompletedNote): Long
     suspend fun getByDate(date: Date): List<CompletedNote>
     suspend fun getByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote>
+    suspend fun getAll(): List<CompletedNote>
 }

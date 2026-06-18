@@ -24,4 +24,6 @@ class NoteUseCase @Inject constructor(
 
     suspend fun getNotesByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote> =
         noteRepo.getByDateRange(startMillis, endMillis)
+
+    suspend fun getAllNotes(): List<CompletedNote> = noteRepo.getAll()
 }

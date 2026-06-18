@@ -16,4 +16,7 @@ interface CompletedNoteDao {
 
     @Query("UPDATE completed_notes SET body = :body WHERE id = :id")
     suspend fun updateNoteBody(id: Long, body: String)
+
+    @Query("SELECT * FROM completed_notes ORDER BY created_at DESC")
+    suspend fun getAll(): List<CompletedNote>
 }

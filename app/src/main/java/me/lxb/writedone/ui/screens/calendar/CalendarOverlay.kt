@@ -50,13 +50,9 @@ import me.lxb.writedone.ui.components.CompletedCard
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import me.lxb.writedone.util.calForComparison
-import me.lxb.writedone.util.exportSelectedDatesToJsonFile
-import java.text.SimpleDateFormat
+import me.lxb.writedone.util.copySelectedDatesAsJson
 import java.util.Date
-import java.util.Locale
 
 @Composable
 fun CalendarOverlay(
@@ -82,18 +78,6 @@ fun CalendarOverlay(
 
     var reviewMode by remember { mutableStateOf(false) }
     var selectedDates by remember { mutableStateOf(setOf<Long>()) }
-    val dateFmt = remember { SimpleDateFormat("yyyyMMdd_HHmmss", Locale.CHINESE) }
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json")
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                exportSelectedDatesToJsonFile(context, uri, noteRepo, selectedDates)
-            }
-            reviewMode = false
-            selectedDates = emptySet()
-        }
-    }
 
     Box(
         modifier = modifier
@@ -183,7 +167,11 @@ fun CalendarOverlay(
                                     RoundedCornerShape(Dimens.gap),
                                 )
                                 .clickable(enabled = selectedDates.isNotEmpty()) {
-                                    exportLauncher.launch("WriteDone_${dateFmt.format(Date())}.json")
+                                    scope.launch {
+                                        copySelectedDatesAsJson(context, noteRepo, selectedDates)
+                                    }
+                                    reviewMode = false
+                                    selectedDates = emptySet()
                                 }
                                 .padding(vertical = 12.dp),
                             contentAlignment = Alignment.Center,

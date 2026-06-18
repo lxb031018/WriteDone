@@ -59,6 +59,30 @@ object ExportFormatter {
         return total
     }
 
+    fun toJsonForAI(notesByDate: Map<String, List<CompletedNote>>): String {
+        val timeFmt = SimpleDateFormat("HH:mm", Locale.CHINESE)
+        val arr = JSONArray()
+        for ((dateStr, dayNotes) in notesByDate.toSortedMap()) {
+            val dayObj = JSONObject().apply {
+                put("date", dateStr)
+                val records = JSONArray()
+                for (note in dayNotes.sortedBy { it.createdAt }) {
+                    records.put(JSONObject().apply {
+                        put("start", timeFmt.format(Date(note.createdAt)))
+                        put("end", timeFmt.format(Date(note.createdAt + note.durationSeconds * 1000L)))
+                        put("content", note.content)
+                        if (note.body.isNotBlank()) {
+                            put("body", note.body)
+                        }
+                    })
+                }
+                put("records", records)
+            }
+            arr.put(dayObj)
+        }
+        return arr.toString(2)
+    }
+
     fun toJson(notes: List<CompletedNote>): String {
         val arr = JSONArray()
         for (note in notes) {

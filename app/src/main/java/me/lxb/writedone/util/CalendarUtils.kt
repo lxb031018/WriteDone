@@ -71,3 +71,39 @@ suspend fun exportSelectedDatesToJsonFile(
         Toast.makeText(context, context.getString(R.string.calendar_export_success), Toast.LENGTH_SHORT).show()
     }
 }
+
+suspend fun copySelectedDatesAsJson(context: Context, repo: NoteRepository, selectedDates: Set<Long>) {
+    if (selectedDates.isEmpty()) return
+    val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.CHINESE)
+    val notesByDate = mutableMapOf<String, List<CompletedNote>>()
+
+    for (dateMs in selectedDates.sorted()) {
+        val endMs = dateMs + 86400000L
+        val dayNotes = repo.getByDateRange(dateMs, endMs)
+        val dateStr = dateFmt.format(Date(dateMs))
+        notesByDate[dateStr] = dayNotes
+    }
+
+    val json = ExportFormatter.toJsonForAI(notesByDate)
+
+    withContext(Dispatchers.Main) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("WriteDone JSON", json))
+        Toast.makeText(context, context.getString(R.string.calendar_export_success), Toast.LENGTH_SHORT).show()
+    }
+}
+
+suspend fun exportAllToJsonFile(context: Context, uri: Uri, repo: NoteRepository) {
+    val allNotes = repo.getAll()
+    val json = ExportFormatter.toJson(allNotes)
+
+    withContext(Dispatchers.IO) {
+        context.contentResolver.openOutputStream(uri)?.use { out ->
+            out.write(json.toByteArray(Charsets.UTF_8))
+        }
+    }
+
+    withContext(Dispatchers.Main) {
+        Toast.makeText(context, context.getString(R.string.settings_export_success), Toast.LENGTH_SHORT).show()
+    }
+}

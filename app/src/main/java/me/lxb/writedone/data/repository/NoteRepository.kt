@@ -31,4 +31,6 @@ class NoteRepositoryImpl(private val dao: CompletedNoteDao) : NoteRepository {
     override suspend fun getByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote> {
         return dao.getByDateRange(startMillis, endMillis)
     }
+
+    override suspend fun getAll(): List<CompletedNote> = dao.getAll()
 }
