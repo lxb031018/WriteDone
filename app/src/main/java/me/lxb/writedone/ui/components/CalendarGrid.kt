@@ -206,7 +206,11 @@ fun CalendarGrid(
                                         } else {
                                             Modifier.combinedClickable(
                                                 onClick = { onDateSelected(cellDate) },
-                                                onLongClick = { onLongPress?.invoke(cellDate) }
+                                                onLongClick = {
+                                                    if (cellMs in noteDays) {
+                                                        onLongPress?.invoke(cellDate)
+                                                    }
+                                                }
                                             )
                                         }
                                     ),
