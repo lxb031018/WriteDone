@@ -130,13 +130,15 @@ fun CalendarGrid(
             }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.calendar_prev_month))
             }
+            val isCurrentMonth = displayMonth.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR) &&
+                displayMonth.get(Calendar.MONTH) == Calendar.getInstance().get(Calendar.MONTH)
             Text(
                 text = stringResource(R.string.calendar_month_header, displayMonth.get(Calendar.YEAR), displayMonth.get(Calendar.MONTH) + 1),
                 modifier = Modifier.weight(1f),
                 fontFamily = handwritingFont,
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center,
-                color = colorScheme.onSurface,
+                color = if (isCurrentMonth) colorScheme.onSurface else colorScheme.onSurfaceVariant,
             )
             IconButton(onClick = {
                 displayMonth = Calendar.getInstance().apply {
