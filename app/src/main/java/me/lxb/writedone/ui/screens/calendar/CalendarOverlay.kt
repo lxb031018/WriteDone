@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -69,7 +68,6 @@ fun CalendarOverlay(
     val scope = rememberCoroutineScope()
     val ambientProgress = LocalAmbientProgress.current
     val emptyColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)
-    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
     val reviewTextColor = lerp(AppColors.textSecondary, AppColors.darkTextSecondary, ambientProgress)
     val cancelBg = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
     val confirmBg = lerp(AppColors.accent, AppColors.darkAccent, ambientProgress)
@@ -107,8 +105,6 @@ fun CalendarOverlay(
                 .fillMaxSize()
                 .statusBarsPadding(),
         ) {
-            HorizontalDivider(color = dividerColor)
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()

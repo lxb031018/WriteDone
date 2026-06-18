@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -46,23 +46,9 @@ fun SettingsDrawer(
             .fillMaxWidth()
             .fillMaxHeight()
             .background(lerp(AppColors.bg, AppColors.darkBg, ambientProgress))
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState()),
     ) {
-        Spacer(Modifier.height(24.dp))
-        Header(stringResource(R.string.settings_title))
-        Spacer(Modifier.height(16.dp))
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = lerp(AppColors.border, AppColors.darkBorder, ambientProgress),
-        )
-        Spacer(Modifier.height(12.dp))
-        SectionHeader(stringResource(R.string.settings_display))
-        DrawerToggle(
-            text = stringResource(R.string.settings_auto_dim),
-            checked = autoDimBrightness,
-            onCheckedChange = onToggleAutoDim,
-        )
-        Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_notifications))
         DrawerItem(
             text = stringResource(R.string.settings_notification_permission),
@@ -77,6 +63,13 @@ fun SettingsDrawer(
             onClick = onAutoStartPermission,
         )
         Spacer(Modifier.height(12.dp))
+        SectionHeader(stringResource(R.string.settings_battery_saver))
+        DrawerToggle(
+            text = stringResource(R.string.settings_auto_dim),
+            checked = autoDimBrightness,
+            onCheckedChange = onToggleAutoDim,
+        )
+        Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_legal))
         DrawerItem(
             text = stringResource(R.string.settings_user_agreement),
@@ -87,20 +80,6 @@ fun SettingsDrawer(
             onClick = onPrivacyPolicy,
         )
     }
-}
-
-@Composable
-private fun Header(text: String) {
-    val ambientProgress = LocalAmbientProgress.current
-    Text(
-        text = text,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
-    )
 }
 
 @Composable
