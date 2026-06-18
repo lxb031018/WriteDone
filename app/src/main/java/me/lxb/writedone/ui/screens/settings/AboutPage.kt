@@ -43,7 +43,6 @@ import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.theme.AppColors
-import me.lxb.writedone.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -7,52 +7,53 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import me.lxb.writedone.domain.repository.TimerStateRepository
 
 private val Context.timerDataStore by preferencesDataStore(name = "timer_prefs")
 
-class TimerStateRepository(private val context: Context) {
+class TimerStateRepositoryImpl(private val context: Context) : TimerStateRepository {
 
     companion object {
-        private val START_TIME_KEY = longPreferencesKey("timer_start_time")
-        private val BREAK_REMINDER_SENT_KEY = booleanPreferencesKey("break_reminder_sent")
-        private val BREAK_REMINDER_PENDING_REPEAT_KEY = booleanPreferencesKey("break_reminder_pending_repeat")
+        private val startTimeKey = longPreferencesKey("timer_start_time")
+        private val breakReminderSentKey = booleanPreferencesKey("break_reminder_sent")
+        private val breakReminderPendingRepeatKey = booleanPreferencesKey("break_reminder_pending_repeat")
     }
 
-    suspend fun loadStartTime(): Long? {
-        return context.timerDataStore.data.first()[START_TIME_KEY]
+    override suspend fun loadStartTime(): Long? {
+        return context.timerDataStore.data.first()[startTimeKey]
     }
 
-    suspend fun saveStartTime(millis: Long) {
+    override suspend fun saveStartTime(millis: Long) {
         context.timerDataStore.edit { prefs ->
-            prefs[START_TIME_KEY] = millis
+            prefs[startTimeKey] = millis
         }
     }
 
-    suspend fun loadBreakReminderSent(): Boolean {
-        return context.timerDataStore.data.first()[BREAK_REMINDER_SENT_KEY] ?: false
+    override suspend fun loadBreakReminderSent(): Boolean {
+        return context.timerDataStore.data.first()[breakReminderSentKey] ?: false
     }
 
-    suspend fun saveBreakReminderSent(sent: Boolean) {
+    override suspend fun saveBreakReminderSent(sent: Boolean) {
         context.timerDataStore.edit { prefs ->
-            prefs[BREAK_REMINDER_SENT_KEY] = sent
+            prefs[breakReminderSentKey] = sent
         }
     }
 
-    suspend fun loadBreakReminderPendingRepeat(): Boolean {
-        return context.timerDataStore.data.first()[BREAK_REMINDER_PENDING_REPEAT_KEY] ?: false
+    override suspend fun loadBreakReminderPendingRepeat(): Boolean {
+        return context.timerDataStore.data.first()[breakReminderPendingRepeatKey] ?: false
     }
 
-    suspend fun saveBreakReminderPendingRepeat(sent: Boolean) {
+    override suspend fun saveBreakReminderPendingRepeat(sent: Boolean) {
         context.timerDataStore.edit { prefs ->
-            prefs[BREAK_REMINDER_PENDING_REPEAT_KEY] = sent
+            prefs[breakReminderPendingRepeatKey] = sent
         }
     }
 
-    suspend fun clear() {
+    override suspend fun clear() {
         context.timerDataStore.edit { prefs ->
-            prefs.remove(START_TIME_KEY)
-            prefs.remove(BREAK_REMINDER_SENT_KEY)
-            prefs.remove(BREAK_REMINDER_PENDING_REPEAT_KEY)
+            prefs.remove(startTimeKey)
+            prefs.remove(breakReminderSentKey)
+            prefs.remove(breakReminderPendingRepeatKey)
         }
     }
 }

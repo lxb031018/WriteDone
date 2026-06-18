@@ -2,20 +2,21 @@ package me.lxb.writedone.data.repository
 
 import me.lxb.writedone.data.local.CompletedNoteDao
 import me.lxb.writedone.data.model.CompletedNote
+import me.lxb.writedone.domain.repository.NoteRepository
 import java.util.Calendar
 import java.util.Date
 
-class NoteRepository(private val dao: CompletedNoteDao) {
+class NoteRepositoryImpl(private val dao: CompletedNoteDao) : NoteRepository {
 
-    suspend fun updateBody(id: Long, body: String) {
+    override suspend fun updateBody(id: Long, body: String) {
         dao.updateNoteBody(id, body)
     }
 
-    suspend fun insert(note: CompletedNote): Long {
+    override suspend fun insert(note: CompletedNote): Long {
         return dao.insert(note)
     }
 
-    suspend fun getByDate(date: Date): List<CompletedNote> {
+    override suspend fun getByDate(date: Date): List<CompletedNote> {
         val cal = Calendar.getInstance().apply { time = date }
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
@@ -27,7 +28,7 @@ class NoteRepository(private val dao: CompletedNoteDao) {
         return dao.getByDateRange(startMillis, endMillis)
     }
 
-    suspend fun getByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote> {
+    override suspend fun getByDateRange(startMillis: Long, endMillis: Long): List<CompletedNote> {
         return dao.getByDateRange(startMillis, endMillis)
     }
 }

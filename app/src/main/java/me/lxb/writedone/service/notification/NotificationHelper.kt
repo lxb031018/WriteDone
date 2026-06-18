@@ -1,4 +1,4 @@
-package me.lxb.writedone.notification
+package me.lxb.writedone.service.notification
 
 import android.app.Notification
 import android.app.NotificationChannel

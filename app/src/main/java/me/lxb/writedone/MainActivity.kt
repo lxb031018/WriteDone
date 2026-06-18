@@ -23,9 +23,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import me.lxb.writedone.ambient.AmbientController
-import me.lxb.writedone.data.repository.NoteRepository
-import me.lxb.writedone.data.repository.SettingsRepository
+import me.lxb.writedone.service.ambient.AmbientController
+import me.lxb.writedone.domain.repository.NoteRepository
+import me.lxb.writedone.domain.usecase.SettingsUseCase
 import me.lxb.writedone.ui.screens.calendar.CalendarPage
 import me.lxb.writedone.ui.screens.legal.AgreementDialog
 import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
@@ -33,11 +33,10 @@ import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.home.HomeScreen
 import me.lxb.writedone.ui.screens.settings.AboutPage
 import me.lxb.writedone.ui.theme.AppColors
-import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.WriteDoneTheme
-import me.lxb.writedone.viewmodel.CompletedViewModel
-import me.lxb.writedone.viewmodel.SettingsViewModel
-import me.lxb.writedone.viewmodel.TimerViewModel
+import me.lxb.writedone.ui.screens.home.CompletedViewModel
+import me.lxb.writedone.ui.screens.home.TimerViewModel
+import me.lxb.writedone.ui.screens.settings.SettingsViewModel
 import java.util.Date
 import javax.inject.Inject
 
@@ -47,7 +46,7 @@ class MainActivity : ComponentActivity() {
     private val completedViewModel: CompletedViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
 
-    @Inject lateinit var settingsRepo: SettingsRepository
+    @Inject lateinit var settingsUseCase: SettingsUseCase
     @Inject lateinit var noteRepo: NoteRepository
 
     private val ambientController = AmbientController()
@@ -77,7 +76,7 @@ class MainActivity : ComponentActivity() {
                         timerViewModel = timerViewModel,
                         completedViewModel = completedViewModel,
                         settingsViewModel = settingsViewModel,
-                        settingsRepo = settingsRepo,
+                        settingsRepo = settingsUseCase,
                         noteRepo = noteRepo,
                         ambientController = ambientController,
                     )
@@ -99,7 +98,7 @@ private fun WriteDoneApp(
     timerViewModel: TimerViewModel,
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
-    settingsRepo: SettingsRepository,
+    settingsRepo: SettingsUseCase,
     noteRepo: NoteRepository,
     ambientController: AmbientController,
 ) {

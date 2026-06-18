@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
-import me.lxb.writedone.viewmodel.TimerMode
-import me.lxb.writedone.viewmodel.TimerUiState
+import me.lxb.writedone.domain.model.TimerMode
+import me.lxb.writedone.ui.screens.home.TimerUiState
 
 /**
  * 1:1 port of `lib/features/timer/timer_widget.dart`.
@@ -181,7 +181,7 @@ fun TimerComponent(
     }
 }
 
-fun formatHms(totalSeconds: Int): String {
+internal fun formatHms(totalSeconds: Int): String {
     val h = totalSeconds / 3600
     val m = (totalSeconds % 3600) / 60
     val s = totalSeconds % 60

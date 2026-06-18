@@ -1,4 +1,4 @@
-package me.lxb.writedone.viewmodel
+package me.lxb.writedone.ui.screens.home
 
 import android.app.AlarmManager
 import android.app.Application
@@ -19,9 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.resetMain
-import me.lxb.writedone.data.repository.SettingsRepository
-import me.lxb.writedone.data.repository.TimerStateRepository
-import me.lxb.writedone.notification.NotificationHelper
+import me.lxb.writedone.domain.model.TimerMode
+import me.lxb.writedone.domain.usecase.TimerUseCase
+import me.lxb.writedone.service.notification.NotificationHelper
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,9 +35,8 @@ import org.junit.Test
 class TimerViewModelTest {
 
     private lateinit var app: Application
-    private lateinit var timerStateRepo: TimerStateRepository
-    private lateinit var settingsRepo: SettingsRepository
-    private lateinit var settingsFlow: MutableStateFlow<Boolean>
+    private lateinit var timerUseCase: TimerUseCase
+    private lateinit var timerModeFlow: MutableStateFlow<TimerMode>
 
     @Before
     fun setUp() {
@@ -61,12 +60,10 @@ class TimerViewModelTest {
         mockkStatic(PendingIntent::class)
         every { PendingIntent.getBroadcast(any(), any(), any(), any()) } returns mockk(relaxed = true)
 
-        timerStateRepo = mockk(relaxed = true)
-        coEvery { timerStateRepo.loadStartTime() } returns null
-
-        settingsFlow = MutableStateFlow(false)
-        settingsRepo = mockk(relaxed = true)
-        every { settingsRepo.timerModePomodoro } returns settingsFlow
+        timerModeFlow = MutableStateFlow(TimerMode.Normal)
+        timerUseCase = mockk(relaxed = true)
+        every { timerUseCase.observeTimerMode() } returns timerModeFlow
+        coEvery { timerUseCase.restoreStartTime() } returns null
     }
 
     @After
@@ -75,13 +72,13 @@ class TimerViewModelTest {
     }
 
     private fun createViewModel(): TimerViewModel {
-        val vm = TimerViewModel(app, timerStateRepo, settingsRepo)
+        val vm = TimerViewModel(app, timerUseCase)
         return vm
     }
 
     private fun createPomodoroViewModel(): TimerViewModel {
-        settingsFlow.value = true
-        return TimerViewModel(app, timerStateRepo, settingsRepo)
+        timerModeFlow.value = TimerMode.Pomodoro
+        return TimerViewModel(app, timerUseCase)
     }
 
     // ── Initial state ──
@@ -150,8 +147,6 @@ class TimerViewModelTest {
     fun `break button appears when cumulative reaches 1500 (25 min)`() {
         val vm = createPomodoroViewModel()
 
-        // Simulate multiple cycles with manual state manipulation
-        // We set elapsed via start/stop cycles or verify the cumulative logic directly
         vm.start()
         vm.stop()
         assertEquals(0, vm.state.value.pomodoroCumulativeSeconds)
@@ -194,14 +189,14 @@ class TimerViewModelTest {
         assertEquals(TimerStatus.Idle, vm.state.value.status)
     }
 
-    // ── syncMode ──
+    // ── setMode ──
 
     @Test
-    fun `syncMode updates mode`() {
+    fun `setMode updates mode`() {
         val vm = createViewModel()
-        vm.syncMode(TimerMode.Pomodoro)
+        vm.setMode(TimerMode.Pomodoro)
         assertEquals(TimerMode.Pomodoro, vm.state.value.mode)
-        vm.syncMode(TimerMode.Normal)
+        vm.setMode(TimerMode.Normal)
         assertEquals(TimerMode.Normal, vm.state.value.mode)
     }
 
@@ -211,17 +206,17 @@ class TimerViewModelTest {
     fun `timer ticks increment elapsed while running`() {
         val vm = createViewModel()
         vm.start()
-        // With UnconfinedTestDispatcher, the timer coroutine runs immediately
-        // But delay still needs virtual time to pass
         vm.stop()
         assertTrue(vm.state.value.elapsedSeconds >= 0)
     }
 
-    // ── Notification ──
+    // ── Init collects settings ──
 
     @Test
-    fun `notification channel is created during init`() {
-        createViewModel()
-        verify { NotificationHelper.createChannel(any()) }
+    fun `init collects settings and responds to pomodoro changes`() {
+        val vm = createViewModel()
+        assertEquals(TimerMode.Normal, vm.state.value.mode)
+        timerModeFlow.value = TimerMode.Pomodoro
+        assertEquals(TimerMode.Pomodoro, vm.state.value.mode)
     }
 }

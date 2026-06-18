@@ -30,8 +30,10 @@ import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.util.FormatUtils
 import java.util.Calendar
 import java.util.Date
-import kotlin.math.abs
+
 import kotlin.random.Random
+
+private const val MAX_INPUT_LENGTH = 60
 
 @Composable
 fun StickyNoteInput(
@@ -43,12 +45,12 @@ fun StickyNoteInput(
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    val seed = remember { abs(java.util.Objects.hash(value)) }
+    val seed = remember { java.util.Objects.hash(value) }
     val rng = remember { Random(seed.toLong()) }
     val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
     val colorIndex = remember { rng.nextInt(AppColors.macaronPalette.size) }
 
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
 
     val dateFormatStr = stringResource(R.string.sticky_header_date)
@@ -60,13 +62,13 @@ fun StickyNoteInput(
     val bgColor = lerp(
         AppColors.macaronPalette[colorIndex],
         AppColors.darkMacaronPalette[colorIndex],
-        t,
+        ambientProgress,
     )
-    val headerColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), t)
-    val borderColor = lerp(AppColors.border, AppColors.darkBorder, t)
-    val textColor = lerp(AppColors.text, AppColors.darkText, t)
-    val hintColor = lerp(AppColors.textMuted.copy(alpha = 0.4f), AppColors.darkTextMuted, t)
-    val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, t)
+    val headerColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), ambientProgress)
+    val borderColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
+    val textColor = lerp(AppColors.text, AppColors.darkText, ambientProgress)
+    val hintColor = lerp(AppColors.textMuted.copy(alpha = 0.4f), AppColors.darkTextMuted, ambientProgress)
+    val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, ambientProgress)
 
     val headerText = remember(createdAt, durationSeconds, dateFormatStr, headerStart, emptyDateStr, headerDuration, durationEmptyStr) {
         buildString {
@@ -109,7 +111,7 @@ fun StickyNoteInput(
                 val readOnly = !enabled
                 BasicTextField(
                     value = value,
-                    onValueChange = { if (it.length <= 60) onValueChange(it) },
+                    onValueChange = { if (it.length <= MAX_INPUT_LENGTH) onValueChange(it) },
                     readOnly = readOnly,
                     textStyle = TextStyle(
                         fontFamily = handwritingFont,

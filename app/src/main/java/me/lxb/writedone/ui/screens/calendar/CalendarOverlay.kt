@@ -1,9 +1,5 @@
 package me.lxb.writedone.ui.screens.calendar
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -44,23 +40,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
-import kotlinx.coroutines.Dispatchers
-import me.lxb.writedone.R
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import me.lxb.writedone.R
 import me.lxb.writedone.data.model.CompletedNote
-import me.lxb.writedone.data.repository.NoteRepository
+import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.components.CalendarGrid
 import me.lxb.writedone.ui.components.CompletedCard
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
-import me.lxb.writedone.util.ExportFormatter
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import me.lxb.writedone.util.calForComparison
+import me.lxb.writedone.util.exportSelectedDates
 import java.util.Date
-import java.util.Locale
 
 @Composable
 fun CalendarOverlay(
@@ -75,14 +67,14 @@ fun CalendarOverlay(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val t = LocalAmbientProgress.current
-    val emptyColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
-    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
-    val reviewTextColor = lerp(AppColors.textSecondary, AppColors.darkTextSecondary, t)
-    val cancelBg = lerp(AppColors.border, AppColors.darkBorder, t)
-    val confirmBg = lerp(AppColors.accent, AppColors.darkAccent, t)
-    val disableBg = lerp(AppColors.border, AppColors.darkBorder, t)
-    val disableText = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
+    val ambientProgress = LocalAmbientProgress.current
+    val emptyColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)
+    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
+    val reviewTextColor = lerp(AppColors.textSecondary, AppColors.darkTextSecondary, ambientProgress)
+    val cancelBg = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
+    val confirmBg = lerp(AppColors.accent, AppColors.darkAccent, ambientProgress)
+    val disableBg = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
+    val disableText = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)
 
     var reviewMode by remember { mutableStateOf(false) }
     var selectedDates by remember { mutableStateOf(setOf<Long>()) }
@@ -166,7 +158,7 @@ fun CalendarOverlay(
                             Text(
                                 text = stringResource(R.string.calendar_cancel),
                                 fontSize = 16.sp,
-                                color = lerp(AppColors.text, AppColors.darkText, t),
+                                color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
                                 fontFamily = handwritingFont,
                             )
                         }
@@ -244,33 +236,4 @@ fun CalendarOverlay(
     }
 }
 
-private suspend fun exportSelectedDates(context: Context, repo: NoteRepository, selectedDates: Set<Long>) {
-    if (selectedDates.isEmpty()) return
-    val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.CHINESE)
-    val notesByDate = mutableMapOf<String, List<CompletedNote>>()
 
-    for (dateMs in selectedDates.sorted()) {
-        val endMs = dateMs + 86400000L
-        val dayNotes = repo.getByDateRange(dateMs, endMs)
-        val dateStr = dateFmt.format(Date(dateMs))
-        notesByDate[dateStr] = dayNotes
-    }
-
-    val text = ExportFormatter.formatMultipleDates(notesByDate)
-
-    withContext(Dispatchers.Main) {
-        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("Time Records", text))
-        Toast.makeText(context, context.getString(R.string.calendar_copied_toast), Toast.LENGTH_SHORT).show()
-    }
-}
-
-private fun calForComparison(date: Date): Long {
-    return Calendar.getInstance().apply {
-        time = date
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-}

@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsCompat
@@ -64,10 +66,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.pow
 import kotlin.math.sin
-import me.lxb.writedone.ambient.AmbientController
-import me.lxb.writedone.ambient.AmbientStatus
-import me.lxb.writedone.data.repository.NoteRepository
-import me.lxb.writedone.viewmodel.TimerStatus
+import me.lxb.writedone.service.ambient.AmbientController
+import me.lxb.writedone.service.ambient.AmbientStatus
+import me.lxb.writedone.domain.repository.NoteRepository
+import me.lxb.writedone.ui.screens.home.TimerStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
@@ -78,9 +80,9 @@ import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
-import me.lxb.writedone.viewmodel.CompletedViewModel
-import me.lxb.writedone.viewmodel.SettingsViewModel
-import me.lxb.writedone.viewmodel.TimerViewModel
+import me.lxb.writedone.ui.screens.home.CompletedViewModel
+import me.lxb.writedone.ui.screens.home.TimerViewModel
+import me.lxb.writedone.ui.screens.settings.SettingsViewModel
 import kotlin.math.roundToInt
 
 /**
@@ -94,7 +96,7 @@ import kotlin.math.roundToInt
  *
  * Ambient:
  *   - `themeAnim` drives a 1.5s easeInOut crossfade between light and dark themes,
- *     exposed as `LocalAmbientProgress.current` (t ∈ [0,1]) for `Color.lerp` calls.
+ *     exposed as `LocalAmbientProgress.current` (ambientProgress ∈ [0,1]) for `Color.lerp` calls.
  *   - Breathing alpha runs at ~10fps via `delay(100)` + smoothstep, decoupled from
  *     Choreographer, exposed as `LocalBreathingAlpha.current` for `BreathingWrapper`.
  */
@@ -204,7 +206,7 @@ fun HomeScreen(
                         @Suppress("DEPRECATION")
                         decorView.setOnSystemUiVisibilityChangeListener { visibility ->
                             if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
-                                decorView.removeCallbacks(null)
+                                Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
                                 decorView.postDelayed({
                                     WindowInsetsControllerCompat(win, view)
                                         .hide(WindowInsetsCompat.Type.statusBars())
@@ -228,7 +230,7 @@ fun HomeScreen(
                     } else {
                         @Suppress("DEPRECATION")
                         win.decorView.setOnSystemUiVisibilityChangeListener(null)
-                        win.decorView.removeCallbacks(null)
+                        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
                         hideJob?.cancel()
                         hideJob = null
                         controller.show(WindowInsetsCompat.Type.statusBars())

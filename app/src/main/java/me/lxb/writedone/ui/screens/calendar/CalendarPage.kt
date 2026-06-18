@@ -1,9 +1,5 @@
 package me.lxb.writedone.ui.screens.calendar
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,20 +33,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import me.lxb.writedone.R
 import me.lxb.writedone.data.model.CompletedNote
-import me.lxb.writedone.data.repository.NoteRepository
+import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.components.CalendarGrid
 import me.lxb.writedone.ui.components.CompletedCard
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
-import me.lxb.writedone.util.ExportFormatter
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import me.lxb.writedone.util.calForComparison
+import me.lxb.writedone.util.exportSelectedDates
+import java.util.Date
 
 @Composable
 fun CalendarPage(
@@ -59,6 +53,7 @@ fun CalendarPage(
     onDateSelected: (Date) -> Unit,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var reviewMode by remember { mutableStateOf(false) }
     var selectedDates by remember { mutableStateOf(setOf<Long>()) }
 
@@ -125,7 +120,7 @@ fun CalendarPage(
                             RoundedCornerShape(Dimens.gap),
                         )
                         .clickable(enabled = selectedDates.isNotEmpty()) {
-                            CoroutineScope(Dispatchers.IO).launch {
+                            scope.launch(Dispatchers.IO) {
                                 exportSelectedDates(context, noteRepo, selectedDates)
                             }
                             reviewMode = false
@@ -187,31 +182,4 @@ fun CalendarPage(
     }
 }
 
-private suspend fun exportSelectedDates(context: Context, repo: NoteRepository, selectedDates: Set<Long>) {
-    if (selectedDates.isEmpty()) return
-    val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.CHINESE)
-    val notesByDate = mutableMapOf<String, List<CompletedNote>>()
 
-    for (dateMs in selectedDates.sorted()) {
-        val endMs = dateMs + 86400000L
-        val dayNotes = repo.getByDateRange(dateMs, endMs)
-        val dateStr = dateFmt.format(Date(dateMs))
-        notesByDate[dateStr] = dayNotes
-    }
-
-    val text = ExportFormatter.formatMultipleDates(notesByDate)
-
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboard.setPrimaryClip(ClipData.newPlainText("Time Records", text))
-    Toast.makeText(context, context.getString(R.string.calendar_copied_toast), Toast.LENGTH_SHORT).show()
-}
-
-private fun calForComparison(date: Date): Long {
-    return Calendar.getInstance().apply {
-        time = date
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-}

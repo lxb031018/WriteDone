@@ -28,7 +28,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,10 +36,10 @@ import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.lxb.writedone.R
-import me.lxb.writedone.data.repository.NoteRepository
+import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
-import me.lxb.writedone.ui.theme.Dimens
+import me.lxb.writedone.util.calForComparison
 import java.util.Calendar
 import java.util.Date
 
@@ -298,12 +297,4 @@ fun CalendarGrid(
     }
 }
 
-private fun calForComparison(date: Date): Long {
-    return Calendar.getInstance().apply {
-        time = date
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-}
+

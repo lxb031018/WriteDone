@@ -7,44 +7,45 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import me.lxb.writedone.domain.repository.SettingsRepository
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings_prefs")
 
-class SettingsRepository(private val context: Context) {
+class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
 
     companion object {
-        private val TIMER_MODE_KEY = booleanPreferencesKey("timer_mode_pomodoro")
-        private val AGREEMENT_ACCEPTED_KEY = booleanPreferencesKey("agreement_accepted")
-        private val AUTO_DIM_BRIGHTNESS_KEY = booleanPreferencesKey("auto_dim_brightness")
+        private val timerModeKey = booleanPreferencesKey("timer_mode_pomodoro")
+        private val agreementAcceptedKey = booleanPreferencesKey("agreement_accepted")
+        private val autoDimBrightnessKey = booleanPreferencesKey("auto_dim_brightness")
     }
 
-    val timerModePomodoro: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
-        prefs[TIMER_MODE_KEY] ?: false
+    override val timerModePomodoro: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
+        prefs[timerModeKey] ?: false
     }
 
-    suspend fun setTimerModePomodoro(pomodoro: Boolean) {
+    override suspend fun setTimerModePomodoro(pomodoro: Boolean) {
         context.settingsDataStore.edit { prefs ->
-            prefs[TIMER_MODE_KEY] = pomodoro
+            prefs[timerModeKey] = pomodoro
         }
     }
 
-    val autoDimBrightness: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
-        prefs[AUTO_DIM_BRIGHTNESS_KEY] ?: false
+    override val autoDimBrightness: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
+        prefs[autoDimBrightnessKey] ?: false
     }
 
-    suspend fun setAutoDimBrightness(enabled: Boolean) {
+    override suspend fun setAutoDimBrightness(enabled: Boolean) {
         context.settingsDataStore.edit { prefs ->
-            prefs[AUTO_DIM_BRIGHTNESS_KEY] = enabled
+            prefs[autoDimBrightnessKey] = enabled
         }
     }
 
-    suspend fun isAgreementAccepted(): Boolean {
-        return context.settingsDataStore.data.first()[AGREEMENT_ACCEPTED_KEY] ?: false
+    override suspend fun isAgreementAccepted(): Boolean {
+        return context.settingsDataStore.data.first()[agreementAcceptedKey] ?: false
     }
 
-    suspend fun setAgreementAccepted(accepted: Boolean) {
+    override suspend fun setAgreementAccepted(accepted: Boolean) {
         context.settingsDataStore.edit { prefs ->
-            prefs[AGREEMENT_ACCEPTED_KEY] = accepted
+            prefs[agreementAcceptedKey] = accepted
         }
     }
 }

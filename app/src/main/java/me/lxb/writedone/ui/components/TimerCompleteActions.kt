@@ -24,8 +24,8 @@ fun TimerCompleteActions(
     onBreak: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val t = LocalAmbientProgress.current
-    val textColor = lerp(AppColors.text, AppColors.darkText, t)
+    val ambientProgress = LocalAmbientProgress.current
+    val textColor = lerp(AppColors.text, AppColors.darkText, ambientProgress)
 
     Box(
         modifier = modifier.fillMaxSize().clickable(onClick = onBreak),

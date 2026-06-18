@@ -29,10 +29,10 @@
         </activity>
 
         <receiver
-            android:name=".notification.AlarmReceiver"
+            android:name=".service.notification.AlarmReceiver"
             android:exported="false" />
         <receiver
-            android:name=".notification.UnlockNotificationReceiver"
+            android:name=".service.notification.UnlockNotificationReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.USER_PRESENT" />

@@ -5,6 +5,13 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions.extraWarnings.set(true)
+    compilerOptions.freeCompilerArgs.addAll(
+        listOf("-Xwarning-level=REDUNDANT_VISIBILITY_MODIFIER:disabled")
+    )
+}
+
 android {
     namespace = "me.lxb.writedone"
     compileSdk {

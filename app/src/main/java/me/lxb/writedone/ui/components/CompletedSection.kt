@@ -41,7 +41,7 @@ import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.util.FormatUtils
 import java.util.Calendar
 import java.util.Date
-import kotlin.math.abs
+
 import kotlin.random.Random
 
 @Composable
@@ -54,13 +54,13 @@ fun CompletedSection(
     onNoteBodyChange: ((Long, String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val t = LocalAmbientProgress.current
-    val emptyTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
+    val ambientProgress = LocalAmbientProgress.current
+    val emptyTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)
 
     val listState = rememberLazyListState()
 
     LaunchedEffect(notes.firstOrNull()?.id) {
-        if (notes.isNotEmpty()) {
+        if (notes.isNotEmpty() && listState.firstVisibleItemIndex <= 1) {
             listState.animateScrollToItem(0)
         }
     }
@@ -104,13 +104,13 @@ fun CompletedSection(
 }
 
 @Composable
-fun SectionHeader(
+private fun SectionHeader(
     text: String,
     breathingEnabled: Boolean,
 ) {
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
-    val headerTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, t)
+    val headerTextColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)
     BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -137,22 +137,22 @@ fun CompletedCard(
     val headerStart = stringResource(R.string.sticky_header_start)
     val headerDuration = stringResource(R.string.sticky_header_duration)
 
-    val seed = remember { abs(note.id.toInt()) + note.content.hashCode() }
+    val seed = remember { note.id.hashCode() + note.content.hashCode() }
     val rng = remember { Random(seed.toLong()) }
     val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
     val colorIndex = remember { rng.nextInt(AppColors.macaronPalette.size) }
 
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
     val bgColor = lerp(
         AppColors.macaronPalette[colorIndex],
         AppColors.darkMacaronPalette[colorIndex],
-        t,
+        ambientProgress,
     )
-    val headerTextColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), t)
-    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, t)
-    val textColor = lerp(AppColors.text, AppColors.darkText, t)
-    val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, t)
+    val headerTextColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), ambientProgress)
+    val dividerColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
+    val textColor = lerp(AppColors.text, AppColors.darkText, ambientProgress)
+    val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, ambientProgress)
 
     val headerText = remember(note, dateFormatStr, headerStart, headerDuration) {
         val cal = Calendar.getInstance().apply { time = Date(note.createdAt) }

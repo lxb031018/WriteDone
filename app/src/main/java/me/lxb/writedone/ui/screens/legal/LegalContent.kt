@@ -1,7 +1,6 @@
 package me.lxb.writedone.ui.screens.legal
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.res.stringResource

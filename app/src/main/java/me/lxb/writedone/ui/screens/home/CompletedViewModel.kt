@@ -1,4 +1,4 @@
-package me.lxb.writedone.viewmodel
+package me.lxb.writedone.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.lxb.writedone.data.model.CompletedNote
-import me.lxb.writedone.data.repository.DraftRepository
-import me.lxb.writedone.data.repository.NoteRepository
+import me.lxb.writedone.domain.repository.DraftRepository
+import me.lxb.writedone.domain.usecase.NoteUseCase
 import java.util.Date
 import javax.inject.Inject
 
@@ -21,9 +21,12 @@ data class CompletedUiState(
 
 @HiltViewModel
 class CompletedViewModel @Inject constructor(
-    private val noteRepo: NoteRepository,
-    val draftRepo: DraftRepository,
+    private val noteUseCase: NoteUseCase,
+    private val draftRepo: DraftRepository,
 ) : ViewModel() {
+
+    suspend fun loadDraft(): String = draftRepo.load()
+    suspend fun saveDraft(text: String) = draftRepo.save(text)
 
     private val _state = MutableStateFlow(CompletedUiState())
     val state: StateFlow<CompletedUiState> = _state.asStateFlow()
@@ -39,7 +42,7 @@ class CompletedViewModel @Inject constructor(
 
     fun updateNoteBody(id: Long, body: String) {
         viewModelScope.launch {
-            noteRepo.updateBody(id, body)
+            noteUseCase.updateNoteBody(id, body)
             _state.update { st ->
                 st.copy(notes = st.notes.map { if (it.id == id) it.copy(body = body) else it })
             }
@@ -49,13 +52,7 @@ class CompletedViewModel @Inject constructor(
     fun addNote(content: String, createdAt: Date, durationSeconds: Int) {
         if (content.isBlank()) return
         viewModelScope.launch {
-            val note = CompletedNote(
-                content = content,
-                createdAt = createdAt.time,
-                durationSeconds = durationSeconds,
-            )
-            val rowId = noteRepo.insert(note)
-            val savedNote = note.copy(id = rowId)
+            val savedNote = noteUseCase.addNote(content, createdAt, durationSeconds)
             _state.update { st ->
                 st.copy(notes = listOf(savedNote) + st.notes)
             }
@@ -64,7 +61,7 @@ class CompletedViewModel @Inject constructor(
 
     private fun loadByDate(date: Date) {
         viewModelScope.launch {
-            val notes = noteRepo.getByDate(date)
+            val notes = noteUseCase.getNotesByDate(date)
             _state.update { it.copy(notes = notes, selectedDate = date) }
         }
     }

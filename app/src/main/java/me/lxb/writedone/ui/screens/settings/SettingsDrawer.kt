@@ -39,13 +39,13 @@ fun SettingsDrawer(
     onAutoStartPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(lerp(AppColors.bg, AppColors.darkBg, t))
+            .background(lerp(AppColors.bg, AppColors.darkBg, ambientProgress))
             .verticalScroll(rememberScrollState()),
     ) {
         Spacer(Modifier.height(24.dp))
@@ -53,7 +53,7 @@ fun SettingsDrawer(
         Spacer(Modifier.height(16.dp))
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
-            color = lerp(AppColors.border, AppColors.darkBorder, t),
+            color = lerp(AppColors.border, AppColors.darkBorder, ambientProgress),
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_display))
@@ -91,7 +91,7 @@ fun SettingsDrawer(
 
 @Composable
 private fun Header(text: String) {
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
         modifier = Modifier
@@ -99,13 +99,13 @@ private fun Header(text: String) {
             .padding(horizontal = 16.dp),
         fontSize = 18.sp,
         fontWeight = FontWeight.SemiBold,
-        color = lerp(AppColors.text, AppColors.darkText, t),
+        color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
     )
 }
 
 @Composable
 private fun SectionHeader(text: String) {
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
         modifier = Modifier
@@ -113,13 +113,13 @@ private fun SectionHeader(text: String) {
             .padding(horizontal = 16.dp, vertical = Dimens.gapSm),
         fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
-        color = lerp(AppColors.textMuted, AppColors.darkTextMuted, t),
+        color = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress),
     )
 }
 
 @Composable
 private fun DrawerItem(text: String, onClick: () -> Unit) {
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
         modifier = Modifier
@@ -127,7 +127,7 @@ private fun DrawerItem(text: String, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = Dimens.gap),
         fontSize = 16.sp,
-        color = lerp(AppColors.text, AppColors.darkText, t),
+        color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
     )
 }
 
@@ -137,7 +137,7 @@ private fun DrawerToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val t = LocalAmbientProgress.current
+    val ambientProgress = LocalAmbientProgress.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -149,7 +149,7 @@ private fun DrawerToggle(
             text = text,
             modifier = Modifier.weight(1f),
             fontSize = 16.sp,
-            color = lerp(AppColors.text, AppColors.darkText, t),
+            color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
         )
         Spacer(Modifier.width(8.dp))
         Switch(

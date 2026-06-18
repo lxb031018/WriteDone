@@ -1,4 +1,4 @@
-package me.lxb.writedone.ambient
+package me.lxb.writedone.service.ambient
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
