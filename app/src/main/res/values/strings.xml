@@ -65,9 +65,12 @@
     <string name="calendar_cancel">取消</string>
     <string name="calendar_copy_selected">复制选中</string>
     <string name="calendar_copy_selected_count">复制选中（%d天）</string>
+    <string name="calendar_export_selected">导出选中</string>
+    <string name="calendar_export_selected_count">导出选中（%d天）</string>
     <string name="calendar_review">复盘</string>
     <string name="calendar_no_records">这天还没有记录</string>
     <string name="calendar_copied_toast">已复制到剪贴板</string>
+    <string name="calendar_export_success">导出成功</string>
     <string name="calendar_month_header">%1$d年%2$d月</string>
 
     <!-- Sticky Note -->

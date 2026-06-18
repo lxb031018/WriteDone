@@ -3,6 +3,7 @@ package me.lxb.writedone.util
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,5 +43,31 @@ suspend fun exportSelectedDates(context: Context, repo: NoteRepository, selected
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("Time Records", text))
         Toast.makeText(context, context.getString(R.string.calendar_copied_toast), Toast.LENGTH_SHORT).show()
+    }
+}
+
+suspend fun exportSelectedDatesToJsonFile(
+    context: Context,
+    uri: Uri,
+    repo: NoteRepository,
+    selectedDates: Set<Long>,
+) {
+    val allNotes = mutableListOf<CompletedNote>()
+    for (dateMs in selectedDates.sorted()) {
+        val endMs = dateMs + 86400000L
+        val dayNotes = repo.getByDateRange(dateMs, endMs)
+        allNotes.addAll(dayNotes)
+    }
+
+    val json = ExportFormatter.toJson(allNotes)
+
+    withContext(Dispatchers.IO) {
+        context.contentResolver.openOutputStream(uri)?.use { out ->
+            out.write(json.toByteArray(Charsets.UTF_8))
+        }
+    }
+
+    withContext(Dispatchers.Main) {
+        Toast.makeText(context, context.getString(R.string.calendar_export_success), Toast.LENGTH_SHORT).show()
     }
 }

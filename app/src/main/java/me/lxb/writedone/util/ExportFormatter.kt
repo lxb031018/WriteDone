@@ -1,6 +1,8 @@
 package me.lxb.writedone.util
 
 import me.lxb.writedone.data.model.CompletedNote
+import org.json.JSONArray
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,6 +57,22 @@ object ExportFormatter {
         sb.appendLine("Total: ${FormatUtils.duration(total)}")
         appendGaps(sb, notes)
         return total
+    }
+
+    fun toJson(notes: List<CompletedNote>): String {
+        val arr = JSONArray()
+        for (note in notes) {
+            arr.put(JSONObject().apply {
+                put("content", note.content)
+                put("body", note.body)
+                put("createdAt", note.createdAt)
+                put("durationSeconds", note.durationSeconds)
+            })
+        }
+        return JSONObject().apply {
+            put("version", 1)
+            put("notes", arr)
+        }.toString(2)
     }
 
     private fun appendGaps(sb: StringBuilder, sortedNotes: List<CompletedNote>) {
