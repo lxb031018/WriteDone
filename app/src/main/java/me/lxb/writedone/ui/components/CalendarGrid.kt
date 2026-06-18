@@ -1,7 +1,7 @@
 package me.lxb.writedone.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,10 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,7 +50,7 @@ fun CalendarGrid(
     reviewMode: Boolean = false,
     selectedDates: Set<Long> = emptySet(),
     onToggleDate: ((Date) -> Unit)? = null,
-    onRangeSelected: ((Date, Date) -> Unit)? = null,
+    onLongPress: ((Date) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -94,28 +90,7 @@ fun CalendarGrid(
     val firstDayOffset = (displayMonth.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY + 7) % 7
     val rows = (totalDays + firstDayOffset + 6) / 7
 
-    var dragAnchorMs by remember { mutableStateOf<Long?>(null) }
-    var dragCurrentMs by remember { mutableStateOf<Long?>(null) }
-    var gridWidth by remember { mutableStateOf(0) }
 
-    fun positionToDate(y: Float, x: Float): Date? {
-        if (gridWidth <= 0) return null
-        val cellW = gridWidth / 7f
-        val cellH = cellW
-        val col = (x / cellW).toInt().coerceIn(0, 6)
-        val row = (y / cellH).toInt().coerceIn(0, rows - 1)
-        val dayNum = row * 7 + col - firstDayOffset + 1
-        if (dayNum < 1 || dayNum > totalDays) return null
-        return Calendar.getInstance().apply {
-            set(Calendar.YEAR, displayMonth.get(Calendar.YEAR))
-            set(Calendar.MONTH, displayMonth.get(Calendar.MONTH))
-            set(Calendar.DAY_OF_MONTH, dayNum)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time
-    }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -176,54 +151,7 @@ fun CalendarGrid(
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onSizeChanged { gridWidth = it.width }
-                .then(
-                    if (reviewMode) {
-                        Modifier.pointerInput(firstDayOffset, totalDays, rows, gridWidth) {
-                            awaitEachGesture {
-                                val down = awaitFirstDown()
-                                val anchorDate = positionToDate(down.position.y, down.position.x)
-                                if (anchorDate == null) {
-                                    down.consume()
-                                    return@awaitEachGesture
-                                }
-                                val anchorMs = calForComparison(anchorDate)
-                                dragAnchorMs = anchorMs
-                                dragCurrentMs = anchorMs
-                                var isDrag = false
-                                var endDate: Date = anchorDate
-                                do {
-                                    val event = awaitPointerEvent()
-                                    val change = event.changes.firstOrNull() ?: break
-                                    if (!isDrag) {
-                                        val dx = change.position.x - down.position.x
-                                        val dy = change.position.y - down.position.y
-                                        if (dx * dx + dy * dy > 64f) {
-                                            isDrag = true
-                                        }
-                                    }
-                                    if (isDrag) {
-                                        val date = positionToDate(change.position.y, change.position.x)
-                                        if (date != null) {
-                                            dragCurrentMs = calForComparison(date)
-                                            endDate = date
-                                        }
-                                    }
-                                    change.consume()
-                                } while (event.changes.any { it.pressed })
-                                dragAnchorMs = null
-                                dragCurrentMs = null
-                                if (isDrag) {
-                                    onRangeSelected?.invoke(anchorDate, endDate)
-                                } else {
-                                    onToggleDate?.invoke(anchorDate)
-                                }
-                            }
-                        }
-                    } else Modifier
-                ),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             for (row in 0 until rows) {
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -246,24 +174,11 @@ fun CalendarGrid(
                                 selectedCal.get(Calendar.MONTH) == displayMonth.get(Calendar.MONTH) &&
                                 selectedCal.get(Calendar.DAY_OF_MONTH) == dayNum
 
-                            val inDragRange = dragAnchorMs != null && dragCurrentMs != null &&
-                                cellMs in dragAnchorMs!!.coerceAtMost(dragCurrentMs!!)..dragAnchorMs!!.coerceAtLeast(dragCurrentMs!!)
+                            val isSelectedOrPreview = cellMs in selectedDates
 
-                            val isSelectedOrPreview = cellMs in selectedDates || inDragRange
-
-                            val bgModifier = when {
-                                inDragRange && cellMs != dragAnchorMs && cellMs != dragCurrentMs ->
-                                    Modifier.background(colorScheme.primary.copy(alpha = 0.12f))
-                                else -> Modifier
-                            }
-
-                            val circleModifier = when {
-                                inDragRange && (cellMs == dragAnchorMs || cellMs == dragCurrentMs) ->
-                                    Modifier.clip(CircleShape).background(colorScheme.primary.copy(alpha = 0.35f))
-                                isSelectedOrPreview ->
-                                    Modifier.clip(CircleShape).background(colorScheme.primary.copy(alpha = 0.3f))
-                                else -> Modifier
-                            }
+                            val circleModifier = if (isSelectedOrPreview)
+                                Modifier.clip(CircleShape).background(colorScheme.primary.copy(alpha = 0.3f))
+                            else Modifier
 
                             val accentDeepColor = if (isDark) AppColors.darkAccentDeep else AppColors.accentDeep
                             val textColor = when {
@@ -278,12 +193,18 @@ fun CalendarGrid(
                                     .weight(1f)
                                     .aspectRatio(1f)
                                     .padding(2.dp)
-                                    .then(bgModifier)
                                     .then(circleModifier)
                                     .then(
-                                        if (!reviewMode) Modifier.clickable {
-                                            onDateSelected(cellDate)
-                                        } else Modifier
+                                        if (reviewMode) {
+                                            Modifier.combinedClickable(
+                                                onClick = { onToggleDate?.invoke(cellDate) }
+                                            )
+                                        } else {
+                                            Modifier.combinedClickable(
+                                                onClick = { onDateSelected(cellDate) },
+                                                onLongClick = { onLongPress?.invoke(cellDate) }
+                                            )
+                                        }
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {

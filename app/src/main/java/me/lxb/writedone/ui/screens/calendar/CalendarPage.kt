@@ -75,13 +75,10 @@ fun CalendarPage(
                 selectedDates = if (ms in selectedDates) selectedDates - ms
                 else selectedDates + ms
             },
-            onRangeSelected = { start, end ->
-                val startMs = calForComparison(start)
-                val endMs = calForComparison(end)
-                val range = generateSequence(startMs.coerceAtMost(endMs)) {
-                    if (it < startMs.coerceAtLeast(endMs)) it + 86400000L else null
-                }.toSet()
-                selectedDates = selectedDates + range
+            onLongPress = { date ->
+                val ms = calForComparison(date)
+                selectedDates = selectedDates + ms
+                reviewMode = true
             },
             modifier = Modifier.padding(horizontal = Dimens.pageH),
         )
@@ -140,25 +137,6 @@ fun CalendarPage(
                         fontFamily = handwritingFont,
                     )
                 }
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.pageH)
-                    .clickable {
-                        reviewMode = true
-                        selectedDates = emptySet()
-                    }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.calendar_review),
-                    fontSize = 16.sp,
-                    color = colorScheme.onSurfaceVariant,
-                    fontFamily = handwritingFont,
-                )
             }
         }
 
