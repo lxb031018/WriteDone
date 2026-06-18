@@ -3,6 +3,7 @@ package me.lxb.writedone
 import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -159,6 +160,7 @@ private fun WriteDoneApp(
             )
         }
         Screen.Calendar -> {
+            BackHandler { currentScreen = Screen.Home }
             CalendarPage(
                 selectedDate = calendarDate,
                 notes = completedState.notes,
@@ -170,16 +172,19 @@ private fun WriteDoneApp(
             )
         }
         Screen.About -> {
+            BackHandler { currentScreen = Screen.Home }
             AboutPage(
                 onBack = { currentScreen = Screen.Home },
             )
         }
         Screen.UserAgreement -> {
+            BackHandler { currentScreen = Screen.Home }
             UserAgreementPage(onBack = {
                 currentScreen = Screen.Home
             })
         }
         Screen.PrivacyPolicy -> {
+            BackHandler { currentScreen = Screen.Home }
             PrivacyPolicyPage(onBack = {
                 currentScreen = Screen.Home
             })

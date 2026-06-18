@@ -498,6 +498,16 @@ fun HomeScreen(
                 )
             }
 
+            // ── Back gesture: close drawer ──
+            if (drawerAnim.value > 0f) {
+                BackHandler { animateDrawerTo(0f) }
+            }
+
+            // ── Back gesture: close calendar overlay ──
+            if (calendarAnim.value > 0f) {
+                BackHandler { animateCalendarTo(0f) }
+            }
+
             // ── Calendar Scrim ──
             if (calendarAnim.value > 0f) {
                 Box(
