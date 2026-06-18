@@ -381,8 +381,8 @@ fun HomeScreen(
                                     ),
                             ) {
                                 CompletedSection(
-                                    notes = completedState.notes,
-                                    headerText = stringResource(R.string.completed_header, completedState.notes.size),
+                                    notes = completedState.todayNotes,
+                                    headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
                                     showHeader = true,
                                     breathingEnabled = breathingEnabled,
                                     onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
@@ -438,8 +438,8 @@ fun HomeScreen(
                         Spacer(Modifier.height(Dimens.gapLg))
 
                         CompletedSection(
-                            notes = completedState.notes,
-                            headerText = stringResource(R.string.completed_header, completedState.notes.size),
+                            notes = completedState.todayNotes,
+                            headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
                             showHeader = true,
                             breathingEnabled = breathingEnabled,
                             onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },

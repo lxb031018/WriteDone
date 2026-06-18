@@ -16,6 +16,7 @@ import javax.inject.Inject
 
 data class CompletedUiState(
     val notes: List<CompletedNote> = emptyList(),
+    val todayNotes: List<CompletedNote> = emptyList(),
     val selectedDate: Date = Date(),
 )
 
@@ -32,11 +33,20 @@ class CompletedViewModel @Inject constructor(
     val state: StateFlow<CompletedUiState> = _state.asStateFlow()
 
     init {
-        loadByDate(Date())
+        val today = Date()
+        loadByDate(today)
+        loadTodayNotes()
+    }
+
+    private fun loadTodayNotes() {
+        viewModelScope.launch {
+            val todayNotes = noteUseCase.getNotesByDate(Date())
+            _state.update { it.copy(todayNotes = todayNotes) }
+        }
     }
 
     fun selectDate(date: Date) {
-        _state.update { CompletedUiState(selectedDate = date) }
+        _state.update { it.copy(selectedDate = date) }
         loadByDate(date)
     }
 
@@ -44,7 +54,10 @@ class CompletedViewModel @Inject constructor(
         viewModelScope.launch {
             noteUseCase.updateNoteBody(id, body)
             _state.update { st ->
-                st.copy(notes = st.notes.map { if (it.id == id) it.copy(body = body) else it })
+                st.copy(
+                    notes = st.notes.map { if (it.id == id) it.copy(body = body) else it },
+                    todayNotes = st.todayNotes.map { if (it.id == id) it.copy(body = body) else it },
+                )
             }
         }
     }
@@ -54,7 +67,10 @@ class CompletedViewModel @Inject constructor(
         viewModelScope.launch {
             val savedNote = noteUseCase.addNote(content, createdAt, durationSeconds)
             _state.update { st ->
-                st.copy(notes = listOf(savedNote) + st.notes)
+                st.copy(
+                    notes = listOf(savedNote) + st.notes,
+                    todayNotes = listOf(savedNote) + st.todayNotes,
+                )
             }
         }
     }
