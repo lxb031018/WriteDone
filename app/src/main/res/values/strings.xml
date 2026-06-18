@@ -23,9 +23,9 @@
     <string name="about_inspiration">灵感来自 git —— 在完全由自己掌控的时间里，把每天主动做的、有意义的事，像 git commit 一样记录下来。</string>
     <string name="about_legal_header">📜 协议与政策</string>
     <string name="about_user_agreement_title">《WriteDone用户协议》</string>
-    <string name="about_user_agreement_summary">约定你与开发者之间就使用本应用的权利和义务。</string>
+    <string name="about_user_agreement_summary">约定您与开发者之间就使用本应用的权利和义务。</string>
     <string name="about_privacy_policy_title">《WriteDone隐私政策》</string>
-    <string name="about_privacy_policy_summary">说明本应用如何处理你的信息。本应用不收集任何信息。</string>
+    <string name="about_privacy_policy_summary">说明本应用如何处理您的信息。本应用不收集任何信息。</string>
     <string name="about_data_header">🔒 数据说明</string>
     <string name="about_data_only_you">你的数据只属于你</string>
     <string name="about_data_details">· 不联网 · 不收集任何个人信息\n· 未集成任何第三方 SDK\n· 所有提交记录只保存在本机\n· 卸载 App 数据即丢失, 请自行备份</string>
@@ -80,7 +80,7 @@
     <string name="timer_complete_break">不卷了，休息5分钟\n〜(￣▽￣〜)</string>
 
     <!-- Notification -->
-    <string name="notification_channel_name">番茄钟提醒</string>
+    <string name="notification_channel_name">番茄计时器提醒</string>
     <string name="notification_break_title">休息一下吧</string>
     <string name="notification_break_text">已经计时25分钟啦，该休息一下啦！</string>
 
