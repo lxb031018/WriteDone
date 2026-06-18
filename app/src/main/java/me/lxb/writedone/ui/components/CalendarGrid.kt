@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,11 +34,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.lxb.writedone.R
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.LocalDarkTheme
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.util.calForComparison
 import java.util.Calendar
@@ -54,6 +57,8 @@ fun CalendarGrid(
     onRangeSelected: ((Date, Date) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+    val isDark = LocalDarkTheme.current
     var displayMonth by remember { mutableStateOf(Calendar.getInstance().apply { time = selectedDate }) }
     var noteDays by remember { mutableStateOf(setOf<Long>()) }
 
@@ -131,7 +136,7 @@ fun CalendarGrid(
                 fontFamily = handwritingFont,
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center,
-                color = AppColors.text,
+                color = colorScheme.onSurface,
             )
             IconButton(onClick = {
                 displayMonth = Calendar.getInstance().apply {
@@ -159,7 +164,7 @@ fun CalendarGrid(
                     fontFamily = handwritingFont,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
-                    color = AppColors.textMuted,
+                    color = colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -246,23 +251,24 @@ fun CalendarGrid(
 
                             val bgModifier = when {
                                 inDragRange && cellMs != dragAnchorMs && cellMs != dragCurrentMs ->
-                                    Modifier.background(AppColors.accent.copy(alpha = 0.12f))
+                                    Modifier.background(colorScheme.primary.copy(alpha = 0.12f))
                                 else -> Modifier
                             }
 
                             val circleModifier = when {
                                 inDragRange && (cellMs == dragAnchorMs || cellMs == dragCurrentMs) ->
-                                    Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.35f))
+                                    Modifier.clip(CircleShape).background(colorScheme.primary.copy(alpha = 0.35f))
                                 isSelectedOrPreview ->
-                                    Modifier.clip(CircleShape).background(AppColors.accent.copy(alpha = 0.3f))
+                                    Modifier.clip(CircleShape).background(colorScheme.primary.copy(alpha = 0.3f))
                                 else -> Modifier
                             }
 
+                            val accentDeepColor = if (isDark) AppColors.darkAccentDeep else AppColors.accentDeep
                             val textColor = when {
-                                isSelectedOrPreview -> AppColors.accentDeep
-                                isSelected -> AppColors.accentDeep
-                                cellMs in noteDays -> AppColors.text
-                                else -> AppColors.textMuted
+                                isSelectedOrPreview -> accentDeepColor
+                                isSelected -> accentDeepColor
+                                cellMs in noteDays -> colorScheme.onSurface
+                                else -> colorScheme.onSurfaceVariant
                             }
 
                             Box(

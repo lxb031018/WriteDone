@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 
@@ -19,6 +20,7 @@ private val LightColorScheme = lightColorScheme(
     surface = AppColors.card,
     onBackground = AppColors.text,
     onSurface = AppColors.text,
+    onSurfaceVariant = AppColors.textMuted,
     outline = AppColors.border,
 )
 
@@ -32,7 +34,22 @@ private val DarkColorScheme = darkColorScheme(
     surface = AppColors.darkCard,
     onBackground = AppColors.darkText,
     onSurface = AppColors.darkText,
+    onSurfaceVariant = AppColors.darkTextMuted,
     outline = AppColors.darkBorder,
+)
+
+private val AmbientColorScheme = darkColorScheme(
+    primary = AppColors.ambientAccent,
+    onPrimary = AppColors.ambientText,
+    primaryContainer = AppColors.ambientAccentLight,
+    secondary = AppColors.ambientTextSecondary,
+    tertiary = AppColors.ambientGreen,
+    background = AppColors.ambientBg,
+    surface = AppColors.ambientCard,
+    onBackground = AppColors.ambientText,
+    onSurface = AppColors.ambientText,
+    onSurfaceVariant = AppColors.ambientTextMuted,
+    outline = AppColors.ambientBorder,
 )
 
 /**
@@ -82,11 +99,13 @@ fun WriteDoneTheme(
     content: @Composable () -> Unit,
 ) {
     val baseScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    val colorScheme = baseScheme.lerpedTo(DarkColorScheme, ambientProgress.coerceIn(0f, 1f))
+    val colorScheme = baseScheme.lerpedTo(AmbientColorScheme, ambientProgress.coerceIn(0f, 1f))
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = AppTypography,
-        content = content,
-    )
+    CompositionLocalProvider(LocalDarkTheme provides darkTheme) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = AppTypography,
+            content = content,
+        )
+    }
 }

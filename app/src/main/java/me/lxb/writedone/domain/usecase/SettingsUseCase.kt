@@ -11,6 +11,10 @@ class SettingsUseCase @Inject constructor(
 
     suspend fun setAutoDimBrightness(enabled: Boolean) = settingsRepo.setAutoDimBrightness(enabled)
 
+    val themeMode: Flow<String> = settingsRepo.themeMode
+
+    suspend fun setThemeMode(mode: String) = settingsRepo.setThemeMode(mode)
+
     suspend fun isAgreementAccepted(): Boolean = settingsRepo.isAgreementAccepted()
     suspend fun setAgreementAccepted(accepted: Boolean) = settingsRepo.setAgreementAccepted(accepted)
 }

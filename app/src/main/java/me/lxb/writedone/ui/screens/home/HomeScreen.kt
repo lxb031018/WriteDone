@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -108,10 +109,13 @@ fun HomeScreen(
     settingsViewModel: SettingsViewModel,
     ambientController: AmbientController,
     noteRepo: NoteRepository? = null,
+    ambientProgress: Float = 0f,
+    onAmbientProgressChange: (Float) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val completedState by completedViewModel.state.collectAsState()
     val autoDimBrightness by settingsViewModel.autoDimBrightness.collectAsState()
+    val themeMode by settingsViewModel.themeMode.collectAsState()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -149,12 +153,15 @@ fun HomeScreen(
     val ambientState by ambientController.state.collectAsState()
 
     // Theme transition: 1.5s easeInOut (Flutter `_themeCtrl`).
-    val themeAnim = remember { Animatable(0f) }
+    val themeAnim = remember { Animatable(ambientProgress) }
     LaunchedEffect(ambientState.status) {
         themeAnim.animateTo(
             targetValue = if (ambientState.status == AmbientStatus.Active) 1f else 0f,
             animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
         )
+    }
+    LaunchedEffect(themeAnim.value) {
+        onAmbientProgressChange(themeAnim.value)
     }
 
     // Breathing alpha: |sin(t)|³ narrow-peak curve via lookup table at ~10fps.
@@ -248,16 +255,15 @@ fun HomeScreen(
     var lastDragDirection by remember { mutableFloatStateOf(0f) }
 
     CompositionLocalProvider(
-        LocalAmbientProgress provides ambientProgress,
+        LocalAmbientProgress provides themeAnim.value,
         LocalBreathingAlpha provides breathingAlpha,
     ) {
-        val bgColor = remember(ambientProgress) { lerp(AppColors.bg, AppColors.darkBg, ambientProgress) }
-        val landscapeDividerColor = remember(ambientProgress) { lerp(AppColors.border, AppColors.darkBorder, ambientProgress) }
+        val colorScheme = MaterialTheme.colorScheme
 
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(bgColor)
+                .background(colorScheme.background)
                 .onSizeChanged { screenWidthPx = it.width.toFloat() }
                 .pointerInput(isLandscape) {
                     if (isLandscape) return@pointerInput
@@ -353,7 +359,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(bgColor)
+                        .background(colorScheme.background)
                         .statusBarsPadding(),
                 ) {
                     if (isLandscape) {
@@ -387,7 +393,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .width(1.dp)
                                     .fillMaxHeight(),
-                                color = landscapeDividerColor,
+                                color = colorScheme.outline,
                                 thickness = 1.dp,
                             )
                             // Right column: Timer + Input
@@ -472,6 +478,8 @@ fun HomeScreen(
                 SettingsDrawer(
                     autoDimBrightness = autoDimBrightness,
                     onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
+                    themeMode = themeMode,
+                    onThemeModeChange = { settingsViewModel.setThemeMode(it) },
                     onUserAgreement = { showUserAgreement = true },
                     onPrivacyPolicy = { showPrivacyPolicy = true },
                     onNotificationPermission = {
@@ -532,7 +540,7 @@ fun HomeScreen(
                 CalendarOverlay(
                     calendarAnim = calendarAnim,
                     screenWidthPx = screenWidthPx,
-                    bgColor = bgColor,
+                    bgColor = colorScheme.background,
                     selectedDate = completedState.selectedDate,
                     notes = completedState.notes,
                     noteRepo = noteRepo ?: error("noteRepo must be provided"),

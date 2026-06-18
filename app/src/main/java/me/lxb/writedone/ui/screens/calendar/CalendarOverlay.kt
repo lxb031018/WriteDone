@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,15 +65,16 @@ fun CalendarOverlay(
     onDateSelected: (Date) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val ambientProgress = LocalAmbientProgress.current
-    val emptyColor = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)
-    val reviewTextColor = lerp(AppColors.textSecondary, AppColors.darkTextSecondary, ambientProgress)
-    val cancelBg = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
-    val confirmBg = lerp(AppColors.accent, AppColors.darkAccent, ambientProgress)
-    val disableBg = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
-    val disableText = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)
+    val emptyColor = colorScheme.onSurfaceVariant
+    val reviewTextColor = colorScheme.secondary
+    val cancelBg = colorScheme.outline
+    val confirmBg = colorScheme.primary
+    val disableBg = colorScheme.outline
+    val disableText = colorScheme.onSurfaceVariant
 
     var reviewMode by remember { mutableStateOf(false) }
     var selectedDates by remember { mutableStateOf(setOf<Long>()) }
@@ -154,7 +156,7 @@ fun CalendarOverlay(
                             Text(
                                 text = stringResource(R.string.calendar_cancel),
                                 fontSize = 16.sp,
-                                color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
+                                color = colorScheme.onSurface,
                                 fontFamily = handwritingFont,
                             )
                         }

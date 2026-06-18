@@ -29,9 +29,10 @@ import me.lxb.writedone.ui.theme.LocalAmbientProgress
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAgreementPage(onBack: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
     val ambientProgress = LocalAmbientProgress.current
     Scaffold(
-        containerColor = lerp(AppColors.bg, AppColors.darkBg, ambientProgress),
+        containerColor = colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.user_agreement_title)) },
@@ -41,7 +42,7 @@ fun UserAgreementPage(onBack: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = lerp(AppColors.bg, AppColors.darkBg, ambientProgress),
+                    containerColor = colorScheme.background,
                 ),
             )
         },

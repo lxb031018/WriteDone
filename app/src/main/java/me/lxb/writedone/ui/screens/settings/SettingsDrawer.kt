@@ -2,6 +2,7 @@ package me.lxb.writedone.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,13 +11,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
@@ -27,11 +32,14 @@ import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
+import me.lxb.writedone.ui.theme.ThemeMode
 
 @Composable
 fun SettingsDrawer(
     autoDimBrightness: Boolean,
     onToggleAutoDim: (Boolean) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
     onUserAgreement: () -> Unit,
     onPrivacyPolicy: () -> Unit,
     onNotificationPermission: () -> Unit,
@@ -41,13 +49,14 @@ fun SettingsDrawer(
     onLockScreenNotification: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val ambientProgress = LocalAmbientProgress.current
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(lerp(AppColors.bg, AppColors.darkBg, ambientProgress))
+            .background(colorScheme.background)
             .statusBarsPadding()
             .verticalScroll(rememberScrollState()),
     ) {
@@ -80,6 +89,23 @@ fun SettingsDrawer(
             onCheckedChange = onToggleAutoDim,
         )
         Spacer(Modifier.height(12.dp))
+        SectionHeader(stringResource(R.string.settings_theme))
+        DrawerOption(
+            text = stringResource(R.string.settings_theme_system),
+            selected = themeMode == ThemeMode.System,
+            onClick = { onThemeModeChange(ThemeMode.System) },
+        )
+        DrawerOption(
+            text = stringResource(R.string.settings_theme_light),
+            selected = themeMode == ThemeMode.Light,
+            onClick = { onThemeModeChange(ThemeMode.Light) },
+        )
+        DrawerOption(
+            text = stringResource(R.string.settings_theme_dark),
+            selected = themeMode == ThemeMode.Dark,
+            onClick = { onThemeModeChange(ThemeMode.Dark) },
+        )
+        Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_legal))
         DrawerItem(
             text = stringResource(R.string.settings_user_agreement),
@@ -94,6 +120,7 @@ fun SettingsDrawer(
 
 @Composable
 private fun SectionHeader(text: String) {
+    val colorScheme = MaterialTheme.colorScheme
     val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
@@ -102,12 +129,13 @@ private fun SectionHeader(text: String) {
             .padding(horizontal = 16.dp, vertical = Dimens.gapSm),
         fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
-        color = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress),
+        color = colorScheme.onSurfaceVariant,
     )
 }
 
 @Composable
 private fun DrawerItem(text: String, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
     val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
@@ -116,8 +144,44 @@ private fun DrawerItem(text: String, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = Dimens.gap),
         fontSize = 16.sp,
-        color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
+        color = colorScheme.onSurface,
     )
+}
+
+@Composable
+private fun DrawerOption(text: String, selected: Boolean, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(start = 16.dp, end = 16.dp, top = Dimens.gapSm, bottom = Dimens.gapSm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .background(
+                    color = if (selected) colorScheme.primary else colorScheme.outline,
+                    shape = CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(Color.White, CircleShape),
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = text,
+            fontSize = 16.sp,
+            color = colorScheme.onSurface,
+        )
+    }
 }
 
 @Composable
@@ -126,6 +190,7 @@ private fun DrawerToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val ambientProgress = LocalAmbientProgress.current
     Row(
         modifier = Modifier
@@ -138,7 +203,7 @@ private fun DrawerToggle(
             text = text,
             modifier = Modifier.weight(1f),
             fontSize = 16.sp,
-            color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
+            color = colorScheme.onSurface,
         )
         Spacer(Modifier.width(8.dp))
         Switch(

@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,6 +36,7 @@ import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.home.HomeScreen
 import me.lxb.writedone.ui.screens.settings.AboutPage
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.ThemeMode
 import me.lxb.writedone.ui.theme.WriteDoneTheme
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
 import me.lxb.writedone.ui.screens.home.TimerViewModel
@@ -65,13 +68,17 @@ class MainActivity : ComponentActivity() {
         })
 
         setContent {
-            val ambientProgress = androidx.compose.runtime.remember {
-                mutableFloatStateOf(0f)
-            }.floatValue
-            WriteDoneTheme(ambientProgress = ambientProgress) {
+            var ambientProgress by remember { mutableFloatStateOf(0f) }
+            val themeMode by settingsViewModel.themeMode.collectAsStateWithLifecycle()
+            val darkTheme = when (themeMode) {
+                ThemeMode.System -> isSystemInDarkTheme()
+                ThemeMode.Light -> false
+                ThemeMode.Dark -> true
+            }
+            WriteDoneTheme(darkTheme = darkTheme, ambientProgress = ambientProgress) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = AppColors.bg,
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     WriteDoneApp(
                         timerViewModel = timerViewModel,
@@ -80,6 +87,8 @@ class MainActivity : ComponentActivity() {
                         settingsRepo = settingsUseCase,
                         noteRepo = noteRepo,
                         ambientController = ambientController,
+                        ambientProgress = ambientProgress,
+                        onAmbientProgressChange = { ambientProgress = it },
                     )
                 }
             }
@@ -102,6 +111,8 @@ private fun WriteDoneApp(
     settingsRepo: SettingsUseCase,
     noteRepo: NoteRepository,
     ambientController: AmbientController,
+    ambientProgress: Float,
+    onAmbientProgressChange: (Float) -> Unit,
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Home) }
     var showAgreement by remember { mutableStateOf(false) }
@@ -157,6 +168,8 @@ private fun WriteDoneApp(
                 settingsViewModel = settingsViewModel,
                 ambientController = ambientController,
                 noteRepo = noteRepo,
+                ambientProgress = ambientProgress,
+                onAmbientProgressChange = onAmbientProgressChange,
             )
         }
         Screen.Calendar -> {

@@ -13,6 +13,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
@@ -27,6 +28,7 @@ import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
+import me.lxb.writedone.ui.theme.LocalDarkTheme
 import me.lxb.writedone.util.FormatUtils
 import java.util.Calendar
 import java.util.Date
@@ -53,22 +55,32 @@ fun StickyNoteInput(
     val ambientProgress = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
 
+    val colorScheme = MaterialTheme.colorScheme
     val dateFormatStr = stringResource(R.string.sticky_header_date)
     val headerStart = stringResource(R.string.sticky_header_start)
     val emptyDateStr = stringResource(R.string.sticky_header_empty_date)
     val headerDuration = stringResource(R.string.sticky_header_duration)
     val durationEmptyStr = stringResource(R.string.sticky_duration_empty)
 
+    val isDark = LocalDarkTheme.current
     val bgColor = lerp(
-        AppColors.macaronPalette[colorIndex],
-        AppColors.darkMacaronPalette[colorIndex],
+        if (isDark) AppColors.darkMacaronPalette[colorIndex] else AppColors.macaronPalette[colorIndex],
+        AppColors.ambientMacaronPalette[colorIndex],
         ambientProgress,
     )
-    val headerColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), ambientProgress)
-    val borderColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
-    val textColor = lerp(AppColors.text, AppColors.darkText, ambientProgress)
-    val hintColor = lerp(AppColors.textMuted.copy(alpha = 0.4f), AppColors.darkTextMuted, ambientProgress)
-    val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, ambientProgress)
+    val headerColor = lerp(
+        if (isDark) AppColors.darkTextMuted else AppColors.textMuted,
+        AppColors.ambientText.copy(alpha = 0.15f),
+        ambientProgress,
+    )
+    val borderColor = colorScheme.outline
+    val textColor = colorScheme.onSurface
+    val hintColor = lerp(
+        if (isDark) AppColors.darkTextMuted else AppColors.textMuted.copy(alpha = 0.4f),
+        AppColors.ambientTextMuted,
+        ambientProgress,
+    )
+    val cursorColor = colorScheme.primary
 
     val headerText = remember(createdAt, durationSeconds, dateFormatStr, headerStart, emptyDateStr, headerDuration, durationEmptyStr) {
         buildString {

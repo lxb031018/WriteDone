@@ -3,6 +3,7 @@ package me.lxb.writedone.data.repository
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -17,6 +18,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         private val timerModeKey = booleanPreferencesKey("timer_mode_pomodoro")
         private val agreementAcceptedKey = booleanPreferencesKey("agreement_accepted")
         private val autoDimBrightnessKey = booleanPreferencesKey("auto_dim_brightness")
+        private val themeModeKey = stringPreferencesKey("theme_mode")
     }
 
     override val timerModePomodoro: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
@@ -36,6 +38,16 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setAutoDimBrightness(enabled: Boolean) {
         context.settingsDataStore.edit { prefs ->
             prefs[autoDimBrightnessKey] = enabled
+        }
+    }
+
+    override val themeMode: Flow<String> = context.settingsDataStore.data.map { prefs ->
+        prefs[themeModeKey] ?: "System"
+    }
+
+    override suspend fun setThemeMode(mode: String) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[themeModeKey] = mode
         }
     }
 

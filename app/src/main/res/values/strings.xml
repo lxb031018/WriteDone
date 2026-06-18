@@ -18,6 +18,10 @@
     <string name="settings_legal">协议与政策</string>
     <string name="settings_user_agreement">用户协议</string>
     <string name="settings_privacy_policy">隐私政策</string>
+    <string name="settings_theme">主题模式</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色模式</string>
+    <string name="settings_theme_dark">深色模式</string>
 
     <!-- About -->
     <string name="about_title">关于</string>

@@ -42,6 +42,7 @@ import me.lxb.writedone.ui.theme.Dimens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.lxb.writedone.util.calForComparison
+import androidx.compose.material3.MaterialTheme
 import me.lxb.writedone.util.exportSelectedDates
 import java.util.Date
 
@@ -52,6 +53,7 @@ fun CalendarPage(
     noteRepo: NoteRepository,
     onDateSelected: (Date) -> Unit,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var reviewMode by remember { mutableStateOf(false) }
@@ -95,7 +97,7 @@ fun CalendarPage(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = Dimens.pageH)
-                        .background(AppColors.border, RoundedCornerShape(Dimens.gap))
+                        .background(colorScheme.outline, RoundedCornerShape(Dimens.gap))
                         .clickable {
                             reviewMode = false
                             selectedDates = emptySet()
@@ -106,7 +108,7 @@ fun CalendarPage(
                     Text(
                         text = stringResource(R.string.calendar_cancel),
                         fontSize = 16.sp,
-                        color = AppColors.text,
+                        color = colorScheme.onSurface,
                         fontFamily = handwritingFont,
                     )
                 }
@@ -116,7 +118,7 @@ fun CalendarPage(
                         .weight(1f)
                         .padding(horizontal = Dimens.pageH)
                         .background(
-                            if (selectedDates.isNotEmpty()) AppColors.accent else AppColors.border,
+                            if (selectedDates.isNotEmpty()) colorScheme.primary else colorScheme.outline,
                             RoundedCornerShape(Dimens.gap),
                         )
                         .clickable(enabled = selectedDates.isNotEmpty()) {
@@ -134,7 +136,7 @@ fun CalendarPage(
                         else stringResource(R.string.calendar_copy_selected),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (selectedDates.isNotEmpty()) Color.White else AppColors.textMuted,
+                        color = if (selectedDates.isNotEmpty()) Color.White else colorScheme.onSurfaceVariant,
                         fontFamily = handwritingFont,
                     )
                 }
@@ -154,7 +156,7 @@ fun CalendarPage(
                 Text(
                     text = stringResource(R.string.calendar_review),
                     fontSize = 16.sp,
-                    color = AppColors.textSecondary,
+                    color = colorScheme.onSurfaceVariant,
                     fontFamily = handwritingFont,
                 )
             }
@@ -170,7 +172,7 @@ fun CalendarPage(
                     .padding(Dimens.gapLg),
                 fontFamily = handwritingFont,
                 fontSize = 14.sp,
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         } else {

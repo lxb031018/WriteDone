@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,8 +25,9 @@ fun TimerCompleteActions(
     onBreak: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val ambientProgress = LocalAmbientProgress.current
-    val textColor = lerp(AppColors.text, AppColors.darkText, ambientProgress)
+    val textColor = colorScheme.onSurface
 
     Box(
         modifier = modifier.fillMaxSize().clickable(onClick = onBreak),

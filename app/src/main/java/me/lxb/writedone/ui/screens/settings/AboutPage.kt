@@ -47,6 +47,7 @@ import me.lxb.writedone.ui.theme.AppColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutPage(onBack: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
     var showUserAgreement by remember { mutableStateOf(false) }
     var showPrivacyPolicy by remember { mutableStateOf(false) }
 
@@ -78,7 +79,7 @@ fun AboutPage(onBack: () -> Unit) {
                 text = "WriteDone",
                 fontFamily = handwritingFont,
                 fontSize = 32.sp,
-                color = AppColors.text,
+                color = colorScheme.onSurface,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
@@ -87,29 +88,29 @@ fun AboutPage(onBack: () -> Unit) {
                 text = stringResource(R.string.about_subtitle),
                 fontFamily = handwritingFont,
                 fontSize = 16.sp,
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(16.dp))
             Text(
                 text = "v1.0.0",
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(32.dp))
-            HorizontalDivider(color = AppColors.border)
+            HorizontalDivider(color = colorScheme.outline)
             Spacer(Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.about_inspiration),
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(24.dp))
 
             Text(
                 text = stringResource(R.string.about_legal_header),
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
                 fontSize = 13.sp,
             )
             Spacer(Modifier.height(8.dp))
@@ -129,7 +130,7 @@ fun AboutPage(onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.about_data_header),
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
                 fontSize = 13.sp,
             )
             Spacer(Modifier.height(8.dp))
@@ -139,7 +140,7 @@ fun AboutPage(onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
             Text(
                 text = "© 2026 lxb. All rights reserved.",
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
@@ -162,13 +163,14 @@ fun AboutPage(onBack: () -> Unit) {
 
 @Composable
 private fun DocLinkCard(title: String, summary: String, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = AppColors.card),
-        border = BorderStroke(1.dp, AppColors.border),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+        border = BorderStroke(1.dp, colorScheme.outline),
     ) {
         Row(
             modifier = Modifier
@@ -180,13 +182,13 @@ private fun DocLinkCard(title: String, summary: String, onClick: () -> Unit) {
                 Text(
                     text = title,
                     fontSize = 14.sp,
-                    color = AppColors.text,
+                    color = colorScheme.onSurface,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = summary,
                     fontSize = 12.sp,
-                    color = AppColors.textMuted,
+                    color = colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -195,23 +197,24 @@ private fun DocLinkCard(title: String, summary: String, onClick: () -> Unit) {
 
 @Composable
 private fun DataNoteCard() {
+    val colorScheme = MaterialTheme.colorScheme
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = AppColors.card),
-        border = BorderStroke(1.dp, AppColors.border),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+        border = BorderStroke(1.dp, colorScheme.outline),
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
                 text = stringResource(R.string.about_data_only_you),
                 fontSize = 14.sp,
-                color = AppColors.text,
+                color = colorScheme.onSurface,
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 text = stringResource(R.string.about_data_details),
                 fontSize = 12.sp,
-                color = AppColors.textMuted,
+                color = colorScheme.onSurfaceVariant,
             )
         }
     }
