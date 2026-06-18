@@ -152,6 +152,7 @@ fun CompletedCard(
     val headerTextColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.15f), ambientProgress)
     val dividerColor = lerp(AppColors.border, AppColors.darkBorder, ambientProgress)
     val textColor = lerp(AppColors.text, AppColors.darkText, ambientProgress)
+    val bodyTextColor = lerp(AppColors.textMuted, AppColors.darkText.copy(alpha = 0.65f), ambientProgress)
     val cursorColor = lerp(AppColors.accent, AppColors.darkAccent, ambientProgress)
 
     val headerText = remember(note, dateFormatStr, headerStart, headerDuration) {
@@ -189,7 +190,7 @@ fun CompletedCard(
                 HorizontalDivider(color = dividerColor, thickness = 1.dp)
                 Spacer(Modifier.height(Dimens.gap))
                 Text(
-                    text = "title:${note.content}",
+                    text = note.content,
                     fontFamily = handwritingFont,
                     fontSize = 22.sp,
                     color = textColor,
@@ -205,8 +206,8 @@ fun CompletedCard(
                             },
                             textStyle = TextStyle(
                                 fontFamily = handwritingFont,
-                                fontSize = 22.sp,
-                                color = textColor,
+                                fontSize = 18.sp,
+                                color = bodyTextColor,
                             ),
                             cursorBrush = SolidColor(cursorColor),
                             modifier = Modifier.fillMaxWidth(),
@@ -215,8 +216,8 @@ fun CompletedCard(
                         Text(
                             text = note.body,
                             fontFamily = handwritingFont,
-                            fontSize = 22.sp,
-                            color = textColor,
+                            fontSize = 18.sp,
+                            color = bodyTextColor,
                         )
                     }
                 }
