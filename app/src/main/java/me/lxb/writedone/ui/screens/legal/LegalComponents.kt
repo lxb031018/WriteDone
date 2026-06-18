@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -21,26 +22,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.LocalAmbientProgress
 
 val boldSpan = SpanStyle(fontWeight = FontWeight.Bold)
 val italicSpan = SpanStyle(fontStyle = FontStyle.Italic)
-val codeSpan = SpanStyle(
-    fontFamily = FontFamily.Monospace,
-    color = AppColors.accentDeep,
-    background = AppColors.card,
-)
 
-private val baseStyle = TextStyle(
+@Composable
+private fun baseStyle(): TextStyle = TextStyle(
     fontSize = 14.sp,
     lineHeight = 1.7.em,
-    color = AppColors.text,
+    color = lerp(AppColors.text, AppColors.darkText, LocalAmbientProgress.current),
 )
 
 @Composable
 fun LP(text: String) {
     Text(
         text = text,
-        style = baseStyle,
+        style = baseStyle(),
         modifier = Modifier.padding(vertical = 4.dp),
     )
 }
@@ -49,19 +47,20 @@ fun LP(text: String) {
 fun LPRich(content: AnnotatedString) {
     Text(
         text = content,
-        style = baseStyle,
+        style = baseStyle(),
         modifier = Modifier.padding(vertical = 4.dp),
     )
 }
 
 @Composable
 fun LH2(text: String) {
+    val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
         style = TextStyle(
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = AppColors.text,
+            color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
         ),
         modifier = Modifier.padding(top = 18.dp, bottom = 8.dp),
     )
@@ -69,12 +68,13 @@ fun LH2(text: String) {
 
 @Composable
 fun LH3(text: String) {
+    val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
         style = TextStyle(
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = AppColors.text,
+            color = lerp(AppColors.text, AppColors.darkText, ambientProgress),
         ),
         modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
     )
@@ -88,12 +88,13 @@ fun LBullet(text: String) {
             .padding(start = 4.dp, top = 2.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.Start,
     ) {
+        val s = baseStyle()
         Text(
             text = "\u2022",
-            style = baseStyle,
+            style = s,
             modifier = Modifier.padding(end = 8.dp),
         )
-        Text(text = text, style = baseStyle)
+        Text(text = text, style = s)
     }
 }
 
@@ -105,36 +106,39 @@ fun LBulletRich(content: AnnotatedString) {
             .padding(start = 4.dp, top = 2.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.Start,
     ) {
+        val s = baseStyle()
         Text(
             text = "\u2022",
-            style = baseStyle,
+            style = s,
             modifier = Modifier.padding(end = 8.dp),
         )
-        Text(text = content, style = baseStyle)
+        Text(text = content, style = s)
     }
 }
 
 @Composable
 fun LRule() {
+    val ambientProgress = LocalAmbientProgress.current
     Spacer(Modifier.height(12.dp))
-    HorizontalDivider(thickness = 1.dp, color = AppColors.border)
+    HorizontalDivider(thickness = 1.dp, color = lerp(AppColors.border, AppColors.darkBorder, ambientProgress))
     Spacer(Modifier.height(12.dp))
 }
 
 @Composable
 fun LContactLine(label: String, value: String) {
+    val ambientProgress = LocalAmbientProgress.current
     Row(
         modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Text(
             text = "$label:",
-            style = baseStyle.copy(color = AppColors.textMuted),
+            style = baseStyle().copy(color = lerp(AppColors.textMuted, AppColors.darkTextMuted, ambientProgress)),
             modifier = Modifier.padding(end = 8.dp),
         )
         Text(
             text = value,
-            style = baseStyle.copy(color = AppColors.accentDeep),
+            style = baseStyle().copy(color = lerp(AppColors.accentDeep, AppColors.darkAccentDeep, ambientProgress)),
         )
     }
 }

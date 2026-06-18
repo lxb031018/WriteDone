@@ -19,14 +19,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.lxb.writedone.R
+import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.LocalAmbientProgress
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAgreementPage(onBack: () -> Unit) {
+    val ambientProgress = LocalAmbientProgress.current
     Scaffold(
+        containerColor = lerp(AppColors.bg, AppColors.darkBg, ambientProgress),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.user_agreement_title)) },
@@ -36,7 +41,7 @@ fun UserAgreementPage(onBack: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
+                    containerColor = lerp(AppColors.bg, AppColors.darkBg, ambientProgress),
                 ),
             )
         },
