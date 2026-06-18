@@ -129,6 +129,7 @@ private fun SectionHeader(
 
 @Composable
 fun CompletedCard(
+    modifier: Modifier = Modifier,
     note: CompletedNote,
     breathingEnabled: Boolean,
     onBodyChange: ((Long, String) -> Unit)? = null,
@@ -169,7 +170,7 @@ fun CompletedCard(
     val isBodyEditable = onBodyChange != null
 
     Box(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
             Column(

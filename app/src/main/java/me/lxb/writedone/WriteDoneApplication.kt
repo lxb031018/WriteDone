@@ -8,6 +8,6 @@ import me.lxb.writedone.service.notification.NotificationHelper
 class WriteDoneApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        NotificationHelper.createChannel(this)
+        NotificationHelper.createChannels(this)
     }
 }

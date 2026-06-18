@@ -13,6 +13,8 @@
     <string name="settings_notification_permission">通知权限</string>
     <string name="settings_exact_alarm_permission">精确闹钟权限</string>
     <string name="settings_auto_start_permission">自启动权限</string>
+    <string name="settings_battery_optimization">关闭电池优化</string>
+    <string name="settings_lock_screen_notification">锁屏通知</string>
     <string name="settings_legal">协议与政策</string>
     <string name="settings_user_agreement">用户协议</string>
     <string name="settings_privacy_policy">隐私政策</string>

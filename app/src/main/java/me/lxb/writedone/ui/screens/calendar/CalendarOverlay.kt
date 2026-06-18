@@ -223,7 +223,11 @@ fun CalendarOverlay(
                     )
                 } else {
                     notes.forEach { note ->
-                        CompletedCard(note = note, breathingEnabled = false)
+                        CompletedCard(
+                            modifier = Modifier.padding(horizontal = Dimens.pageH),
+                            note = note,
+                            breathingEnabled = false,
+                        )
                         Spacer(Modifier.height(Dimens.gap))
                     }
                 }

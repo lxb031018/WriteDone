@@ -37,6 +37,8 @@ fun SettingsDrawer(
     onNotificationPermission: () -> Unit,
     onExactAlarmPermission: () -> Unit,
     onAutoStartPermission: () -> Unit,
+    onBatteryOptimization: () -> Unit,
+    onLockScreenNotification: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ambientProgress = LocalAmbientProgress.current
@@ -61,6 +63,14 @@ fun SettingsDrawer(
         DrawerItem(
             text = stringResource(R.string.settings_auto_start_permission),
             onClick = onAutoStartPermission,
+        )
+        DrawerItem(
+            text = stringResource(R.string.settings_lock_screen_notification),
+            onClick = onLockScreenNotification,
+        )
+        DrawerItem(
+            text = stringResource(R.string.settings_battery_optimization),
+            onClick = onBatteryOptimization,
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_battery_saver))

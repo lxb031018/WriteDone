@@ -17,7 +17,7 @@ class UnlockNotificationReceiver : BroadcastReceiver() {
                 val repo = TimerStateRepositoryImpl(context)
                 if (!repo.loadBreakReminderPendingRepeat()) return@launch
                 repo.saveBreakReminderPendingRepeat(false)
-                NotificationHelper.createChannel(context)
+                NotificationHelper.createChannels(context)
                 NotificationHelper.showBreakReminder(context)
             } finally {
                 pendingResult.finish()

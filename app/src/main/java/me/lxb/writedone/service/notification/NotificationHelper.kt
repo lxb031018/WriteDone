@@ -12,10 +12,13 @@ import me.lxb.writedone.R
 
 object NotificationHelper {
     const val CHANNEL_ID = "write_done_pomodoro"
+    const val CHANNEL_ID_RUNNING = "write_done_timer_running"
     const val NOTIFICATION_ID = 1001
+    const val NOTIFICATION_ID_RUNNING = 1002
 
-    fun createChannel(context: Context) {
-        val channel = NotificationChannel(
+    fun createChannels(context: Context) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val pomodoroChannel = NotificationChannel(
             CHANNEL_ID,
             context.getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH,
@@ -24,8 +27,16 @@ object NotificationHelper {
             enableVibration(true)
             vibrationPattern = longArrayOf(0, 250, 150, 250)
         }
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(channel)
+        manager.createNotificationChannel(pomodoroChannel)
+        val runningChannel = NotificationChannel(
+            CHANNEL_ID_RUNNING,
+            "计时运行中",
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setShowBadge(false)
+        }
+        manager.createNotificationChannel(runningChannel)
     }
 
     fun showBreakReminder(context: Context) {
@@ -49,5 +60,15 @@ object NotificationHelper {
             .setContentIntent(pendingIntent)
             .build()
         manager.notify(NOTIFICATION_ID, notification)
+    }
+
+    fun createTimerRunningNotification(context: Context, isPomodoro: Boolean): Notification {
+        return NotificationCompat.Builder(context, CHANNEL_ID_RUNNING)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("专注中")
+            .setContentText(if (isPomodoro) "番茄计时中" else "计时中")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
     }
 }

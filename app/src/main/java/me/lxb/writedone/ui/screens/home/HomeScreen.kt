@@ -71,6 +71,7 @@ import me.lxb.writedone.service.ambient.AmbientStatus
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.screens.home.TimerStatus
 import me.lxb.writedone.ui.components.CompletedSection
+import me.lxb.writedone.util.OemPermissionGuide
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
 import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
@@ -485,10 +486,13 @@ fun HomeScreen(
                         }
                     },
                     onAutoStartPermission = {
-                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                            context.startActivity(this)
-                        }
+                        OemPermissionGuide.openAutoStartSettings(context)
+                    },
+                    onBatteryOptimization = {
+                        OemPermissionGuide.openBatteryOptimizationSettings(context)
+                    },
+                    onLockScreenNotification = {
+                        OemPermissionGuide.openLockScreenNotificationSettings(context)
                     },
                     modifier = Modifier.align(Alignment.CenterStart),
                 )

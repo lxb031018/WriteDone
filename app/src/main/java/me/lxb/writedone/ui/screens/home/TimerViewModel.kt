@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.lxb.writedone.domain.model.TimerMode
 import me.lxb.writedone.domain.usecase.TimerUseCase
+import me.lxb.writedone.service.TimerForegroundService
 import me.lxb.writedone.service.notification.AlarmReceiver
 import me.lxb.writedone.service.notification.NotificationHelper
 import javax.inject.Inject
@@ -74,6 +76,7 @@ class TimerViewModel @Inject constructor(
         val startTime = timerUseCase.restoreStartTime() ?: return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
         val mode = _state.value.mode
+        startForegroundService(startTime, mode == TimerMode.Pomodoro)
         if (mode == TimerMode.Pomodoro) {
             if (elapsed < WORK_SECONDS) {
                 scheduleBreakAlarm(startTime)
@@ -93,6 +96,7 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             timerUseCase.startTimer()
         }
+        startForegroundService(now, mode == TimerMode.Pomodoro)
         if (mode == TimerMode.Pomodoro) {
             scheduleBreakAlarm(now)
         }
@@ -107,6 +111,7 @@ class TimerViewModel @Inject constructor(
         ))
         timerJob?.cancel()
         timerJob = null
+        stopForegroundService()
         cancelBreakAlarm()
         viewModelScope.launch {
             timerUseCase.stopTimer()
@@ -126,8 +131,14 @@ class TimerViewModel @Inject constructor(
     }
 
     fun takeBreak() {
+        val current = _state.value
+        _stopEvents.tryEmit(StopEvent(
+            elapsedSeconds = current.elapsedSeconds,
+            startTimeMillis = current.startTimeMillis ?: System.currentTimeMillis(),
+        ))
         timerJob?.cancel()
         timerJob = null
+        stopForegroundService()
         cancelBreakAlarm()
         viewModelScope.launch {
             timerUseCase.takeBreak()
@@ -202,6 +213,22 @@ class TimerViewModel @Inject constructor(
         }
     }
 
+    private fun startForegroundService(startTimeMillis: Long, isPomodoro: Boolean) {
+        val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_START
+            putExtra(TimerForegroundService.EXTRA_START_TIME, startTimeMillis)
+            putExtra(TimerForegroundService.EXTRA_IS_POMODORO, isPomodoro)
+        }
+        ContextCompat.startForegroundService(getApplication(), intent)
+    }
+
+    private fun stopForegroundService() {
+        val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_STOP
+        }
+        ContextCompat.startForegroundService(getApplication(), intent)
+    }
+
     private fun scheduleBreakAlarm(startTimeMillis: Long) {
         val triggerTime = startTimeMillis + WORK_SECONDS * 1000L
         val alarmManager = getApplication<Application>().getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -242,5 +269,6 @@ class TimerViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        stopForegroundService()
     }
 }
