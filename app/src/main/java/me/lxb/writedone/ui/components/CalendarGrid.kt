@@ -1,6 +1,7 @@
 package me.lxb.writedone.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +58,14 @@ fun CalendarGrid(
     val isDark = LocalDarkTheme.current
     var displayMonth by remember { mutableStateOf(Calendar.getInstance().apply { time = selectedDate }) }
     var noteDays by remember { mutableStateOf(setOf<Long>()) }
+    val todayMs = remember {
+        Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
 
     val year = displayMonth.get(Calendar.YEAR)
     val month = displayMonth.get(Calendar.MONTH)
@@ -175,15 +184,20 @@ fun CalendarGrid(
                                 selectedCal.get(Calendar.DAY_OF_MONTH) == dayNum
 
                             val isSelectedOrPreview = cellMs in selectedDates
+                            val isToday = cellMs == todayMs
 
                             val circleModifier = if (isSelectedOrPreview)
                                 Modifier.clip(CircleShape).background(colorScheme.primary.copy(alpha = 0.3f))
+                            else Modifier
+                            val todayModifier = if (isToday)
+                                Modifier.border(1.5.dp, colorScheme.primary, CircleShape)
                             else Modifier
 
                             val accentDeepColor = if (isDark) AppColors.darkAccentDeep else AppColors.accentDeep
                             val textColor = when {
                                 isSelectedOrPreview -> accentDeepColor
                                 isSelected -> accentDeepColor
+                                isToday -> colorScheme.primary
                                 cellMs in noteDays -> colorScheme.onSurface
                                 else -> colorScheme.onSurfaceVariant
                             }
@@ -194,6 +208,7 @@ fun CalendarGrid(
                                     .aspectRatio(1f)
                                     .padding(2.dp)
                                     .then(circleModifier)
+                                    .then(todayModifier)
                                     .then(
                                         if (reviewMode) {
                                             Modifier.combinedClickable(
