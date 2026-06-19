@@ -88,7 +88,7 @@
     <string name="completed_header">已完成 — %d</string>
 
     <!-- Timer -->
-    <string name="timer_complete_break">不卷了，休息5分钟\n〜(￣▽￣〜)</string>
+    <string name="timer_complete_break">不卷了，完事休息几分钟\n〜(￣▽￣〜)</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">番茄计时器提醒</string>
