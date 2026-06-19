@@ -24,8 +24,8 @@ android {
         applicationId = "me.lxb.writedone"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10001
-        versionName = "1.0.1"
+        versionCode = 10002
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
