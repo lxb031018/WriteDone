@@ -148,8 +148,6 @@
     <string name="legal_section6">六、知识产权</string>
     <string name="legal_section6_1">6.1 应用知识产权</string>
     <string name="legal_ip_app">本应用 (包括但不限于源代码、UI 设计、文案、图标、Logo 等) 的所有知识产权归开发者 lxb 所有, 受中华人民共和国著作权法、专利法、商标法等法律法规保护。</string>
-    <string name="legal_section6_2">6.2 第三方组件</string>
-    <string name="legal_third_party">本应用使用 Flutter 开源框架及若干开源组件 (如 sqflite、path_provider、intl、shared_preferences 等), 这些组件遵循其各自的许可证, 详见项目仓库中的依赖说明。</string>
     <string name="legal_section6_3">6.3 反馈</string>
     <string name="legal_feedback">如您向我们提供反馈、建议或意见, 您授予我们非独占、免费、永久、不可撤销的使用该等反馈的权利, 用于改进本应用或开发新产品。</string>
     <string name="legal_section7">七、协议变更</string>
