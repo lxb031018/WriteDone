@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,6 +62,8 @@ fun SettingsDrawer(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState()),
     ) {
+        SettingsGuide()
+        Spacer(Modifier.height(8.dp))
         SectionHeader(stringResource(R.string.settings_notifications))
         DrawerItem(
             text = stringResource(R.string.settings_notification_permission),
@@ -218,4 +221,53 @@ private fun DrawerToggle(
             onCheckedChange = onCheckedChange,
         )
     }
+}
+
+@Composable
+private fun SettingsGuide() {
+    val colorScheme = MaterialTheme.colorScheme
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Spacer(Modifier.height(12.dp))
+        GuideSection("📌 便利贴", "输入待办事项，计时结束后自动归档至「已完成」\n（归档后的便利贴仍可二次编辑，在空白处追加备注；原始内容不可修改，新增备注会显示在下方）")
+        GuideSection("⏱️ 计时器", "• 点击计时器：开始 / 结束计时\n• 左右滑动：切换计时器\n• 休息提醒：番茄计时器（番茄红）累积计时达 25 分钟，进行起身活动提示（建议完成手头上的最后一件事就起身休息一下）")
+        GuideSection("📅 日历", "右滑进入日历页面\n长按任意日期，复制当日日程摘要；粘贴至 AI 助手（如豆包/DeepSeek），聊一聊当日的生活质量")
+        GuideSection("🔔 权限说明", "为保障计时结束时的提醒功能，建议授予设置页面提到的权限。")
+        GuideSection("📁 隐私承诺", "WriteDone 仅读取本地数据，不会上传至云端。")
+        Spacer(Modifier.height(8.dp))
+        HorizontalDivider(color = colorScheme.outline.copy(alpha = 0.3f))
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "💡 开发者手记",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "浪漫小钱钱（刘俏斌 / 彬仔 / B仔）。特别在意省电，常规使用几乎不耗电；「横屏摆件模式」功耗会略增。",
+            fontSize = 13.sp,
+            color = colorScheme.onSurfaceVariant,
+            lineHeight = 20.sp,
+        )
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun GuideSection(header: String, body: String) {
+    val colorScheme = MaterialTheme.colorScheme
+    Text(
+        text = header,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = colorScheme.onSurface,
+    )
+    Spacer(Modifier.height(4.dp))
+    Text(
+        text = body,
+        fontSize = 13.sp,
+        color = colorScheme.onSurfaceVariant,
+        lineHeight = 20.sp,
+    )
+    Spacer(Modifier.height(12.dp))
 }
