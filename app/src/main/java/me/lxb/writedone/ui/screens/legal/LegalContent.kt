@@ -106,8 +106,6 @@ fun UserAgreementBody() {
     LH2(stringResource(R.string.legal_section6))
     LH3(stringResource(R.string.legal_section6_1))
     LP(stringResource(R.string.legal_ip_app))
-    LH3(stringResource(R.string.legal_section6_2))
-    LP(stringResource(R.string.legal_third_party))
     LH3(stringResource(R.string.legal_section6_3))
     LPRich(buildAnnotatedString {
         append(stringResource(R.string.legal_feedback))
