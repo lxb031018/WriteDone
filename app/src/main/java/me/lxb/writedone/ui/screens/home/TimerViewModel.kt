@@ -226,7 +226,7 @@ class TimerViewModel @Inject constructor(
         val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
             action = TimerForegroundService.ACTION_STOP
         }
-        ContextCompat.startForegroundService(getApplication(), intent)
+        getApplication<Application>().startService(intent)
     }
 
     private fun scheduleBreakAlarm(startTimeMillis: Long) {
