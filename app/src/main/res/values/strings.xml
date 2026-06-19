@@ -76,7 +76,7 @@
     <string name="calendar_month_header">%1$d年%2$d月</string>
 
     <!-- Sticky Note -->
-    <string name="sticky_placeholder">准备好了嘛^_^</string>
+    <string name="sticky_placeholder">定个小目标 (¥ᴗ¥)✨</string>
     <string name="sticky_header_date">%1$d年%2$d月%3$d日    </string>
     <string name="sticky_header_start">开始:</string>
     <string name="sticky_header_empty_date">--年--月--日    开始:--:--</string>
