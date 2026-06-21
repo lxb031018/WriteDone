@@ -88,6 +88,9 @@
     <string name="sync_role_isolated">未连接到热点</string>
     <string name="sync_now">立即同步</string>
     <string name="sync_in_progress">同步中…</string>
+    <string name="sync_host_toggle">作为同步主机</string>
+    <string name="sync_host_description">开启后，其他设备可通过你同步笔记</string>
+    <string name="sync_manual">手动同步</string>
     <string name="sync_paired_devices">已配对的设备</string>
     <string name="sync_gateway_ip">热点网关</string>
     <string name="sync_gateway_unknown">未知</string>

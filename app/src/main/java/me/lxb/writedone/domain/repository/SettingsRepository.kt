@@ -11,4 +11,6 @@ interface SettingsRepository {
     suspend fun setThemeMode(mode: String)
     suspend fun isAgreementAccepted(): Boolean
     suspend fun setAgreementAccepted(accepted: Boolean)
+    val syncHostEnabled: Flow<Boolean>
+    suspend fun setSyncHostEnabled(enabled: Boolean)
 }

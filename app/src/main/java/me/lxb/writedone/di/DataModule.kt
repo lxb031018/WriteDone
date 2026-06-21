@@ -79,9 +79,11 @@ object DataModule {
         @ApplicationContext context: Context,
         noteUseCase: NoteUseCase,
         pairingRepo: PairingRepository,
+        settingsRepo: SettingsRepository,
     ): SyncManager = SyncManager(
         context = context,
         noteUseCase = noteUseCase,
         pairingRepo = pairingRepo,
+        settingsRepo = settingsRepo,
     )
 }

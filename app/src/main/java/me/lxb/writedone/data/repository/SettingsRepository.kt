@@ -19,6 +19,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         private val agreementAcceptedKey = booleanPreferencesKey("agreement_accepted")
         private val autoDimBrightnessKey = booleanPreferencesKey("auto_dim_brightness")
         private val themeModeKey = stringPreferencesKey("theme_mode")
+        private val syncHostEnabledKey = booleanPreferencesKey("sync_host_enabled")
     }
 
     override val timerModePomodoro: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
@@ -58,6 +59,16 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setAgreementAccepted(accepted: Boolean) {
         context.settingsDataStore.edit { prefs ->
             prefs[agreementAcceptedKey] = accepted
+        }
+    }
+
+    override val syncHostEnabled: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
+        prefs[syncHostEnabledKey] ?: false
+    }
+
+    override suspend fun setSyncHostEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[syncHostEnabledKey] = enabled
         }
     }
 }

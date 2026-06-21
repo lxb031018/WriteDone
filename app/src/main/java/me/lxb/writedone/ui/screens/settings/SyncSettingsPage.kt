@@ -16,11 +16,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,6 +44,10 @@ fun SyncSettingsPage(
 ) {
     val state by syncManager.state.collectAsState()
 
+    LaunchedEffect(Unit) {
+        syncManager.refreshStatus()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,7 +66,72 @@ fun SyncSettingsPage(
 
         Spacer(Modifier.height(16.dp))
 
+        HostToggleCard(
+            isHostEnabled = state.isHostEnabled,
+            onCheckedChange = { syncManager.setHostEnabled(it) },
+        )
+
+        Spacer(Modifier.height(12.dp))
+
         StatusCard(state)
+
+        if (!state.isHostEnabled) {
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = { syncManager.syncNow() },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isSyncing,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Text(
+                    text = if (state.isSyncing) stringResource(R.string.sync_in_progress)
+                    else stringResource(R.string.sync_manual),
+                    fontSize = 14.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HostToggleCard(
+    isHostEnabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!isHostEnabled) }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.sync_host_toggle),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.sync_host_description),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(
+                checked = isHostEnabled,
+                onCheckedChange = onCheckedChange,
+            )
+        }
     }
 }
 
@@ -79,7 +152,10 @@ private fun StatusCard(state: me.lxb.writedone.data.sync.SyncState) {
 
             Spacer(Modifier.height(12.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                val isOnline = state.lastSyncResult.isNotEmpty()
+                    && !state.lastSyncResult.startsWith("同步失败")
+                    && state.lastSyncResult != "未连接到热点"
                 Box(
                     modifier = Modifier
                         .size(10.dp)
@@ -87,7 +163,7 @@ private fun StatusCard(state: me.lxb.writedone.data.sync.SyncState) {
                         .background(
                             when {
                                 state.isHostRunning -> MaterialTheme.colorScheme.primary
-                                state.lastSyncResult.isNotEmpty() -> MaterialTheme.colorScheme.secondary
+                                isOnline -> MaterialTheme.colorScheme.secondary
                                 else -> MaterialTheme.colorScheme.error
                             }
                         ),
@@ -97,7 +173,7 @@ private fun StatusCard(state: me.lxb.writedone.data.sync.SyncState) {
                     text = when {
                         state.isHostRunning -> stringResource(R.string.sync_role_host)
                         state.isSyncing -> stringResource(R.string.sync_in_progress)
-                        state.lastSyncResult.isNotEmpty() -> stringResource(R.string.sync_role_client)
+                        isOnline -> stringResource(R.string.sync_role_client)
                         else -> stringResource(R.string.sync_role_isolated)
                     },
                     fontSize = 14.sp,

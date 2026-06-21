@@ -17,4 +17,8 @@ class SettingsUseCase @Inject constructor(
 
     suspend fun isAgreementAccepted(): Boolean = settingsRepo.isAgreementAccepted()
     suspend fun setAgreementAccepted(accepted: Boolean) = settingsRepo.setAgreementAccepted(accepted)
+
+    val syncHostEnabled: Flow<Boolean> = settingsRepo.syncHostEnabled
+
+    suspend fun setSyncHostEnabled(enabled: Boolean) = settingsRepo.setSyncHostEnabled(enabled)
 }

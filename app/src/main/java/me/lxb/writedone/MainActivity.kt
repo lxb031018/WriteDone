@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
                     timerViewModel.onResume()
-                    syncManager.autoDetectRoleAndStart()
+                    syncManager.onResume()
                 }
                 Lifecycle.Event.ON_PAUSE -> {
                     timerViewModel.onPause()
