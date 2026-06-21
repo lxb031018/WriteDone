@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
                     timerViewModel.onResume()
+                    syncManager.autoDetectRoleAndStart()
                 }
                 Lifecycle.Event.ON_PAUSE -> {
                     timerViewModel.onPause()
@@ -221,7 +222,6 @@ private fun WriteDoneApp(
             BackHandler { currentScreen = Screen.Home }
             SyncSettingsPage(
                 syncManager = syncManager,
-                pairingRepo = pairingRepo,
                 onBack = { currentScreen = Screen.Home },
             )
         }

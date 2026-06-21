@@ -82,6 +82,10 @@
     <string name="sync_host_notification_title">同步服务运行中</string>
     <string name="sync_host_notification_text">设备同步已就绪</string>
     <string name="sync_host_channel_name">同步服务</string>
+    <string name="sync_status">同步状态</string>
+    <string name="sync_role_host">本机为主机，接收同步请求</string>
+    <string name="sync_role_client">已连接</string>
+    <string name="sync_role_isolated">未连接到热点</string>
     <string name="sync_now">立即同步</string>
     <string name="sync_in_progress">同步中…</string>
     <string name="sync_paired_devices">已配对的设备</string>
