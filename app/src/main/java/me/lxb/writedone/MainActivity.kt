@@ -26,6 +26,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import me.lxb.writedone.data.sync.PairingRepository
+import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.service.ambient.AmbientController
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.domain.usecase.SettingsUseCase
@@ -35,6 +37,7 @@ import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
 import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.home.HomeScreen
 import me.lxb.writedone.ui.screens.settings.AboutPage
+import me.lxb.writedone.ui.screens.settings.SyncSettingsPage
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.ThemeMode
 import me.lxb.writedone.ui.theme.WriteDoneTheme
@@ -52,6 +55,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settingsUseCase: SettingsUseCase
     @Inject lateinit var noteRepo: NoteRepository
+    @Inject lateinit var syncManager: SyncManager
+    @Inject lateinit var pairingRepo: PairingRepository
 
     private val ambientController = AmbientController()
 
@@ -61,8 +66,12 @@ class MainActivity : ComponentActivity() {
 
         lifecycle.addObserver(LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> timerViewModel.onResume()
-                Lifecycle.Event.ON_PAUSE -> timerViewModel.onPause()
+                Lifecycle.Event.ON_RESUME -> {
+                    timerViewModel.onResume()
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    timerViewModel.onPause()
+                }
                 else -> {}
             }
         })
@@ -87,6 +96,8 @@ class MainActivity : ComponentActivity() {
                         settingsRepo = settingsUseCase,
                         noteRepo = noteRepo,
                         ambientController = ambientController,
+                        syncManager = syncManager,
+                        pairingRepo = pairingRepo,
                         ambientProgress = ambientProgress,
                         onAmbientProgressChange = { ambientProgress = it },
                     )
@@ -97,11 +108,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         ambientController.dispose()
+        syncManager.destroy()
         super.onDestroy()
     }
 }
 
-enum class Screen { Home, Calendar, About, UserAgreement, PrivacyPolicy }
+enum class Screen { Home, Calendar, About, UserAgreement, PrivacyPolicy, Sync }
 
 @Composable
 private fun WriteDoneApp(
@@ -111,6 +123,8 @@ private fun WriteDoneApp(
     settingsRepo: SettingsUseCase,
     noteRepo: NoteRepository,
     ambientController: AmbientController,
+    syncManager: SyncManager,
+    pairingRepo: PairingRepository,
     ambientProgress: Float,
     onAmbientProgressChange: (Float) -> Unit,
 ) {
@@ -170,6 +184,7 @@ private fun WriteDoneApp(
                 noteRepo = noteRepo,
                 ambientProgress = ambientProgress,
                 onAmbientProgressChange = onAmbientProgressChange,
+                onSyncSettings = { currentScreen = Screen.Sync },
             )
         }
         Screen.Calendar -> {
@@ -201,6 +216,14 @@ private fun WriteDoneApp(
             PrivacyPolicyPage(onBack = {
                 currentScreen = Screen.Home
             })
+        }
+        Screen.Sync -> {
+            BackHandler { currentScreen = Screen.Home }
+            SyncSettingsPage(
+                syncManager = syncManager,
+                pairingRepo = pairingRepo,
+                onBack = { currentScreen = Screen.Home },
+            )
         }
     }
 }

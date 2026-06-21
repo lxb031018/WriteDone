@@ -114,6 +114,7 @@ fun HomeScreen(
     noteRepo: NoteRepository? = null,
     ambientProgress: Float = 0f,
     onAmbientProgressChange: (Float) -> Unit = {},
+    onSyncSettings: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val completedState by completedViewModel.state.collectAsState()
@@ -496,6 +497,7 @@ fun HomeScreen(
                     onUserAgreement = { showUserAgreement = true },
                     onPrivacyPolicy = { showPrivacyPolicy = true },
                     onExportData = { exportLauncher.launch("WriteDone_all.json") },
+                    onSyncSettings = onSyncSettings,
                     onNotificationPermission = {
                         Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)

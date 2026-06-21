@@ -73,6 +73,22 @@
     <string name="calendar_export_success">JSON 已复制到剪贴板</string>
     <string name="settings_export_data">导出数据</string>
     <string name="settings_export_success">数据已导出</string>
+    <string name="settings_sync">局域网同步</string>
+    <string name="settings_sync_title">局域网同步</string>
+    <string name="sync_host_mode">主机模式</string>
+    <string name="sync_host_mode_desc">作为热点设备，接收其他设备的同步请求</string>
+    <string name="sync_host_started">同步服务运行中</string>
+    <string name="sync_host_stopped">同步服务未运行</string>
+    <string name="sync_host_notification_title">同步服务运行中</string>
+    <string name="sync_host_notification_text">设备同步已就绪</string>
+    <string name="sync_host_channel_name">同步服务</string>
+    <string name="sync_now">立即同步</string>
+    <string name="sync_in_progress">同步中…</string>
+    <string name="sync_paired_devices">已配对的设备</string>
+    <string name="sync_gateway_ip">热点网关</string>
+    <string name="sync_gateway_unknown">未知</string>
+    <string name="sync_last_sync">上次同步</string>
+    <string name="sync_never">从未</string>
     <string name="calendar_month_header">%1$d年%2$d月</string>
 
     <!-- Sticky Note -->

@@ -1,6 +1,7 @@
 package me.lxb.writedone.di
 
 import android.content.Context
+import android.provider.Settings
 import androidx.room.Room
 import dagger.Module
 import dagger.Provides
@@ -13,10 +14,14 @@ import me.lxb.writedone.data.repository.DraftRepositoryImpl
 import me.lxb.writedone.data.repository.NoteRepositoryImpl
 import me.lxb.writedone.data.repository.SettingsRepositoryImpl
 import me.lxb.writedone.data.repository.TimerStateRepositoryImpl
+import me.lxb.writedone.data.sync.PairingRepository
+import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.domain.repository.DraftRepository
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.domain.repository.SettingsRepository
 import me.lxb.writedone.domain.repository.TimerStateRepository
+import me.lxb.writedone.domain.usecase.NoteUseCase
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -31,7 +36,7 @@ object DataModule {
             AppDatabase::class.java,
             "writedone.db",
         )
-            .fallbackToDestructiveMigration(true)
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .build()
     }
 
@@ -56,4 +61,27 @@ object DataModule {
     @Singleton
     fun provideTimerStateRepository(@ApplicationContext context: Context): TimerStateRepository =
         TimerStateRepositoryImpl(context)
+
+    @Provides
+    @Named("deviceId")
+    @Singleton
+    fun provideDeviceId(@ApplicationContext context: Context): String =
+        Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
+
+    @Provides
+    @Singleton
+    fun providePairingRepository(@ApplicationContext context: Context): PairingRepository =
+        PairingRepository(context)
+
+    @Provides
+    @Singleton
+    fun provideSyncManager(
+        @ApplicationContext context: Context,
+        noteUseCase: NoteUseCase,
+        pairingRepo: PairingRepository,
+    ): SyncManager = SyncManager(
+        context = context,
+        noteUseCase = noteUseCase,
+        pairingRepo = pairingRepo,
+    )
 }

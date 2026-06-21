@@ -3,6 +3,7 @@ package me.lxb.writedone.data.local
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import me.lxb.writedone.data.model.CompletedNote
 
 @Dao
@@ -19,4 +20,54 @@ interface CompletedNoteDao {
 
     @Query("SELECT * FROM completed_notes ORDER BY created_at DESC")
     suspend fun getAll(): List<CompletedNote>
+
+    @Query("SELECT * FROM completed_notes WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getBySyncId(syncId: String): CompletedNote?
+
+    @Query("""
+        UPDATE completed_notes 
+        SET content = :content, body = :body, created_at = :createdAt, 
+            duration_seconds = :durationSeconds, last_modified_at = :lastModifiedAt, 
+            device_id = :deviceId 
+        WHERE sync_id = :syncId
+    """)
+    suspend fun updateBySyncId(
+        syncId: String, content: String, body: String,
+        createdAt: Long, durationSeconds: Int,
+        lastModifiedAt: Long, deviceId: String,
+    )
+
+    @Transaction
+    suspend fun upsert(note: CompletedNote) {
+        if (note.syncId.isEmpty()) {
+            insert(note)
+            return
+        }
+        val existing = getBySyncId(note.syncId)
+        if (existing != null) {
+            if (note.lastModifiedAt >= existing.lastModifiedAt) {
+                updateBySyncId(
+                    syncId = note.syncId,
+                    content = note.content,
+                    body = note.body,
+                    createdAt = note.createdAt,
+                    durationSeconds = note.durationSeconds,
+                    lastModifiedAt = note.lastModifiedAt,
+                    deviceId = note.deviceId,
+                )
+            }
+        } else {
+            insert(note)
+        }
+    }
+
+    @Transaction
+    suspend fun upsertAll(notes: List<CompletedNote>) {
+        for (note in notes) {
+            upsert(note)
+        }
+    }
+
+    @Query("SELECT * FROM completed_notes WHERE sync_id != '' AND last_modified_at > :since ORDER BY last_modified_at ASC")
+    suspend fun getModifiedSince(since: Long): List<CompletedNote>
 }

@@ -33,4 +33,11 @@ class NoteRepositoryImpl(private val dao: CompletedNoteDao) : NoteRepository {
     }
 
     override suspend fun getAll(): List<CompletedNote> = dao.getAll()
+
+    override suspend fun upsert(note: CompletedNote) = dao.upsert(note)
+
+    override suspend fun upsertAll(notes: List<CompletedNote>) = dao.upsertAll(notes)
+
+    override suspend fun getModifiedSince(since: Long): List<CompletedNote> =
+        dao.getModifiedSince(since)
 }
