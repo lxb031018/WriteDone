@@ -58,7 +58,6 @@ class SyncManager @Inject constructor(
                 startHost()
             } else {
                 maybeSyncAsClient()
-                SyncWorker.schedule(context)
             }
         }
     }
@@ -85,7 +84,6 @@ class SyncManager @Inject constructor(
 
     fun destroy() {
         stopHost()
-        SyncWorker.cancel(context)
         scope.cancel()
     }
 
