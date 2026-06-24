@@ -21,7 +21,6 @@ import me.lxb.writedone.domain.repository.DraftRepository
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.domain.repository.SettingsRepository
 import me.lxb.writedone.domain.repository.TimerStateRepository
-import me.lxb.writedone.domain.usecase.NoteUseCase
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -80,13 +79,11 @@ object DataModule {
         @ApplicationContext context: Context,
         noteRepo: NoteRepository,
         pairingRepo: PairingRepository,
-        settingsRepo: SettingsRepository,
         hotspotManager: HotspotManager,
     ): SyncManager = SyncManager(
         context = context,
         noteRepo = noteRepo,
         pairingRepo = pairingRepo,
-        settingsRepo = settingsRepo,
         hotspotManager = hotspotManager,
     )
 }

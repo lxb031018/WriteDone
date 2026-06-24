@@ -3,7 +3,6 @@ package me.lxb.writedone.ui.screens.home
 import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.provider.Settings
 import android.os.Handler
 import android.os.Looper
@@ -191,16 +190,12 @@ fun HomeScreen(
         }
     }
     // Observe sync completion and refresh CompletedSection
-    var lastSyncVersion by remember { mutableIntStateOf(0) }
     LaunchedEffect(syncManager) {
         if (syncManager == null) return@LaunchedEffect
-        while (true) {
-            val v = syncManager.state.value.syncCompletedVersion
-            if (v > 0 && v != lastSyncVersion) {
-                lastSyncVersion = v
+        syncManager.state.collect { state ->
+            if (state.syncCompletedVersion > 0) {
                 completedViewModel.refresh()
             }
-            delay(500)
         }
     }
 

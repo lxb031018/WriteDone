@@ -14,7 +14,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.lxb.writedone.domain.repository.NoteRepository
-import me.lxb.writedone.domain.repository.SettingsRepository
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -39,7 +38,6 @@ class SyncManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val noteRepo: NoteRepository,
     private val pairingRepo: PairingRepository,
-    private val settingsRepo: SettingsRepository,
     private val hotspotManager: HotspotManager,
 ) {
     companion object {
@@ -54,10 +52,6 @@ class SyncManager @Inject constructor(
 
     private var serverSocket: ServerSocket? = null
     private var serverScope: CoroutineScope? = null
-
-    fun onResume() {
-        // No auto-initialization needed; user triggers sync manually
-    }
 
     fun syncNow() {
         scope.launch {

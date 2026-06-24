@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -23,29 +21,12 @@ class PairingRepository(private val context: Context) {
         val lastSeenIp: String = "",
     )
 
-    suspend fun getPairedDeviceIds(): List<String> {
-        return getPairedDevices().map { it.deviceId }
-    }
-
-    suspend fun isPaired(deviceId: String): Boolean {
-        return getPairedDeviceIds().contains(deviceId)
-    }
-
     suspend fun addPairedDevice(deviceId: String, deviceName: String) {
         val devices = getPairedDevices().toMutableList()
         if (devices.none { it.deviceId == deviceId }) {
             devices.add(PairedDevice(deviceId, deviceName))
             savePairedDevices(devices)
         }
-    }
-
-    suspend fun removePairedDevice(deviceId: String) {
-        val devices = getPairedDevices().filter { it.deviceId != deviceId }
-        savePairedDevices(devices)
-    }
-
-    suspend fun getPairedDeviceNames(): Map<String, String> {
-        return getPairedDevices().associate { it.deviceId to it.deviceName }
     }
 
     suspend fun getLastSyncTimestamp(): Long {
@@ -87,29 +68,4 @@ class PairingRepository(private val context: Context) {
         }
     }
 
-    fun pairedDeviceCountFlow(): Flow<Int> {
-        return context.syncStore.data.map { prefs ->
-            val json = prefs[PAIRED_DEVICES_KEY] ?: return@map 0
-            try {
-                JSONArray(json).length()
-            } catch (_: Exception) {
-                0
-            }
-        }
-    }
-
-    fun pairedDeviceNamesFlow(): Flow<Map<String, String>> {
-        return context.syncStore.data.map { prefs ->
-            val json = prefs[PAIRED_DEVICES_KEY] ?: return@map emptyMap()
-            try {
-                val arr = JSONArray(json)
-                (0 until arr.length()).associate { i ->
-                    val obj = arr.getJSONObject(i)
-                    obj.getString("deviceId") to obj.optString("deviceName", "")
-                }
-            } catch (_: Exception) {
-                emptyMap()
-            }
-        }
-    }
 }

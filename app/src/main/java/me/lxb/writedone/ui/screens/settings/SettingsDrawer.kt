@@ -24,15 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
-import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
-import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.ThemeMode
 
 @Composable
@@ -52,7 +49,6 @@ fun SettingsDrawer(
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val ambientProgress = LocalAmbientProgress.current
 
     Column(
         modifier = modifier
@@ -131,7 +127,6 @@ fun SettingsDrawer(
 @Composable
 private fun SectionHeader(text: String) {
     val colorScheme = MaterialTheme.colorScheme
-    val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
         modifier = Modifier
@@ -146,7 +141,6 @@ private fun SectionHeader(text: String) {
 @Composable
 private fun DrawerItem(text: String, onClick: () -> Unit) {
     val colorScheme = MaterialTheme.colorScheme
-    val ambientProgress = LocalAmbientProgress.current
     Text(
         text = text,
         modifier = Modifier
@@ -201,7 +195,6 @@ private fun DrawerToggle(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val ambientProgress = LocalAmbientProgress.current
     Row(
         modifier = Modifier
             .fillMaxWidth()

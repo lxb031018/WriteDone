@@ -7,7 +7,6 @@ import org.json.JSONObject
 internal const val MSG_TYPE_IDENTIFY = "IDENTIFY"
 internal const val MSG_TYPE_IDENTIFY_ACK = "IDENTIFY_ACK"
 internal const val MSG_TYPE_SYNC_SUMMARY = "SYNC_SUMMARY"
-internal const val MSG_TYPE_SYNC_REQUEST = "SYNC_REQUEST"
 internal const val MSG_TYPE_SYNC_DATA = "SYNC_DATA"
 internal const val MSG_TYPE_SYNC_ACK = "SYNC_ACK"
 
