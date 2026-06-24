@@ -74,6 +74,11 @@ class CompletedViewModel @Inject constructor(
         }
     }
 
+    fun refresh() {
+        loadByDate(_state.value.selectedDate)
+        loadTodayNotes()
+    }
+
     fun addNote(content: String, createdAt: Date, durationSeconds: Int) {
         if (content.isBlank()) return
         viewModelScope.launch {

@@ -67,6 +67,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import androidx.compose.runtime.mutableIntStateOf
 import kotlinx.coroutines.launch
 import kotlin.math.pow
 import kotlin.math.sin
@@ -85,6 +86,7 @@ import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
+import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
 import me.lxb.writedone.ui.screens.home.TimerViewModel
 import me.lxb.writedone.ui.screens.settings.SettingsViewModel
@@ -115,6 +117,7 @@ fun HomeScreen(
     ambientProgress: Float = 0f,
     onAmbientProgressChange: (Float) -> Unit = {},
     onSyncSettings: () -> Unit = {},
+    syncManager: SyncManager? = null,
     modifier: Modifier = Modifier,
 ) {
     val completedState by completedViewModel.state.collectAsState()
@@ -198,6 +201,20 @@ fun HomeScreen(
             breathingAlphaValue.floatValue = 0f
         }
     }
+    // Observe sync completion and refresh CompletedSection
+    var lastSyncVersion by remember { mutableIntStateOf(0) }
+    LaunchedEffect(syncManager) {
+        if (syncManager == null) return@LaunchedEffect
+        while (true) {
+            val v = syncManager.state.value.syncCompletedVersion
+            if (v > 0 && v != lastSyncVersion) {
+                lastSyncVersion = v
+                completedViewModel.refresh()
+            }
+            delay(500)
+        }
+    }
+
     val breathingAlpha: State<Float>? = if (ambientState.breathingEnabled) breathingAlphaValue else null
     val ambientProgress = themeAnim.value
 

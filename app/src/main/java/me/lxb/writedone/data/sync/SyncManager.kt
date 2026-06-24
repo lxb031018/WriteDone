@@ -31,6 +31,7 @@ data class SyncState(
     val role: Role = Role.UNKNOWN,
     val isServerRunning: Boolean = false,
     val gatewayAddress: InetAddress? = null,
+    val syncCompletedVersion: Int = 0,
 )
 
 @Singleton
@@ -97,7 +98,12 @@ class SyncManager @Inject constructor(
                             doSync(gateway)
                         }
                     }
-                    _state.value = _state.value.copy(isSyncing = false, lastSyncResult = result)
+                    _state.value = _state.value.copy(
+                        isSyncing = false,
+                        lastSyncResult = result,
+                        syncCompletedVersion = if (result == "同步完成") _state.value.syncCompletedVersion + 1
+                            else _state.value.syncCompletedVersion,
+                    )
                 }
                 Role.UNKNOWN -> {
                     _state.value = _state.value.copy(
@@ -199,7 +205,10 @@ class SyncManager @Inject constructor(
             if (incoming.isNotEmpty() || hostSyncNotes.isNotEmpty()) {
                 pairingRepo.updateLastSyncTimestamp(System.currentTimeMillis())
             }
-            _state.value = _state.value.copy(lastSyncResult = "同步完成")
+            _state.value = _state.value.copy(
+                lastSyncResult = "同步完成",
+                syncCompletedVersion = _state.value.syncCompletedVersion + 1,
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Server handler error", e)
         } finally {

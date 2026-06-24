@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.lxb.writedone.data.sync.HotspotManager
 import me.lxb.writedone.data.sync.PairingRepository
@@ -157,6 +158,14 @@ private fun WriteDoneApp(
 
     if (!agreementChecked) return
 
+    // Auto-sync 3 seconds after app opens
+    LaunchedEffect(agreementChecked) {
+        delay(3000)
+        if (!pendingAgreement) {
+            syncManager.syncNow()
+        }
+    }
+
     if (showAgreement) {
         AgreementDialog(
             onAgree = {
@@ -189,6 +198,7 @@ private fun WriteDoneApp(
                 ambientProgress = ambientProgress,
                 onAmbientProgressChange = onAmbientProgressChange,
                 onSyncSettings = { currentScreen = Screen.Sync },
+                syncManager = syncManager,
             )
         }
         Screen.Calendar -> {
