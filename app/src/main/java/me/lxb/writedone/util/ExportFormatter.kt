@@ -83,22 +83,6 @@ object ExportFormatter {
         return arr.toString(2)
     }
 
-    fun toJson(notes: List<CompletedNote>): String {
-        val arr = JSONArray()
-        for (note in notes) {
-            arr.put(JSONObject().apply {
-                put("content", note.content)
-                put("body", note.body)
-                put("createdAt", note.createdAt)
-                put("durationSeconds", note.durationSeconds)
-            })
-        }
-        return JSONObject().apply {
-            put("version", 1)
-            put("notes", arr)
-        }.toString(2)
-    }
-
     private fun appendGaps(sb: StringBuilder, sortedNotes: List<CompletedNote>) {
         val gaps = mutableListOf<Triple<Long, Long, Long>>()
         for (i in 0 until sortedNotes.size - 1) {

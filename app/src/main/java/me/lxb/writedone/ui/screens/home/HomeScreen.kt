@@ -62,7 +62,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import me.lxb.writedone.R
-import me.lxb.writedone.util.exportAllToJsonFile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -137,16 +136,6 @@ fun HomeScreen(
 
     var showUserAgreement by remember { mutableStateOf(false) }
     var showPrivacyPolicy by remember { mutableStateOf(false) }
-
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json")
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                noteRepo?.let { exportAllToJsonFile(context, uri, it) }
-            }
-        }
-    }
 
     fun animateDrawerTo(target: Float) {
         scope.launch {
@@ -513,7 +502,6 @@ fun HomeScreen(
                     onThemeModeChange = { settingsViewModel.setThemeMode(it) },
                     onUserAgreement = { showUserAgreement = true },
                     onPrivacyPolicy = { showPrivacyPolicy = true },
-                    onExportData = { exportLauncher.launch("WriteDone_all.json") },
                     onSyncSettings = onSyncSettings,
                     onNotificationPermission = {
                         Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {

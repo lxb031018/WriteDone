@@ -306,8 +306,6 @@ fun PrivacyPolicyBody() {
     LBullet(stringResource(R.string.legal_pp_delete_item))
     LBullet(stringResource(R.string.legal_pp_delete_clear_data))
     LBullet(stringResource(R.string.legal_pp_delete_uninstall))
-    LH3(stringResource(R.string.legal_pp_section7_3))
-    LP(stringResource(R.string.legal_pp_export_right))
     LH3(stringResource(R.string.legal_pp_section7_4))
     LPRich(buildAnnotatedString {
         append(stringResource(R.string.legal_pp_withdraw_consent))

@@ -71,8 +71,6 @@
     <string name="calendar_no_records">这天还没有记录</string>
     <string name="calendar_copied_toast">已复制到剪贴板</string>
     <string name="calendar_export_success">JSON 已复制到剪贴板</string>
-    <string name="settings_export_data">导出数据</string>
-    <string name="settings_export_success">数据已导出</string>
     <string name="settings_sync">局域网同步</string>
     <string name="settings_sync_title">局域网同步</string>
     <string name="sync_host_mode">主机模式</string>
@@ -278,8 +276,6 @@
     <string name="legal_pp_delete_item">在应用内删除单条记录 (未来版本将提供)</string>
     <string name="legal_pp_delete_clear_data">清除应用数据 (系统设置 → 应用 → WriteDone → 存储 → 清除数据)</string>
     <string name="legal_pp_delete_uninstall">卸载应用 (永久删除所有数据)</string>
-    <string name="legal_pp_section7_3">7.3 导出权 (未来)</string>
-    <string name="legal_pp_export_right">未来版本可能提供&quot;导出数据&quot;功能, 让您将本地数据导出为通用格式 (如 JSON、CSV)。</string>
     <string name="legal_pp_section7_4">7.4 撤回同意</string>
     <string name="legal_pp_withdraw_consent">您可以随时通过卸载本应用撤回对本政策的同意, 撤回后我们将不再处理您的信息 (因我们从未处理过)。</string>
     <string name="legal_pp_section7_5">7.5 投诉举报</string>

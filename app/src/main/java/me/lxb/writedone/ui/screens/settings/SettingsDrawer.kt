@@ -43,7 +43,6 @@ fun SettingsDrawer(
     onThemeModeChange: (ThemeMode) -> Unit,
     onUserAgreement: () -> Unit,
     onPrivacyPolicy: () -> Unit,
-    onExportData: () -> Unit,
     onSyncSettings: () -> Unit,
     onNotificationPermission: () -> Unit,
     onExactAlarmPermission: () -> Unit,
@@ -125,12 +124,6 @@ fun SettingsDrawer(
         DrawerItem(
             text = stringResource(R.string.settings_sync),
             onClick = onSyncSettings,
-        )
-        Spacer(Modifier.height(12.dp))
-        SectionHeader(stringResource(R.string.settings_export_data))
-        DrawerItem(
-            text = stringResource(R.string.settings_export_data),
-            onClick = onExportData,
         )
     }
 }
