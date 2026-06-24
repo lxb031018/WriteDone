@@ -417,9 +417,6 @@ fun HomeScreen(
                                     showHeader = true,
                                     breathingEnabled = breathingEnabled,
                                     onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
-                                    onResolveConflict = { note ->
-                                        completedViewModel.resolveConflict(note.id)
-                                    },
                                     modifier = Modifier.fillMaxSize(),
                                 )
                             }
@@ -477,9 +474,6 @@ fun HomeScreen(
                             showHeader = true,
                             breathingEnabled = breathingEnabled,
                             onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
-                            onResolveConflict = { note ->
-                                completedViewModel.resolveConflict(note.id)
-                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = Dimens.pageH)

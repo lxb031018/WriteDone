@@ -50,18 +50,6 @@ class CompletedViewModel @Inject constructor(
         loadByDate(date)
     }
 
-    fun resolveConflict(id: Long) {
-        viewModelScope.launch {
-            noteUseCase.resolveConflict(id)
-            _state.update { st ->
-                st.copy(
-                    notes = st.notes.map { if (it.id == id) it.copy(conflictDeviceId = "") else it },
-                    todayNotes = st.todayNotes.map { if (it.id == id) it.copy(conflictDeviceId = "") else it },
-                )
-            }
-        }
-    }
-
     fun updateNoteBody(id: Long, body: String) {
         viewModelScope.launch {
             noteUseCase.updateNoteBody(id, body)

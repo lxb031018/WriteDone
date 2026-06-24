@@ -33,12 +33,8 @@ class NoteUseCase @Inject constructor(
 
     suspend fun getAllNotes(): List<CompletedNote> = noteRepo.getAll()
 
-    suspend fun upsert(note: CompletedNote) = noteRepo.upsert(note)
-
     suspend fun upsertAll(notes: List<CompletedNote>) = noteRepo.upsertAll(notes)
 
     suspend fun getModifiedSince(since: Long): List<CompletedNote> =
         noteRepo.getModifiedSince(since)
-
-    suspend fun resolveConflict(id: Long) = noteRepo.resolveConflict(id)
 }

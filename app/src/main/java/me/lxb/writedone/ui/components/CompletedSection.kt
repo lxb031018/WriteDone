@@ -59,7 +59,6 @@ fun CompletedSection(
     showHeader: Boolean = true,
     breathingEnabled: Boolean = false,
     onNoteBodyChange: ((Long, String) -> Unit)? = null,
-    onResolveConflict: ((CompletedNote) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -104,7 +103,6 @@ fun CompletedSection(
                         note = note,
                         breathingEnabled = breathingEnabled,
                         onBodyChange = onNoteBodyChange,
-                        onResolveConflict = onResolveConflict,
                     )
                     Spacer(Modifier.height(Dimens.gap))
                 }
@@ -144,7 +142,6 @@ fun CompletedCard(
     note: CompletedNote,
     breathingEnabled: Boolean,
     onBodyChange: ((Long, String) -> Unit)? = null,
-    onResolveConflict: ((CompletedNote) -> Unit)? = null,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val isDark = LocalDarkTheme.current
@@ -214,24 +211,7 @@ fun CompletedCard(
                         color = headerTextColor,
                         modifier = Modifier.weight(1f),
                     )
-                    if (note.conflictDeviceId.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.errorContainer,
-                                    shape = RoundedCornerShape(4.dp),
-                                )
-                                .clickable { onResolveConflict?.invoke(note) }
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                        ) {
-                            Text(
-                                text = "⚠ 冲突",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    }
+
                 }
                 Spacer(Modifier.height(Dimens.gap))
                 HorizontalDivider(color = dividerColor, thickness = 1.dp)

@@ -37,8 +37,7 @@ object DataModule {
             AppDatabase::class.java,
             "writedone.db",
         )
-            .addMigrations(AppDatabase.MIGRATION_1_2)
-            .addMigrations(AppDatabase.MIGRATION_2_3)
+            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_3_4)
             .build()
     }
 
@@ -79,13 +78,13 @@ object DataModule {
     @Singleton
     fun provideSyncManager(
         @ApplicationContext context: Context,
-        noteUseCase: NoteUseCase,
+        noteRepo: NoteRepository,
         pairingRepo: PairingRepository,
         settingsRepo: SettingsRepository,
         hotspotManager: HotspotManager,
     ): SyncManager = SyncManager(
         context = context,
-        noteUseCase = noteUseCase,
+        noteRepo = noteRepo,
         pairingRepo = pairingRepo,
         settingsRepo = settingsRepo,
         hotspotManager = hotspotManager,

@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.domain.repository.SettingsRepository
-import me.lxb.writedone.domain.usecase.NoteUseCase
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -37,7 +37,7 @@ data class SyncState(
 @Singleton
 class SyncManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val noteUseCase: NoteUseCase,
+    private val noteRepo: NoteRepository,
     private val pairingRepo: PairingRepository,
     private val settingsRepo: SettingsRepository,
     private val hotspotManager: HotspotManager,
@@ -46,7 +46,6 @@ class SyncManager @Inject constructor(
         private const val TAG = "SyncManager"
         private const val TCP_SYNC_PORT = 48766
         private const val SOCKET_TIMEOUT = 30000
-        private const val CONFLICT_THRESHOLD_MS = 5000L
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -178,25 +177,20 @@ class SyncManager @Inject constructor(
             val syncMsg = parseSyncMessage(syncLine)
             if (syncMsg.type != MSG_TYPE_SYNC_SUMMARY) return@withContext
 
-            // 1. Detect conflicts & send HOST's notes to CLIENT (before upsert — preserve HOST's versions)
-            val conflictIds = detectConflicts(syncMsg)
+            // 1. Send HOST's notes to CLIENT (before upsert — preserve HOST's versions)
             val hostLastSync = pairingRepo.getLastSyncTimestamp()
-            val hostNotes = noteUseCase.getModifiedSince(hostLastSync)
+            val hostNotes = noteRepo.getModifiedSince(hostLastSync)
             val hostSyncNotes = hostNotes.map { it.toSyncNote() }
             val dataMsg = SyncMessage(
                 type = MSG_TYPE_SYNC_DATA,
                 deviceId = getDeviceId(),
                 notes = hostSyncNotes,
-                conflictSyncIds = conflictIds,
             )
             writer.println(dataMsg.toJson())
 
-            // 2. Store CLIENT's incoming notes (mark conflicts)
-            val incoming = syncMsg.notes.map {
-                val isConflict = conflictIds.contains(it.syncId)
-                it.toCompletedNote(isConflict)
-            }
-            noteUseCase.upsertAll(incoming)
+            // 2. Store CLIENT's incoming notes
+            val incoming = syncMsg.notes.map { it.toCompletedNote() }
+            noteRepo.upsertAll(incoming)
 
             // 3. Wait for CLIENT SYNC_ACK
             reader.readLine()
@@ -217,25 +211,6 @@ class SyncManager @Inject constructor(
     }
 
     // ── Client ──
-
-    private suspend fun detectConflicts(summary: SyncMessage): List<String> {
-        val conflictIds = mutableListOf<String>()
-        if (summary.lastSyncTimestamp <= 0) return conflictIds
-
-        val localModified = noteUseCase.getModifiedSince(summary.lastSyncTimestamp)
-        val localMap = localModified.associateBy { it.syncId }
-
-        for (remoteNote in summary.notes) {
-            val localNote = localMap[remoteNote.syncId]
-            if (localNote != null) {
-                val timeDiff = kotlin.math.abs(localNote.lastModifiedAt - remoteNote.lastModifiedAt)
-                if (timeDiff < CONFLICT_THRESHOLD_MS && localNote.lastModifiedAt != remoteNote.lastModifiedAt) {
-                    conflictIds.add(remoteNote.syncId)
-                }
-            }
-        }
-        return conflictIds
-    }
 
     private suspend fun doSync(hostAddress: InetAddress): String {
         var socket: Socket? = null
@@ -274,7 +249,7 @@ class SyncManager @Inject constructor(
             pairingRepo.addPairedDevice(ackMsg.deviceId, ackMsg.deviceName)
 
             val lastSync = 0L
-            val localNotes = noteUseCase.getModifiedSince(lastSync)
+            val localNotes = noteRepo.getModifiedSince(lastSync)
             val syncNotes = localNotes.map { it.toSyncNote() }
 
             val summary = SyncMessage(
@@ -290,11 +265,8 @@ class SyncManager @Inject constructor(
             if (response != null) {
                 val dataMsg = parseSyncMessage(response)
                 if (dataMsg.type == MSG_TYPE_SYNC_DATA) {
-                    val incoming = dataMsg.notes.map {
-                        val isConflict = dataMsg.conflictSyncIds.contains(it.syncId)
-                        it.toCompletedNote(isConflict)
-                    }
-                    noteUseCase.upsertAll(incoming)
+                    val incoming = dataMsg.notes.map { it.toCompletedNote() }
+                    noteRepo.upsertAll(incoming)
                     receivedFromHost = true
                 }
             }

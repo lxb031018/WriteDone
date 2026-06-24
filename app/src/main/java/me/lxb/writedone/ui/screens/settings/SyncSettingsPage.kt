@@ -2,7 +2,6 @@ package me.lxb.writedone.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,18 +33,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
-import me.lxb.writedone.data.sync.HotspotManager
-import me.lxb.writedone.data.sync.Role
-import me.lxb.writedone.data.sync.SyncManager
 
 @Composable
 fun SyncSettingsPage(
-    syncManager: SyncManager,
-    hotspotManager: HotspotManager,
+    syncViewModel: SyncViewModel,
     onBack: () -> Unit,
 ) {
-    val syncState by syncManager.state.collectAsState()
-    val hotspotState by hotspotManager.state.collectAsState()
+    val uiState by syncViewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -65,7 +59,7 @@ fun SyncSettingsPage(
 
         Spacer(Modifier.height(16.dp))
 
-        StatusCard(syncState, hotspotState)
+        StatusCard(uiState)
 
         Spacer(Modifier.height(12.dp))
 
@@ -74,27 +68,23 @@ fun SyncSettingsPage(
         Spacer(Modifier.height(12.dp))
 
         Button(
-            onClick = { syncManager.syncNow() },
+            onClick = { syncViewModel.syncNow() },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !syncState.isSyncing,
+            enabled = uiState.buttonEnabled,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
             ),
         ) {
             Text(
-                text = when {
-                    syncState.isSyncing -> stringResource(R.string.sync_in_progress)
-                    syncState.role == Role.HOST -> "等待对方连接..."
-                    else -> stringResource(R.string.sync_manual)
-                },
+                text = uiState.buttonText,
                 fontSize = 14.sp,
             )
         }
 
-        if (syncState.lastSyncResult.isNotEmpty()) {
+        if (uiState.lastSyncResult.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             Text(
-                syncState.lastSyncResult,
+                uiState.lastSyncResult,
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -103,10 +93,7 @@ fun SyncSettingsPage(
 }
 
 @Composable
-private fun StatusCard(
-    syncState: me.lxb.writedone.data.sync.SyncState,
-    hotspotState: me.lxb.writedone.data.sync.HotspotState,
-) {
+private fun StatusCard(uiState: SyncUiState) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -124,47 +111,43 @@ private fun StatusCard(
 
             StatusRow(
                 label = "角色",
-                value = when (hotspotState.role) {
-                    Role.HOST -> "热点主机 (服务器)"
-                    Role.CLIENT -> "连接方"
-                    Role.UNKNOWN -> "未检测"
-                },
-                isOnline = hotspotState.role != Role.UNKNOWN,
+                value = uiState.roleDescription,
+                isOnline = uiState.isOnline,
             )
 
             Spacer(Modifier.height(8.dp))
 
-            if (hotspotState.gatewayAddress != null) {
+            if (uiState.gatewayIp.isNotEmpty()) {
                 StatusRow(
                     label = "网关",
-                    value = hotspotState.gatewayAddress.hostAddress ?: "",
+                    value = uiState.gatewayIp,
                     isOnline = true,
                 )
                 Spacer(Modifier.height(8.dp))
             }
 
-            if (hotspotState.localHotspotIp != null) {
+            if (uiState.localIp.isNotEmpty()) {
                 StatusRow(
                     label = "本机 IP",
-                    value = hotspotState.localHotspotIp.hostAddress ?: "",
+                    value = uiState.localIp,
                     isOnline = true,
                 )
                 Spacer(Modifier.height(8.dp))
             }
 
-            if (hotspotState.lastError.isNotEmpty()) {
+            if (uiState.lastError.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    hotspotState.lastError,
+                    uiState.lastError,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.error,
                 )
             }
 
-            if (syncState.lastSyncResult.isNotEmpty()) {
+            if (uiState.lastSyncResult.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    syncState.lastSyncResult,
+                    uiState.lastSyncResult,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

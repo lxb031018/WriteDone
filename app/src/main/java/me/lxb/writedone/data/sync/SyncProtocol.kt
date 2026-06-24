@@ -18,7 +18,6 @@ internal data class SyncMessage(
     val lastSyncTimestamp: Long = 0,
     val notes: List<SyncNote> = emptyList(),
     val accepted: Boolean = false,
-    val conflictSyncIds: List<String> = emptyList(),
 )
 
 internal data class SyncNote(
@@ -40,9 +39,6 @@ internal fun SyncMessage.toJson(): String = JSONObject().apply {
         put("notes", JSONArray(notes.map { it.toJson() }))
     }
     if (accepted) put("accepted", true)
-    if (conflictSyncIds.isNotEmpty()) {
-        put("conflictSyncIds", JSONArray(conflictSyncIds))
-    }
 }.toString()
 
 internal fun SyncNote.toJson(): JSONObject = JSONObject().apply {
@@ -66,9 +62,6 @@ internal fun parseSyncMessage(json: String): SyncMessage {
             (0 until arr.length()).map { parseSyncNote(arr.getJSONObject(it)) }
         } ?: emptyList(),
         accepted = obj.optBoolean("accepted", false),
-        conflictSyncIds = obj.optJSONArray("conflictSyncIds")?.let { arr ->
-            (0 until arr.length()).map { arr.getString(it) }
-        } ?: emptyList(),
     )
 }
 
@@ -92,7 +85,7 @@ internal fun CompletedNote.toSyncNote() = SyncNote(
     deviceId = deviceId,
 )
 
-internal fun SyncNote.toCompletedNote(isConflict: Boolean = false) = CompletedNote(
+internal fun SyncNote.toCompletedNote() = CompletedNote(
     syncId = syncId,
     content = content,
     body = body,
@@ -100,5 +93,4 @@ internal fun SyncNote.toCompletedNote(isConflict: Boolean = false) = CompletedNo
     durationSeconds = durationSeconds,
     lastModifiedAt = lastModifiedAt,
     deviceId = deviceId,
-    conflictDeviceId = if (isConflict) deviceId else "",
 )

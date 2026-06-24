@@ -27,8 +27,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import me.lxb.writedone.data.sync.HotspotManager
-import me.lxb.writedone.data.sync.PairingRepository
 import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.service.ambient.AmbientController
 import me.lxb.writedone.domain.repository.NoteRepository
@@ -40,6 +38,7 @@ import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.home.HomeScreen
 import me.lxb.writedone.ui.screens.settings.AboutPage
 import me.lxb.writedone.ui.screens.settings.SyncSettingsPage
+import me.lxb.writedone.ui.screens.settings.SyncViewModel
 import me.lxb.writedone.ui.theme.ThemeMode
 import me.lxb.writedone.ui.theme.WriteDoneTheme
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
@@ -53,12 +52,11 @@ class MainActivity : ComponentActivity() {
     private val timerViewModel: TimerViewModel by viewModels()
     private val completedViewModel: CompletedViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val syncViewModel: SyncViewModel by viewModels()
 
     @Inject lateinit var settingsUseCase: SettingsUseCase
     @Inject lateinit var noteRepo: NoteRepository
     @Inject lateinit var syncManager: SyncManager
-    @Inject lateinit var hotspotManager: HotspotManager
-    @Inject lateinit var pairingRepo: PairingRepository
 
     private val ambientController = AmbientController()
 
@@ -100,8 +98,7 @@ class MainActivity : ComponentActivity() {
                         noteRepo = noteRepo,
                         ambientController = ambientController,
                         syncManager = syncManager,
-                        hotspotManager = hotspotManager,
-                        pairingRepo = pairingRepo,
+                        syncViewModel = syncViewModel,
                         ambientProgress = ambientProgress,
                         onAmbientProgressChange = { ambientProgress = it },
                     )
@@ -128,8 +125,7 @@ private fun WriteDoneApp(
     noteRepo: NoteRepository,
     ambientController: AmbientController,
     syncManager: SyncManager,
-    hotspotManager: HotspotManager,
-    pairingRepo: PairingRepository,
+    syncViewModel: SyncViewModel,
     ambientProgress: Float,
     onAmbientProgressChange: (Float) -> Unit,
 ) {
@@ -234,8 +230,7 @@ private fun WriteDoneApp(
         Screen.Sync -> {
             BackHandler { currentScreen = Screen.Home }
             SyncSettingsPage(
-                syncManager = syncManager,
-                hotspotManager = hotspotManager,
+                syncViewModel = syncViewModel,
                 onBack = { currentScreen = Screen.Home },
             )
         }
