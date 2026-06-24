@@ -26,6 +26,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import me.lxb.writedone.data.sync.HotspotManager
 import me.lxb.writedone.data.sync.PairingRepository
 import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.service.ambient.AmbientController
@@ -38,7 +39,6 @@ import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.home.HomeScreen
 import me.lxb.writedone.ui.screens.settings.AboutPage
 import me.lxb.writedone.ui.screens.settings.SyncSettingsPage
-import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.ThemeMode
 import me.lxb.writedone.ui.theme.WriteDoneTheme
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var settingsUseCase: SettingsUseCase
     @Inject lateinit var noteRepo: NoteRepository
     @Inject lateinit var syncManager: SyncManager
+    @Inject lateinit var hotspotManager: HotspotManager
     @Inject lateinit var pairingRepo: PairingRepository
 
     private val ambientController = AmbientController()
@@ -98,6 +99,7 @@ class MainActivity : ComponentActivity() {
                         noteRepo = noteRepo,
                         ambientController = ambientController,
                         syncManager = syncManager,
+                        hotspotManager = hotspotManager,
                         pairingRepo = pairingRepo,
                         ambientProgress = ambientProgress,
                         onAmbientProgressChange = { ambientProgress = it },
@@ -125,6 +127,7 @@ private fun WriteDoneApp(
     noteRepo: NoteRepository,
     ambientController: AmbientController,
     syncManager: SyncManager,
+    hotspotManager: HotspotManager,
     pairingRepo: PairingRepository,
     ambientProgress: Float,
     onAmbientProgressChange: (Float) -> Unit,
@@ -222,6 +225,7 @@ private fun WriteDoneApp(
             BackHandler { currentScreen = Screen.Home }
             SyncSettingsPage(
                 syncManager = syncManager,
+                hotspotManager = hotspotManager,
                 onBack = { currentScreen = Screen.Home },
             )
         }

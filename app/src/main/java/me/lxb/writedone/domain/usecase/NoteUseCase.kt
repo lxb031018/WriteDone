@@ -39,4 +39,6 @@ class NoteUseCase @Inject constructor(
 
     suspend fun getModifiedSince(since: Long): List<CompletedNote> =
         noteRepo.getModifiedSince(since)
+
+    suspend fun resolveConflict(id: Long) = noteRepo.resolveConflict(id)
 }

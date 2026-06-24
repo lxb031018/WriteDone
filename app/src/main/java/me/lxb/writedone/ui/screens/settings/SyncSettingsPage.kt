@@ -2,6 +2,7 @@ package me.lxb.writedone.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,10 +22,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -35,18 +34,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
+import me.lxb.writedone.data.sync.HotspotManager
+import me.lxb.writedone.data.sync.Role
 import me.lxb.writedone.data.sync.SyncManager
 
 @Composable
 fun SyncSettingsPage(
     syncManager: SyncManager,
+    hotspotManager: HotspotManager,
     onBack: () -> Unit,
 ) {
-    val state by syncManager.state.collectAsState()
-
-    LaunchedEffect(Unit) {
-        syncManager.refreshStatus()
-    }
+    val syncState by syncManager.state.collectAsState()
+    val hotspotState by hotspotManager.state.collectAsState()
 
     Column(
         modifier = Modifier
@@ -66,77 +65,48 @@ fun SyncSettingsPage(
 
         Spacer(Modifier.height(16.dp))
 
-        HostToggleCard(
-            isHostEnabled = state.isHostEnabled,
-            onCheckedChange = { syncManager.setHostEnabled(it) },
-        )
+        StatusCard(syncState, hotspotState)
 
         Spacer(Modifier.height(12.dp))
 
-        StatusCard(state)
+        InstructionCard()
 
-        if (!state.isHostEnabled) {
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { syncManager.syncNow() },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isSyncing,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Text(
-                    text = if (state.isSyncing) stringResource(R.string.sync_in_progress)
-                    else stringResource(R.string.sync_manual),
-                    fontSize = 14.sp,
-                )
-            }
-        }
-    }
-}
+        Spacer(Modifier.height(12.dp))
 
-@Composable
-private fun HostToggleCard(
-    isHostEnabled: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onCheckedChange(!isHostEnabled) }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Button(
+            onClick = { syncManager.syncNow() },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !syncState.isSyncing,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+            ),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.sync_host_toggle),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.sync_host_description),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            Switch(
-                checked = isHostEnabled,
-                onCheckedChange = onCheckedChange,
+            Text(
+                text = when {
+                    syncState.isSyncing -> stringResource(R.string.sync_in_progress)
+                    syncState.role == Role.HOST -> "等待对方连接..."
+                    else -> stringResource(R.string.sync_manual)
+                },
+                fontSize = 14.sp,
+            )
+        }
+
+        if (syncState.lastSyncResult.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                syncState.lastSyncResult,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
 }
 
 @Composable
-private fun StatusCard(state: me.lxb.writedone.data.sync.SyncState) {
+private fun StatusCard(
+    syncState: me.lxb.writedone.data.sync.SyncState,
+    hotspotState: me.lxb.writedone.data.sync.HotspotState,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -145,49 +115,105 @@ private fun StatusCard(state: me.lxb.writedone.data.sync.SyncState) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = stringResource(R.string.sync_status),
+                text = "同步状态",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
             )
 
             Spacer(Modifier.height(12.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                val isOnline = state.lastSyncResult.isNotEmpty()
-                    && !state.lastSyncResult.startsWith("同步失败")
-                    && state.lastSyncResult != "未连接到热点"
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when {
-                                state.isHostRunning -> MaterialTheme.colorScheme.primary
-                                isOnline -> MaterialTheme.colorScheme.secondary
-                                else -> MaterialTheme.colorScheme.error
-                            }
-                        ),
+            StatusRow(
+                label = "角色",
+                value = when (hotspotState.role) {
+                    Role.HOST -> "热点主机 (服务器)"
+                    Role.CLIENT -> "连接方"
+                    Role.UNKNOWN -> "未检测"
+                },
+                isOnline = hotspotState.role != Role.UNKNOWN,
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            if (hotspotState.gatewayAddress != null) {
+                StatusRow(
+                    label = "网关",
+                    value = hotspotState.gatewayAddress.hostAddress ?: "",
+                    isOnline = true,
                 )
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.height(8.dp))
+            }
+
+            if (hotspotState.localHotspotIp != null) {
+                StatusRow(
+                    label = "本机 IP",
+                    value = hotspotState.localHotspotIp.hostAddress ?: "",
+                    isOnline = true,
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
+            if (hotspotState.lastError.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
                 Text(
-                    text = when {
-                        state.isHostRunning -> stringResource(R.string.sync_role_host)
-                        state.isSyncing -> stringResource(R.string.sync_in_progress)
-                        isOnline -> stringResource(R.string.sync_role_client)
-                        else -> stringResource(R.string.sync_role_isolated)
-                    },
-                    fontSize = 14.sp,
+                    hotspotState.lastError,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.error,
                 )
             }
 
-            if (state.lastSyncResult.isNotEmpty()) {
+            if (syncState.lastSyncResult.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = state.lastSyncResult,
+                    syncState.lastSyncResult,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun InstructionCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text("使用说明", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "1. 确保两部设备已通过热点连接\n" +
+                        "2. 在主机上点击「同步」按钮启动服务器\n" +
+                        "3. 在连接方上点击「同步」按钮自动同步",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatusRow(label: String, value: String, isOnline: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(
+                    if (isOnline) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
+                ),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = "$label: $value",
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

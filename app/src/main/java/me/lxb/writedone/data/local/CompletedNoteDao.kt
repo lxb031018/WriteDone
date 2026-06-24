@@ -28,14 +28,20 @@ interface CompletedNoteDao {
         UPDATE completed_notes 
         SET content = :content, body = :body, created_at = :createdAt, 
             duration_seconds = :durationSeconds, last_modified_at = :lastModifiedAt, 
-            device_id = :deviceId 
+            device_id = :deviceId, conflict_device_id = :conflictDeviceId
         WHERE sync_id = :syncId
     """)
     suspend fun updateBySyncId(
         syncId: String, content: String, body: String,
         createdAt: Long, durationSeconds: Int,
-        lastModifiedAt: Long, deviceId: String,
+        lastModifiedAt: Long, deviceId: String, conflictDeviceId: String,
     )
+
+    @Query("SELECT * FROM completed_notes WHERE conflict_device_id != ''")
+    suspend fun getConflictedNotes(): List<CompletedNote>
+
+    @Query("UPDATE completed_notes SET conflict_device_id = '' WHERE id = :id")
+    suspend fun resolveConflict(id: Long)
 
     @Transaction
     suspend fun upsert(note: CompletedNote) {
@@ -46,6 +52,11 @@ interface CompletedNoteDao {
         val existing = getBySyncId(note.syncId)
         if (existing != null) {
             if (note.lastModifiedAt >= existing.lastModifiedAt) {
+                val conflictId = if (note.conflictDeviceId.isNotEmpty()) {
+                    note.conflictDeviceId
+                } else {
+                    existing.conflictDeviceId
+                }
                 updateBySyncId(
                     syncId = note.syncId,
                     content = note.content,
@@ -54,6 +65,7 @@ interface CompletedNoteDao {
                     durationSeconds = note.durationSeconds,
                     lastModifiedAt = note.lastModifiedAt,
                     deviceId = note.deviceId,
+                    conflictDeviceId = conflictId,
                 )
             }
         } else {

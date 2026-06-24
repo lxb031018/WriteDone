@@ -12,4 +12,5 @@ interface NoteRepository {
     suspend fun upsert(note: CompletedNote)
     suspend fun upsertAll(notes: List<CompletedNote>)
     suspend fun getModifiedSince(since: Long): List<CompletedNote>
+    suspend fun resolveConflict(id: Long)
 }

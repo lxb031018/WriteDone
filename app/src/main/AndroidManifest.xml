@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
     <application
         android:name=".WriteDoneApplication"
@@ -36,11 +38,6 @@
         <receiver
             android:name=".service.notification.AlarmReceiver"
             android:exported="false" />
-
-        <service
-            android:name=".data.sync.SyncHostService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
 
         <service
             android:name=".service.TimerForegroundService"

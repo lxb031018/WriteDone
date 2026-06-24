@@ -40,4 +40,6 @@ class NoteRepositoryImpl(private val dao: CompletedNoteDao) : NoteRepository {
 
     override suspend fun getModifiedSince(since: Long): List<CompletedNote> =
         dao.getModifiedSince(since)
+
+    override suspend fun resolveConflict(id: Long) = dao.resolveConflict(id)
 }

@@ -14,6 +14,7 @@ import me.lxb.writedone.data.repository.DraftRepositoryImpl
 import me.lxb.writedone.data.repository.NoteRepositoryImpl
 import me.lxb.writedone.data.repository.SettingsRepositoryImpl
 import me.lxb.writedone.data.repository.TimerStateRepositoryImpl
+import me.lxb.writedone.data.sync.HotspotManager
 import me.lxb.writedone.data.sync.PairingRepository
 import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.domain.repository.DraftRepository
@@ -37,6 +38,7 @@ object DataModule {
             "writedone.db",
         )
             .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addMigrations(AppDatabase.MIGRATION_2_3)
             .build()
     }
 
@@ -80,10 +82,12 @@ object DataModule {
         noteUseCase: NoteUseCase,
         pairingRepo: PairingRepository,
         settingsRepo: SettingsRepository,
+        hotspotManager: HotspotManager,
     ): SyncManager = SyncManager(
         context = context,
         noteUseCase = noteUseCase,
         pairingRepo = pairingRepo,
         settingsRepo = settingsRepo,
+        hotspotManager = hotspotManager,
     )
 }
