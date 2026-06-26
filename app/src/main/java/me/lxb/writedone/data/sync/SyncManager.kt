@@ -37,7 +37,6 @@ data class SyncState(
 class SyncManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val noteRepo: NoteRepository,
-    private val pairingRepo: PairingRepository,
     private val hotspotManager: HotspotManager,
 ) {
     companion object {
@@ -76,7 +75,7 @@ class SyncManager @Inject constructor(
                 }
                 Role.CLIENT -> {
                     val result = if (preConnectedSocket != null) {
-                        Log.d(TAG, "CLIENT role, using pre-connected socket (scan/fast path)")
+                        Log.d(TAG, "CLIENT role, using pre-connected socket")
                         try {
                             performSync(preConnectedSocket)
                         } finally {
@@ -94,8 +93,9 @@ class SyncManager @Inject constructor(
                     _state.value = _state.value.copy(
                         isSyncing = false,
                         lastSyncResult = result,
-                        syncCompletedVersion = if (result == "同步完成") _state.value.syncCompletedVersion + 1
-                            else _state.value.syncCompletedVersion,
+                        syncCompletedVersion = if (result == "同步完成" || result.startsWith("同步完成"))
+                            _state.value.syncCompletedVersion + 1
+                        else _state.value.syncCompletedVersion,
                     )
                 }
                 Role.UNKNOWN -> {
@@ -155,44 +155,24 @@ class SyncManager @Inject constructor(
 
             val line = reader.readLine() ?: return@withContext
             val msg = parseSyncMessage(line)
-            if (msg.type != MSG_TYPE_IDENTIFY) return@withContext
+            Log.d(TAG, "handleServer: received type=${msg.type}, clientNotes=${msg.notes.size}")
+            if (msg.type != MSG_TYPE_SYNC_DATA) return@withContext
 
-            pairingRepo.addPairedDevice(msg.deviceId, msg.deviceName)
+            // 1. Store client's incoming notes
+            val incoming = msg.notes.map { it.toCompletedNote() }
+            noteRepo.upsertAll(incoming)
+            Log.d(TAG, "handleServer: upserted ${incoming.size} client notes")
 
-            val ack = SyncMessage(
-                type = MSG_TYPE_IDENTIFY_ACK,
-                deviceId = getDeviceId(),
-                deviceName = android.os.Build.MODEL,
-                accepted = true,
-            )
-            writer.println(ack.toJson())
-
-            val syncLine = reader.readLine() ?: return@withContext
-            val syncMsg = parseSyncMessage(syncLine)
-            if (syncMsg.type != MSG_TYPE_SYNC_SUMMARY) return@withContext
-
-            // 1. Send HOST's notes to CLIENT (before upsert — preserve HOST's versions)
-            val hostLastSync = pairingRepo.getLastSyncTimestamp()
-            val hostNotes = noteRepo.getModifiedSince(hostLastSync)
-            val hostSyncNotes = hostNotes.map { it.toSyncNote() }
+            // 2. Send all host notes back to client
+            val hostNotes = noteRepo.getAll()
+            Log.d(TAG, "handleServer: hostNotesFound=${hostNotes.size}")
             val dataMsg = SyncMessage(
                 type = MSG_TYPE_SYNC_DATA,
-                deviceId = getDeviceId(),
-                notes = hostSyncNotes,
+                notes = hostNotes.map { it.toSyncNote() },
             )
             writer.println(dataMsg.toJson())
+            Log.d(TAG, "handleServer: sent response with ${hostNotes.size} notes")
 
-            // 2. Store CLIENT's incoming notes
-            val incoming = syncMsg.notes.map { it.toCompletedNote() }
-            noteRepo.upsertAll(incoming)
-
-            // 3. Wait for CLIENT SYNC_ACK
-            reader.readLine()
-
-            // 4. Update timestamps and UI
-            if (incoming.isNotEmpty() || hostSyncNotes.isNotEmpty()) {
-                pairingRepo.updateLastSyncTimestamp(System.currentTimeMillis())
-            }
             _state.value = _state.value.copy(
                 lastSyncResult = "同步完成",
                 syncCompletedVersion = _state.value.syncCompletedVersion + 1,
@@ -227,69 +207,35 @@ class SyncManager @Inject constructor(
             val writer = PrintWriter(socket.getOutputStream(), true)
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
 
-            val dId = getDeviceId()
-
-            val identify = SyncMessage(
-                type = MSG_TYPE_IDENTIFY,
-                deviceId = dId,
-                deviceName = android.os.Build.MODEL,
-            )
-            writer.println(identify.toJson())
-
-            val ackLine = reader.readLine() ?: return "同步失败: 主机无响应"
-            val ackMsg = parseSyncMessage(ackLine)
-            if (!ackMsg.accepted) return "同步失败: 主机拒绝"
-
-            pairingRepo.addPairedDevice(ackMsg.deviceId, ackMsg.deviceName)
-
-            val lastSync = 0L
-            val localNotes = noteRepo.getModifiedSince(lastSync)
-            val syncNotes = localNotes.map { it.toSyncNote() }
+            val localNotes = noteRepo.getAll()
+            Log.d(TAG, "performSync: localNotes=${localNotes.size}")
 
             val summary = SyncMessage(
-                type = MSG_TYPE_SYNC_SUMMARY,
-                deviceId = dId,
-                lastSyncTimestamp = lastSync,
-                notes = syncNotes,
+                type = MSG_TYPE_SYNC_DATA,
+                notes = localNotes.map { it.toSyncNote() },
             )
             writer.println(summary.toJson())
+            Log.d(TAG, "performSync: sent ${localNotes.size} notes to host")
 
             val response = reader.readLine()
-            var receivedFromHost = false
+            Log.d(TAG, "performSync: response received=${response != null}")
             if (response != null) {
                 val dataMsg = parseSyncMessage(response)
                 if (dataMsg.type == MSG_TYPE_SYNC_DATA) {
                     val incoming = dataMsg.notes.map { it.toCompletedNote() }
+                    Log.d(TAG, "performSync: received ${incoming.size} notes from host")
                     noteRepo.upsertAll(incoming)
-                    receivedFromHost = true
+                } else {
+                    Log.w(TAG, "performSync: unexpected response type=${dataMsg.type}")
                 }
             }
 
-            val ack = SyncMessage(
-                type = MSG_TYPE_SYNC_ACK,
-                deviceId = dId,
-            )
-            writer.println(ack.toJson())
-
-            if (syncNotes.isNotEmpty() || receivedFromHost) {
-                pairingRepo.updateLastSyncTimestamp(System.currentTimeMillis())
-            }
-
-            val sent = syncNotes.size
+            val sent = localNotes.size
             if (sent > 0) "同步完成，发送 $sent 条"
             else "同步完成"
         } catch (e: Exception) {
             Log.e(TAG, "performSync failed", e)
             "同步失败: ${e.message}"
         }
-    }
-
-    private fun getDeviceId(): String {
-        return try {
-            android.provider.Settings.Secure.getString(
-                context.contentResolver,
-                android.provider.Settings.Secure.ANDROID_ID
-            ) ?: ""
-        } catch (_: Exception) { "" }
     }
 }

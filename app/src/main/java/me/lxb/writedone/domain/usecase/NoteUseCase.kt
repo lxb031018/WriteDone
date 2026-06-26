@@ -4,11 +4,8 @@ import me.lxb.writedone.data.model.CompletedNote
 import me.lxb.writedone.domain.repository.NoteRepository
 import java.util.Date
 import javax.inject.Inject
-import javax.inject.Named
-
 class NoteUseCase @Inject constructor(
     private val noteRepo: NoteRepository,
-    @Named("deviceId") private val deviceId: String,
 ) {
     suspend fun updateNoteBody(id: Long, body: String) = noteRepo.updateBody(id, body)
 
@@ -20,7 +17,6 @@ class NoteUseCase @Inject constructor(
             durationSeconds = durationSeconds,
             syncId = CompletedNote.generateSyncId(),
             lastModifiedAt = now,
-            deviceId = deviceId,
         )
         val id = noteRepo.insert(note)
         return note.copy(id = id)

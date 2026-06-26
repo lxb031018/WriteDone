@@ -19,8 +19,6 @@ data class CompletedNote(
     val syncId: String = "",
     @ColumnInfo(name = "last_modified_at")
     val lastModifiedAt: Long = createdAt,
-    @ColumnInfo(name = "device_id")
-    val deviceId: String = "",
 ) {
     companion object {
         fun generateSyncId(): String = UUID.randomUUID().toString()

@@ -24,14 +24,13 @@ interface CompletedNoteDao {
     @Query("""
         UPDATE completed_notes
         SET content = :content, body = :body, created_at = :createdAt,
-            duration_seconds = :durationSeconds, last_modified_at = :lastModifiedAt,
-            device_id = :deviceId
+            duration_seconds = :durationSeconds, last_modified_at = :lastModifiedAt
         WHERE sync_id = :syncId AND last_modified_at < :lastModifiedAt
     """)
     suspend fun updateIfNewer(
         syncId: String, content: String, body: String,
         createdAt: Long, durationSeconds: Int,
-        lastModifiedAt: Long, deviceId: String,
+        lastModifiedAt: Long,
     )
 
     @Query("SELECT * FROM completed_notes WHERE sync_id = :syncId LIMIT 1")
@@ -51,7 +50,6 @@ interface CompletedNoteDao {
                     createdAt = note.createdAt,
                     durationSeconds = note.durationSeconds,
                     lastModifiedAt = note.lastModifiedAt,
-                    deviceId = note.deviceId,
                 )
             }
         }
