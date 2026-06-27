@@ -18,6 +18,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sqrt
+import kotlin.jvm.Volatile
 
 class AmbientSensorMonitor(
     context: Context,
@@ -38,10 +39,10 @@ class AmbientSensorMonitor(
     private val _isReady = MutableStateFlow(false)
     val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
-    private var gx = 0f
-    private var gy = 0f
-    private var gz = 0f
-    private var hasGravity = false
+    @Volatile private var gx = 0f
+    @Volatile private var gy = 0f
+    @Volatile private var gz = 0f
+    @Volatile private var hasGravity = false
 
     private var evalJob: Job? = null
 
@@ -53,7 +54,6 @@ class AmbientSensorMonitor(
             if (!hasGravity) {
                 gx = rawX; gy = rawY; gz = rawZ
                 hasGravity = true
-                Log.d(TAG, "First raw sample: ($rawX, $rawY, $rawZ)")
             } else {
                 gx += LOW_PASS_ALPHA * (rawX - gx)
                 gy += LOW_PASS_ALPHA * (rawY - gy)
@@ -69,7 +69,6 @@ class AmbientSensorMonitor(
             Log.w(TAG, "accelerometer is null, aborting")
             return
         }
-        Log.d(TAG, "start: registering accelerometer @ SENSOR_DELAY_NORMAL")
         sensorManager.registerListener(
             sensorListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL
         )
@@ -77,31 +76,24 @@ class AmbientSensorMonitor(
             var stationaryMs = 0L
             while (isActive) {
                 delay(EVAL_INTERVAL_MS)
-                val hasG = hasGravity
-                val evalResult = evaluate()
-                Log.d(TAG, "eval: hasGravity=$hasG evaluate=$evalResult stationMs=$stationaryMs" +
-                        " g=(${"%.1f".format(gx)}, ${"%.1f".format(gy)}, ${"%.1f".format(gz)})")
-                if (hasG && evalResult) {
+                if (hasGravity && evaluate()) {
                     stationaryMs += EVAL_INTERVAL_MS
-                    if (stationaryMs >= SETTLE_TIME_MS) {
-                        if (!_isReady.value) {
-                            Log.i(TAG, "isReady -> true (settled ${stationaryMs}ms)")
-                        }
+                    if (stationaryMs >= SETTLE_TIME_MS && !_isReady.value) {
                         _isReady.value = true
+                        Log.i(TAG, "isReady -> true")
                     }
                 } else {
                     stationaryMs = 0L
                     if (_isReady.value) {
-                        Log.i(TAG, "isReady -> false (condition broken)")
+                        _isReady.value = false
+                        Log.i(TAG, "isReady -> false")
                     }
-                    _isReady.value = false
                 }
             }
         }
     }
 
     fun stop() {
-        Log.d(TAG, "stop")
         sensorManager.unregisterListener(sensorListener)
         evalJob?.cancel()
         evalJob = null
@@ -115,16 +107,7 @@ class AmbientSensorMonitor(
 
     private fun evaluate(): Boolean {
         val norm = sqrt(gx * gx + gy * gy + gz * gz)
-        if (norm < 0.1f) {
-            Log.v(TAG, "evaluate: norm=$norm < 0.1 → false")
-            return false
-        }
-        val verticalRatio = abs(gx) / norm
-        val levelRatio = abs(gy) / norm
-        val pass = verticalRatio > VERTICAL_THRESHOLD && levelRatio < LEVEL_THRESHOLD
-        Log.v(TAG, "evaluate: norm=${"%.2f".format(norm)}" +
-                " vert(|gx|/n)=${"%.3f".format(verticalRatio)} (need > $VERTICAL_THRESHOLD)" +
-                " lev(|gy|/n)=${"%.3f".format(levelRatio)} (need < $LEVEL_THRESHOLD) → $pass")
-        return pass
+        if (norm < 0.1f) return false
+        return abs(gx) / norm > VERTICAL_THRESHOLD && abs(gy) / norm < LEVEL_THRESHOLD
     }
 }

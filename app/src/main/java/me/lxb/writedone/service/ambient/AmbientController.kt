@@ -29,7 +29,7 @@ class AmbientController(
     val state: StateFlow<AmbientState> = _state.asStateFlow()
 
     fun enter() {
-        Log.d(TAG, "enter() called")
+        Log.i(TAG, "enter")
         sensorJob?.cancel()
         breathingJob?.cancel()
         _state.value = AmbientState()
@@ -37,7 +37,6 @@ class AmbientController(
         var firstFalse = true
         sensorJob = scope.launch {
             sensorMonitor.isReady.collect { ready ->
-                Log.d(TAG, "collect: isReady=$ready")
                 if (ready) {
                     firstFalse = true
                     _state.value = AmbientState(status = AmbientStatus.Active)
@@ -49,24 +48,23 @@ class AmbientController(
                             status = AmbientStatus.Active,
                             breathingEnabled = true,
                         )
-                        Log.i(TAG, "breathingEnabled -> true")
+                        Log.i(TAG, "breathing -> true")
                     }
                 } else {
                     if (firstFalse) {
                         firstFalse = false
-                        Log.d(TAG, "collect: skip first false")
                         return@collect
                     }
                     breathingJob?.cancel()
                     _state.value = AmbientState()
-                    Log.d(TAG, "status -> Normal (isReady=false)")
+                    Log.i(TAG, "status -> Normal")
                 }
             }
         }
     }
 
     fun exit() {
-        Log.d(TAG, "exit() called")
+        Log.i(TAG, "exit")
         sensorJob?.cancel()
         breathingJob?.cancel()
         sensorMonitor.stop()
