@@ -9,31 +9,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
-import me.lxb.writedone.R
-import me.lxb.writedone.ui.theme.AppColors
+import androidx.compose.runtime.remember
+import me.lxb.writedone.ui.theme.BreakTexts
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
-import me.lxb.writedone.ui.theme.LocalAmbientProgress
 
 @Composable
 fun TimerCompleteActions(
     onBreak: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colorScheme = MaterialTheme.colorScheme
-    val ambientProgress = LocalAmbientProgress.current
-    val textColor = colorScheme.onSurface
+    val textColor = MaterialTheme.colorScheme.onSurface
 
     Box(
         modifier = modifier.fillMaxSize().clickable(onClick = onBreak),
         contentAlignment = Alignment.Center,
     ) {
-        val breakText = stringResource(R.string.timer_complete_break)
+        val breakText = remember { BreakTexts.random() }
         Text(
             text = breakText,
             fontFamily = handwritingFont,

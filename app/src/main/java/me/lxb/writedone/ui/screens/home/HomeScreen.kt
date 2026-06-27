@@ -88,6 +88,7 @@ import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
 import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.settings.SettingsDrawer
 import me.lxb.writedone.ui.theme.AppColors
+import me.lxb.writedone.ui.theme.BreakTexts
 import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
@@ -455,7 +456,7 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                text = stringResource(R.string.timer_complete_break),
+                                text = remember { BreakTexts.random() },
                                 style = TextStyle(
                                     fontFamily = handwritingFont,
                                     fontSize = 48.sp,
