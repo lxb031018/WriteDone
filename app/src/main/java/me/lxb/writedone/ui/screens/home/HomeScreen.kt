@@ -128,6 +128,7 @@ fun HomeScreen(
     val completedState by completedViewModel.state.collectAsState()
     val autoDimBrightness by settingsViewModel.autoDimBrightness.collectAsState()
     val breathingLampEnabled by settingsViewModel.breathingLampEnabled.collectAsState()
+    val autoStartTimerOnLandscapeEnabled by settingsViewModel.autoStartTimerOnLandscapeEnabled.collectAsState()
     val themeMode by settingsViewModel.themeMode.collectAsState()
     val timerState by timerViewModel.state.collectAsState()
 
@@ -264,6 +265,15 @@ fun HomeScreen(
                     }
                 }
             }
+    }
+
+    // Auto-start timer when entering landscape with toggle enabled
+    LaunchedEffect(isLandscape) {
+        if (isLandscape && autoStartTimerOnLandscapeEnabled) {
+            if (timerViewModel.state.value.status == TimerStatus.Idle) {
+                timerViewModel.start()
+            }
+        }
     }
 
     // Keep screen on only when ambient mode is active.
@@ -587,6 +597,8 @@ fun HomeScreen(
                     onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
                     breathingLampEnabled = breathingLampEnabled,
                     onToggleBreathingLamp = { settingsViewModel.setBreathingLampEnabled(it) },
+                    autoStartTimerOnLandscapeEnabled = autoStartTimerOnLandscapeEnabled,
+                    onToggleAutoStartTimerOnLandscape = { settingsViewModel.setAutoStartTimerOnLandscapeEnabled(it) },
                     themeMode = themeMode,
                     onThemeModeChange = { settingsViewModel.setThemeMode(it) },
                     onUserAgreement = { showUserAgreement = true },

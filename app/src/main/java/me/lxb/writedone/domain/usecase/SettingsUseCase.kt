@@ -25,4 +25,8 @@ class SettingsUseCase @Inject constructor(
     val syncHostEnabled: Flow<Boolean> = settingsRepo.syncHostEnabled
 
     suspend fun setSyncHostEnabled(enabled: Boolean) = settingsRepo.setSyncHostEnabled(enabled)
+
+    val autoStartTimerOnLandscapeEnabled: Flow<Boolean> = settingsRepo.autoStartTimerOnLandscapeEnabled
+
+    suspend fun setAutoStartTimerOnLandscapeEnabled(enabled: Boolean) = settingsRepo.setAutoStartTimerOnLandscapeEnabled(enabled)
 }

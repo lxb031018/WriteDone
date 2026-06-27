@@ -13,4 +13,6 @@ interface SettingsRepository {
     suspend fun setAgreementAccepted(accepted: Boolean)
     val syncHostEnabled: Flow<Boolean>
     suspend fun setSyncHostEnabled(enabled: Boolean)
+    val autoStartTimerOnLandscapeEnabled: Flow<Boolean>
+    suspend fun setAutoStartTimerOnLandscapeEnabled(enabled: Boolean)
 }

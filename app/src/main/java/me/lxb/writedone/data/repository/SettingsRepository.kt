@@ -20,6 +20,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         private val autoDimBrightnessKey = booleanPreferencesKey("auto_dim_brightness")
         private val themeModeKey = stringPreferencesKey("theme_mode")
         private val syncHostEnabledKey = booleanPreferencesKey("sync_host_enabled")
+        private val autoStartTimerOnLandscapeKey = booleanPreferencesKey("auto_start_timer_on_landscape")
     }
 
     override val breathingLampEnabled: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
@@ -69,6 +70,16 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setSyncHostEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { prefs ->
             prefs[syncHostEnabledKey] = enabled
+        }
+    }
+
+    override val autoStartTimerOnLandscapeEnabled: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
+        prefs[autoStartTimerOnLandscapeKey] ?: false
+    }
+
+    override suspend fun setAutoStartTimerOnLandscapeEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[autoStartTimerOnLandscapeKey] = enabled
         }
     }
 }

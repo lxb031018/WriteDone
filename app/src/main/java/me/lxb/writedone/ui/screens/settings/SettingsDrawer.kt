@@ -38,6 +38,8 @@ fun SettingsDrawer(
     onToggleAutoDim: (Boolean) -> Unit,
     breathingLampEnabled: Boolean,
     onToggleBreathingLamp: (Boolean) -> Unit,
+    autoStartTimerOnLandscapeEnabled: Boolean,
+    onToggleAutoStartTimerOnLandscape: (Boolean) -> Unit,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     onUserAgreement: () -> Unit,
@@ -94,6 +96,11 @@ fun SettingsDrawer(
             text = stringResource(R.string.settings_breathing_lamp),
             checked = breathingLampEnabled,
             onCheckedChange = onToggleBreathingLamp,
+        )
+        DrawerToggle(
+            text = stringResource(R.string.settings_auto_start_timer),
+            checked = autoStartTimerOnLandscapeEnabled,
+            onCheckedChange = onToggleAutoStartTimerOnLandscape,
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_theme))

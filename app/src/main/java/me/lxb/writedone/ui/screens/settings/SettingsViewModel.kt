@@ -38,4 +38,11 @@ class SettingsViewModel @Inject constructor(
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { settingsUseCase.setThemeMode(mode.name) }
     }
+
+    val autoStartTimerOnLandscapeEnabled: StateFlow<Boolean> = settingsUseCase.autoStartTimerOnLandscapeEnabled
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setAutoStartTimerOnLandscapeEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsUseCase.setAutoStartTimerOnLandscapeEnabled(enabled) }
+    }
 }
