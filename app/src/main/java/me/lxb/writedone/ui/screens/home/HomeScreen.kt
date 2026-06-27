@@ -32,7 +32,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -54,7 +56,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.BackHandler
@@ -82,6 +86,7 @@ import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.settings.SettingsDrawer
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.Dimens
+import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.data.sync.SyncManager
@@ -120,7 +125,9 @@ fun HomeScreen(
 ) {
     val completedState by completedViewModel.state.collectAsState()
     val autoDimBrightness by settingsViewModel.autoDimBrightness.collectAsState()
+    val breathingLampEnabled by settingsViewModel.breathingLampEnabled.collectAsState()
     val themeMode by settingsViewModel.themeMode.collectAsState()
+    val timerState by timerViewModel.state.collectAsState()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -129,6 +136,8 @@ fun HomeScreen(
     val context = LocalContext.current
 
     var screenWidthPx by remember { mutableFloatStateOf(1f) }
+    var isPeeking by remember { mutableStateOf(false) }
+    var peekJob by remember { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
     val drawerAnim = remember { Animatable(0f) }
     val calendarAnim = remember { Animatable(0f) }
@@ -267,6 +276,27 @@ fun HomeScreen(
         view.keepScreenOn = ambientState.status == AmbientStatus.Active
     }
 
+    // Notify ViewModel when ambient mode activates/deactivates
+    LaunchedEffect(ambientState.status) {
+        timerViewModel.setAmbientMode(ambientState.status == AmbientStatus.Active)
+        if (ambientState.status != AmbientStatus.Active) {
+            peekJob?.cancel()
+            isPeeking = false
+        }
+    }
+
+    // Brightness control: force minimum in pure-black ambient (breathing lamp OFF),
+    // otherwise follow autoDimBrightness setting.
+    // During peek, restore system brightness temporarily.
+    LaunchedEffect(ambientState.status, autoDimBrightness, breathingLampEnabled, isPeeking) {
+        val active = ambientState.status == AmbientStatus.Active
+        if (active && !isPeeking && (!breathingLampEnabled || autoDimBrightness)) {
+            window?.attributes = window?.attributes?.apply { screenBrightness = 0f }
+        } else if (!active || isPeeking) {
+            window?.attributes = window?.attributes?.apply { screenBrightness = -1f }
+        }
+    }
+
     // Y threshold (in px) above which a horizontal drag opens the drawer (legacy).
     // Below this Y, drag is routed by direction: rightward → calendar, leftward → drawer.
     val drawerDragThresholdPx = with(density) { 250.dp.toPx() }
@@ -375,98 +405,146 @@ fun HomeScreen(
                     .offset { IntOffset((screenWidthPx * calendarAnim.value - screenWidthPx * drawerAnim.value).roundToInt(), 0) }
                     .background(Color.Transparent),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(colorScheme.background)
-                        .statusBarsPadding(),
-                ) {
-                    if (isLandscape) {
-                        Row(
+                val isAmbientHidden = ambientState.status == AmbientStatus.Active
+                    && !breathingLampEnabled && !isPeeking
+
+                when {
+                    // Ambient pure-black mode with break overlay
+                    isAmbientHidden && timerState.breakButtonVisible -> {
+                        Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .weight(1f),
+                                .background(Color.Black)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { timerViewModel.takeBreak() },
+                                ),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            // Left column: Completed list
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .padding(
-                                        start = Dimens.pageH,
-                                        top = Dimens.gap,
-                                        end = Dimens.gap,
-                                        bottom = 0.dp,
-                                    ),
-                            ) {
+                            Text(
+                                text = stringResource(R.string.timer_complete_break),
+                                fontFamily = handwritingFont,
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White.copy(alpha = 0.8f),
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                    // Ambient pure-black mode: hide all content, tap to peek
+                    isAmbientHidden -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        isPeeking = true
+                                        peekJob?.cancel()
+                                        peekJob = scope.launch {
+                                            delay(3000L)
+                                            isPeeking = false
+                                        }
+                                    },
+                                ),
+                        )
+                    }
+                    // Normal content display
+                    else -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(colorScheme.background)
+                                .statusBarsPadding(),
+                        ) {
+                            if (isLandscape) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .weight(1f),
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .padding(
+                                                start = Dimens.pageH,
+                                                top = Dimens.gap,
+                                                end = Dimens.gap,
+                                                bottom = 0.dp,
+                                            ),
+                                    ) {
+                                        CompletedSection(
+                                            notes = completedState.todayNotes,
+                                            headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
+                                            showHeader = true,
+                                            breathingEnabled = breathingEnabled,
+                                            onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                    }
+                                    VerticalDivider(
+                                        modifier = Modifier
+                                            .width(1.dp)
+                                            .fillMaxHeight(),
+                                        color = colorScheme.outline,
+                                        thickness = 1.dp,
+                                    )
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(
+                                                start = Dimens.gap,
+                                                top = Dimens.gap,
+                                                end = Dimens.pageH,
+                                                bottom = Dimens.pageBottom,
+                                            ),
+                                    ) {
+                                        Spacer(Modifier.height(Dimens.gapMd))
+                                        TimerInputCard(
+                                            timerViewModel = timerViewModel,
+                                            completedViewModel = completedViewModel,
+                                            isLandscape = true,
+                                            breathingEnabled = breathingEnabled,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        )
+                                    }
+                                }
+                            } else {
+                                TimerInputCard(
+                                    timerViewModel = timerViewModel,
+                                    completedViewModel = completedViewModel,
+                                    isLandscape = false,
+                                    breathingEnabled = breathingEnabled,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            start = Dimens.pageH,
+                                            top = Dimens.gapMd,
+                                            end = Dimens.pageH,
+                                        ),
+                                )
+
+                                Spacer(Modifier.height(Dimens.gapLg))
+
                                 CompletedSection(
                                     notes = completedState.todayNotes,
                                     headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
                                     showHeader = true,
                                     breathingEnabled = breathingEnabled,
                                     onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            }
-                            VerticalDivider(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .fillMaxHeight(),
-                                color = colorScheme.outline,
-                                thickness = 1.dp,
-                            )
-                            // Right column: Timer + Input
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .verticalScroll(rememberScrollState())
-                                    .padding(
-                                        start = Dimens.gap,
-                                        top = Dimens.gap,
-                                        end = Dimens.pageH,
-                                        bottom = Dimens.pageBottom,
-                                    ),
-                            ) {
-                                Spacer(Modifier.height(Dimens.gapMd))
-                                TimerInputCard(
-                                    timerViewModel = timerViewModel,
-                                    completedViewModel = completedViewModel,
-                                    isLandscape = true,
-                                    breathingEnabled = breathingEnabled,
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = Dimens.pageH)
+                                        .weight(1f),
                                 )
                             }
                         }
-                    } else {
-                        // Portrait
-                        TimerInputCard(
-                            timerViewModel = timerViewModel,
-                            completedViewModel = completedViewModel,
-                            isLandscape = false,
-                            breathingEnabled = breathingEnabled,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    start = Dimens.pageH,
-                                    top = Dimens.gapMd,
-                                    end = Dimens.pageH,
-                                ),
-                        )
-
-                        Spacer(Modifier.height(Dimens.gapLg))
-
-                        CompletedSection(
-                            notes = completedState.todayNotes,
-                            headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
-                            showHeader = true,
-                            breathingEnabled = breathingEnabled,
-                            onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = Dimens.pageH)
-                                .weight(1f),
-                        )
                     }
                 }
             }
@@ -497,6 +575,8 @@ fun HomeScreen(
                 SettingsDrawer(
                     autoDimBrightness = autoDimBrightness,
                     onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
+                    breathingLampEnabled = breathingLampEnabled,
+                    onToggleBreathingLamp = { settingsViewModel.setBreathingLampEnabled(it) },
                     themeMode = themeMode,
                     onThemeModeChange = { settingsViewModel.setThemeMode(it) },
                     onUserAgreement = { showUserAgreement = true },

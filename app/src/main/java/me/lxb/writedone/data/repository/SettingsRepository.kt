@@ -15,20 +15,20 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings_p
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
 
     companion object {
-        private val timerModeKey = booleanPreferencesKey("timer_mode_pomodoro")
+        private val breathingLampKey = booleanPreferencesKey("breathing_lamp_enabled")
         private val agreementAcceptedKey = booleanPreferencesKey("agreement_accepted")
         private val autoDimBrightnessKey = booleanPreferencesKey("auto_dim_brightness")
         private val themeModeKey = stringPreferencesKey("theme_mode")
         private val syncHostEnabledKey = booleanPreferencesKey("sync_host_enabled")
     }
 
-    override val timerModePomodoro: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
-        prefs[timerModeKey] ?: false
+    override val breathingLampEnabled: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
+        prefs[breathingLampKey] ?: false
     }
 
-    override suspend fun setTimerModePomodoro(pomodoro: Boolean) {
+    override suspend fun setBreathingLampEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { prefs ->
-            prefs[timerModeKey] = pomodoro
+            prefs[breathingLampKey] = enabled
         }
     }
 

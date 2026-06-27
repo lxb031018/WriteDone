@@ -36,6 +36,8 @@ import me.lxb.writedone.ui.theme.ThemeMode
 fun SettingsDrawer(
     autoDimBrightness: Boolean,
     onToggleAutoDim: (Boolean) -> Unit,
+    breathingLampEnabled: Boolean,
+    onToggleBreathingLamp: (Boolean) -> Unit,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     onUserAgreement: () -> Unit,
@@ -87,6 +89,11 @@ fun SettingsDrawer(
             text = stringResource(R.string.settings_auto_dim),
             checked = autoDimBrightness,
             onCheckedChange = onToggleAutoDim,
+        )
+        DrawerToggle(
+            text = stringResource(R.string.settings_breathing_lamp),
+            checked = breathingLampEnabled,
+            onCheckedChange = onToggleBreathingLamp,
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_theme))
@@ -222,7 +229,7 @@ private fun SettingsGuide() {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(12.dp))
         GuideSection("📌 便利贴", "输入待办事项，计时结束后自动归档至「已完成」\n（归档后的便利贴仍可二次编辑，在空白处追加备注；原始内容不可修改，新增备注会显示在下方）")
-        GuideSection("⏱️ 计时器", "• 点击计时器：开始 / 结束计时\n• 左右滑动：切换计时器\n• 休息提醒：番茄计时器（番茄红）累积计时达 25 分钟，进行起身活动提示（建议完成手头上的最后一件事就起身休息一下）")
+        GuideSection("⏱️ 计时器", "• 点击计时器：开始 / 结束计时\n• 休息提醒：累积计时达 25 分钟，进行起身活动提示（建议完成手头上的最后一件事就起身休息一下）\n• 横屏摆件时自动切换至番茄模式")
         GuideSection("📅 日历", "右滑进入日历页面\n长按任意日期，复制当日日程摘要；粘贴至 AI 助手（如豆包/DeepSeek），聊一聊当日的生活质量")
         GuideSection("🔔 权限说明", "为保障计时结束时的提醒功能，建议授予设置页面提到的权限。")
         GuideSection("📁 隐私承诺", "WriteDone 仅读取本地数据，不会上传至云端。")

@@ -17,6 +17,13 @@ class SettingsViewModel @Inject constructor(
     private val settingsUseCase: SettingsUseCase,
 ) : ViewModel() {
 
+    val breathingLampEnabled: StateFlow<Boolean> = settingsUseCase.breathingLampEnabled
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setBreathingLampEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsUseCase.setBreathingLampEnabled(enabled) }
+    }
+
     val autoDimBrightness: StateFlow<Boolean> = settingsUseCase.autoDimBrightness
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 

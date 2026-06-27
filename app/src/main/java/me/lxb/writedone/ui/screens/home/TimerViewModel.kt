@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.lxb.writedone.domain.model.TimerMode
 import me.lxb.writedone.domain.usecase.TimerUseCase
 import me.lxb.writedone.service.TimerForegroundService
 import me.lxb.writedone.service.notification.AlarmReceiver
@@ -38,8 +37,7 @@ data class TimerUiState(
     val status: TimerStatus = TimerStatus.Idle,
     val elapsedSeconds: Int = 0,
     val startTimeMillis: Long? = null,
-    val mode: TimerMode = TimerMode.Normal,
-    val pomodoroCumulativeSeconds: Int = 0,
+    val cumulativeSeconds: Int = 0,
     val breakButtonVisible: Boolean = false,
 )
 
@@ -60,13 +58,9 @@ class TimerViewModel @Inject constructor(
     }
 
     private var timerJob: Job? = null
+    private var pomodoroSessionActive = false
 
     init {
-        viewModelScope.launch {
-            timerUseCase.observeTimerMode().collect { mode ->
-                _state.update { it.copy(mode = mode) }
-            }
-        }
         viewModelScope.launch {
             restoreTimer()
         }
@@ -75,31 +69,39 @@ class TimerViewModel @Inject constructor(
     private suspend fun restoreTimer() {
         val startTime = timerUseCase.restoreStartTime() ?: return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
-        val mode = _state.value.mode
-        startForegroundService(startTime, mode == TimerMode.Pomodoro)
-        if (mode == TimerMode.Pomodoro) {
-            if (elapsed < WORK_SECONDS) {
-                scheduleBreakAlarm(startTime)
-            } else {
-                if (!timerUseCase.getBreakReminderSent()) {
-                    NotificationHelper.showBreakReminder(getApplication())
-                    timerUseCase.setBreakReminderSent(true)
-                }
+        startForegroundService(startTime)
+        if (elapsed < WORK_SECONDS) {
+            scheduleBreakAlarm(startTime)
+        } else {
+            if (!timerUseCase.getBreakReminderSent()) {
+                NotificationHelper.showBreakReminder(getApplication())
+                timerUseCase.setBreakReminderSent(true)
             }
         }
         startTimer(startTime, elapsed)
     }
 
+    fun setAmbientMode(active: Boolean) {
+        if (active && _state.value.status == TimerStatus.Running && !pomodoroSessionActive) {
+            pomodoroSessionActive = true
+            val startTime = _state.value.startTimeMillis ?: return
+            scheduleBreakAlarm(startTime)
+            val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
+            _state.update {
+                it.copy(
+                    breakButtonVisible = it.cumulativeSeconds + elapsed >= WORK_SECONDS,
+                )
+            }
+        }
+    }
+
     fun start() {
         val now = System.currentTimeMillis()
-        val mode = _state.value.mode
+        pomodoroSessionActive = false
         viewModelScope.launch {
             timerUseCase.startTimer()
         }
-        startForegroundService(now, mode == TimerMode.Pomodoro)
-        if (mode == TimerMode.Pomodoro) {
-            scheduleBreakAlarm(now)
-        }
+        startForegroundService(now)
         startTimer(now, 0)
     }
 
@@ -116,17 +118,17 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             timerUseCase.stopTimer()
         }
-        if (current.mode == TimerMode.Pomodoro) {
-            val newCumulative = current.pomodoroCumulativeSeconds + current.elapsedSeconds
+        if (pomodoroSessionActive) {
+            pomodoroSessionActive = false
+            val newCumulative = current.cumulativeSeconds + current.elapsedSeconds
             _state.update {
                 TimerUiState(
-                    mode = it.mode,
-                    pomodoroCumulativeSeconds = newCumulative,
+                    cumulativeSeconds = newCumulative,
                     breakButtonVisible = newCumulative >= WORK_SECONDS,
                 )
             }
         } else {
-            _state.update { TimerUiState(mode = it.mode) }
+            _state.update { TimerUiState() }
         }
     }
 
@@ -140,10 +142,11 @@ class TimerViewModel @Inject constructor(
         timerJob = null
         stopForegroundService()
         cancelBreakAlarm()
+        pomodoroSessionActive = false
         viewModelScope.launch {
             timerUseCase.takeBreak()
         }
-        _state.update { TimerUiState(mode = it.mode) }
+        _state.update { TimerUiState() }
     }
 
     fun toggleTimer() {
@@ -164,7 +167,7 @@ class TimerViewModel @Inject constructor(
         val startTime = _state.value.startTimeMillis ?: return
         if (_state.value.status != TimerStatus.Running) return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
-        if (_state.value.mode == TimerMode.Pomodoro && elapsed >= WORK_SECONDS) {
+        if (pomodoroSessionActive && elapsed >= WORK_SECONDS) {
             viewModelScope.launch {
                 if (!timerUseCase.getBreakReminderSent()) {
                     NotificationHelper.showBreakReminder(getApplication())
@@ -173,13 +176,6 @@ class TimerViewModel @Inject constructor(
             }
         }
         startTimer(startTime, elapsed)
-    }
-
-    fun setMode(mode: TimerMode) {
-        _state.update { it.copy(mode = mode) }
-        viewModelScope.launch {
-            timerUseCase.setTimerMode(mode)
-        }
     }
 
     private fun startTimer(startTimeMillis: Long, initialElapsed: Int) {
@@ -198,10 +194,10 @@ class TimerViewModel @Inject constructor(
                 _state.update { current ->
                     val startMs = current.startTimeMillis ?: System.currentTimeMillis()
                     val newElapsed = ((System.currentTimeMillis() - startMs) / 1000).toInt()
-                    val total = current.pomodoroCumulativeSeconds + newElapsed
+                    val total = current.cumulativeSeconds + newElapsed
                     current.copy(
                         elapsedSeconds = newElapsed,
-                        breakButtonVisible = current.mode == TimerMode.Pomodoro && total >= WORK_SECONDS,
+                        breakButtonVisible = pomodoroSessionActive && total >= WORK_SECONDS,
                     )
                 }
                 if (_state.value.breakButtonVisible && !breakNotified) {
@@ -213,11 +209,10 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    private fun startForegroundService(startTimeMillis: Long, isPomodoro: Boolean) {
+    private fun startForegroundService(startTimeMillis: Long) {
         val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
             action = TimerForegroundService.ACTION_START
             putExtra(TimerForegroundService.EXTRA_START_TIME, startTimeMillis)
-            putExtra(TimerForegroundService.EXTRA_IS_POMODORO, isPomodoro)
         }
         ContextCompat.startForegroundService(getApplication(), intent)
     }

@@ -62,11 +62,11 @@ object NotificationHelper {
         manager.notify(NOTIFICATION_ID, notification)
     }
 
-    fun createTimerRunningNotification(context: Context, isPomodoro: Boolean): Notification {
+    fun createTimerRunningNotification(context: Context): Notification {
         return NotificationCompat.Builder(context, CHANNEL_ID_RUNNING)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("专注中")
-            .setContentText(if (isPomodoro) "番茄计时中" else "计时中")
+            .setContentText("计时中")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .build()

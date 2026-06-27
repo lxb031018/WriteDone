@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
 import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
-import me.lxb.writedone.domain.model.TimerMode
 import me.lxb.writedone.ui.screens.home.TimerUiState
 
 /**
@@ -54,7 +53,6 @@ import me.lxb.writedone.ui.screens.home.TimerUiState
 @Composable
 fun TimerComponent(
     state: TimerUiState,
-    mode: TimerMode,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -74,18 +72,12 @@ fun TimerComponent(
 
     val timerFont = remember { FontFamily(Font(R.font.handlee)) }
 
-    val textBrush = if (mode == TimerMode.Pomodoro) {
-        Brush.linearGradient(
-            colors = listOf(AppColors.pomodoroLight, AppColors.pomodoro, AppColors.pomodoroDark),
-        )
-    } else {
-        Brush.linearGradient(
-            colors = listOf(Color(0xFF5C4D3E), Color(0xFF3C3530), Color(0xFF1E1814)),
-        )
-    }
+    val textBrush = Brush.linearGradient(
+        colors = listOf(AppColors.pomodoroLight, AppColors.pomodoro, AppColors.pomodoroDark),
+    )
 
     val text = formatHms(state.elapsedSeconds)
-    val glowColor = if (mode == TimerMode.Pomodoro) AppColors.pomodoro else Color(0xFF9E9E9E)
+    val glowColor = AppColors.pomodoro
     val baseStyle = TextStyle(
         fontFamily = timerFont,
         brush = textBrush,

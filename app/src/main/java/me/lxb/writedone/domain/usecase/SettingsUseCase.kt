@@ -7,6 +7,10 @@ import javax.inject.Inject
 class SettingsUseCase @Inject constructor(
     private val settingsRepo: SettingsRepository,
 ) {
+    val breathingLampEnabled: Flow<Boolean> = settingsRepo.breathingLampEnabled
+
+    suspend fun setBreathingLampEnabled(enabled: Boolean) = settingsRepo.setBreathingLampEnabled(enabled)
+
     val autoDimBrightness: Flow<Boolean> = settingsRepo.autoDimBrightness
 
     suspend fun setAutoDimBrightness(enabled: Boolean) = settingsRepo.setAutoDimBrightness(enabled)

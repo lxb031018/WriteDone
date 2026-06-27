@@ -13,7 +13,6 @@ class TimerForegroundService : Service() {
         const val ACTION_START = "me.lxb.writedone.action.START_TIMER"
         const val ACTION_STOP = "me.lxb.writedone.action.STOP_TIMER"
         const val EXTRA_START_TIME = "extra_start_time"
-        const val EXTRA_IS_POMODORO = "extra_is_pomodoro"
         const val WORK_SECONDS = 1500L
     }
 
@@ -24,14 +23,11 @@ class TimerForegroundService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 val startTime = intent.getLongExtra(EXTRA_START_TIME, System.currentTimeMillis())
-                val isPomodoro = intent.getBooleanExtra(EXTRA_IS_POMODORO, false)
 
-                val notification = NotificationHelper.createTimerRunningNotification(this, isPomodoro)
+                val notification = NotificationHelper.createTimerRunningNotification(this)
                 startForeground(NotificationHelper.NOTIFICATION_ID_RUNNING, notification)
 
-                if (isPomodoro) {
-                    scheduleBreakIfNeeded(startTime)
-                }
+                scheduleBreakIfNeeded(startTime)
             }
             ACTION_STOP -> {
                 breakRunnable?.let(handler::removeCallbacks)
