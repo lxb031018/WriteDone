@@ -88,7 +88,7 @@ fun TimerComponent(
     val autoSize = remember {
         TextAutoSize.StepBased(
             minFontSize = 12.sp,
-            maxFontSize = 200.sp,
+            maxFontSize = 600.sp,
             stepSize = 1.sp,
         )
     }

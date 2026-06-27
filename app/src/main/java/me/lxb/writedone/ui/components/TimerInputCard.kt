@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -37,6 +38,8 @@ fun TimerInputCard(
 ) {
     val timerState by timerViewModel.state.collectAsState()
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val timerHeight = (configuration.screenWidthDp * 0.16f).coerceIn(80f, 300f)
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -82,7 +85,7 @@ fun TimerInputCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp),
+                .height(timerHeight.dp),
         ) {
             TimerComponent(
                 state = timerState,
