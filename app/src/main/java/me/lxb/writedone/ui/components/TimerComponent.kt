@@ -6,11 +6,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -34,21 +38,17 @@ import me.lxb.writedone.ui.theme.LocalTimerPalette
 import me.lxb.writedone.ui.screens.home.TimerUiState
 
 /**
- * 1:1 port of `lib/features/timer/timer_widget.dart`.
+ * Timer display component.
  *
  * Layout strategy:
- *   - Flutter: `FittedBox(fit: BoxFit.fitWidth)` performs **layout-time** scaling
- *     so the text never overflows the parent. We reproduce this with
- *     `BasicText(autoSize = TextAutoSize.StepBased(...))`, which is the
- *     layout-time auto-shrink API in Compose Foundation 1.10+.
- *   - The 120.dp height constraint lives on the parent `HorizontalPager` in
- *     [TimerInputCard] (matches Flutter's `SizedBox(height: 120)`).
+ *   - `TextAutoSize.StepBased` with `maxFontSize` derived from the container
+ *     height, so the text naturally scales on both small phones and tablets
+ *     without overflowing.
+ *   - Container height is managed by the parent [TimerInputCard].
  *
  * Shadows:
- *   - Flutter source defines two `Shadow`s (drop + highlight). Compose's
- *     `TextStyle.shadow` is single-valued, so we stack two `BasicText`s —
- *     the bottom layer carries the white highlight, the top carries the
- *     drop shadow + gradient fill.
+ *   - Two `BasicText` layers stacked: the bottom carries the white highlight,
+ *     the top carries the drop shadow + gradient fill.
  */
 @Composable
 fun TimerComponent(
@@ -85,10 +85,17 @@ fun TimerComponent(
         fontSize = 200.sp,
         fontWeight = FontWeight.Normal,
     )
-    val autoSize = remember {
+    var containerHeightPx by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val maxFontSize = if (containerHeightPx > 0) {
+        with(density) { (containerHeightPx * 0.6f / this.density).sp }
+    } else {
+        600.sp
+    }
+    val autoSize = remember(maxFontSize) {
         TextAutoSize.StepBased(
             minFontSize = 12.sp,
-            maxFontSize = 600.sp,
+            maxFontSize = maxFontSize,
             stepSize = 1.sp,
         )
     }
@@ -102,6 +109,7 @@ fun TimerComponent(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .onSizeChanged { containerHeightPx = it.height }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
