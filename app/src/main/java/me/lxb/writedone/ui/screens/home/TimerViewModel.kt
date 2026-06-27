@@ -72,14 +72,6 @@ class TimerViewModel @Inject constructor(
         val startTime = timerUseCase.restoreStartTime() ?: return
         val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
         startForegroundService(startTime)
-        if (elapsed < WORK_SECONDS) {
-            scheduleBreakAlarm(startTime)
-        } else {
-            if (!timerUseCase.getBreakReminderSent()) {
-                NotificationHelper.showBreakReminder(getApplication())
-                timerUseCase.setBreakReminderSent(true)
-            }
-        }
         startTimer(startTime, elapsed)
     }
 

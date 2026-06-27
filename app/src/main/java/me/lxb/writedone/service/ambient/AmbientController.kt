@@ -30,9 +30,10 @@ class AmbientController(
 
     fun enter() {
         Log.i(TAG, "enter")
+        val mode = _state.value.displayMode
         sensorJob?.cancel()
         breathingJob?.cancel()
-        _state.value = AmbientState()
+        _state.value = AmbientState(displayMode = mode)
         sensorMonitor.start()
         var firstFalse = true
         sensorJob = scope.launch {
@@ -59,7 +60,7 @@ class AmbientController(
                         return@collect
                     }
                     breathingJob?.cancel()
-                    _state.value = AmbientState()
+                    _state.value = AmbientState(displayMode = _state.value.displayMode)
                     Log.i(TAG, "status -> Normal")
                 }
             }
