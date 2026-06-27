@@ -7,9 +7,9 @@
 
     <!-- Settings -->
     <string name="settings_title">设置</string>
-    <string name="settings_auto_dim">横屏自动降低亮度</string>
-    <string name="settings_battery_saver">横屏模式</string>
-    <string name="settings_breathing_lamp">呼吸灯</string>
+    <string name="settings_auto_dim">摆件模式自动降低亮度</string>
+    <string name="settings_battery_saver">摆件模式</string>
+    <string name="settings_breathing_lamp">摆件模式启用呼吸灯</string>
     <string name="settings_auto_start_timer">摆件模式自动开始计时</string>
     <string name="settings_notifications">通知</string>
     <string name="settings_notification_permission">通知权限</string>

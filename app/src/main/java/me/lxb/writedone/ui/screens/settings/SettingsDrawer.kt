@@ -102,6 +102,13 @@ fun SettingsDrawer(
             checked = autoStartTimerOnLandscapeEnabled,
             onCheckedChange = onToggleAutoStartTimerOnLandscape,
         )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Tip：手机横放，俯仰角超过60°自动启用摆件模式和休息通知",
+            modifier = Modifier.padding(horizontal = 16.dp),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_theme))
         DrawerOption(
