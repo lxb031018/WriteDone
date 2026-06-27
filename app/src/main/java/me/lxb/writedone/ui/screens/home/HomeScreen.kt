@@ -12,6 +12,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -49,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -411,6 +418,31 @@ fun HomeScreen(
                 val isAmbientHidden = ambientState.status == AmbientStatus.Active
                     && ambientState.displayMode == AmbientDisplayMode.Blackout && !isPeeking
 
+                val rainbowColors = remember {
+                    listOf(
+                        Color(0xFFFF6B6B),
+                        Color(0xFFFFE66D),
+                        Color(0xFF69DB7C),
+                        Color(0xFF74C0FC),
+                        Color(0xFFDA77F2),
+                    )
+                }
+                val rainbowTransition = rememberInfiniteTransition(label = "rainbow")
+                val scrollOffset by rainbowTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(3000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                    label = "scroll",
+                )
+                val rainbowBrush = remember(scrollOffset) {
+                    val shift = (scrollOffset * rainbowColors.size).toInt()
+                    val shifted = rainbowColors.drop(shift) + rainbowColors.take(shift)
+                    Brush.linearGradient(shifted)
+                }
+
                 when {
                     // Ambient pure-black mode with break overlay
                     isAmbientHidden && timerState.breakButtonVisible -> {
@@ -427,11 +459,13 @@ fun HomeScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.timer_complete_break),
-                                fontFamily = handwritingFont,
-                                fontSize = 48.sp,
-                                lineHeight = 64.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = Color.White.copy(alpha = 0.8f),
+                                style = TextStyle(
+                                    fontFamily = handwritingFont,
+                                    fontSize = 48.sp,
+                                    lineHeight = 64.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    brush = rainbowBrush,
+                                ),
                                 textAlign = TextAlign.Center,
                             )
                         }
