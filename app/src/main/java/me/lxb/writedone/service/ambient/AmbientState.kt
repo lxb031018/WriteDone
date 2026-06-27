@@ -8,5 +8,4 @@ data class AmbientState(
     val status: AmbientStatus = AmbientStatus.Normal,
     val breathingEnabled: Boolean = false,
     val displayMode: AmbientDisplayMode = AmbientDisplayMode.Breathing,
-    val compositingSuspended: Boolean = false,
 )

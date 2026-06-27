@@ -284,13 +284,6 @@ fun HomeScreen(
         ambientController.updateDisplayMode(breathingLampEnabled)
     }
 
-    // Pause/resume tick loop during blackout for power saving
-    // Peek overrides suspension so the timer stays live while visible.
-    val effectiveCompositingSuspended = ambientState.compositingSuspended && !isPeeking
-    LaunchedEffect(effectiveCompositingSuspended) {
-        timerViewModel.setCompositingSuspended(effectiveCompositingSuspended)
-    }
-
     // Brightness control: dim screen when autoDim is enabled.
     // During peek, restore system brightness temporarily.
     LaunchedEffect(ambientState.status, autoDimBrightness, isPeeking) {
@@ -431,6 +424,7 @@ fun HomeScreen(
                                 text = stringResource(R.string.timer_complete_break),
                                 fontFamily = handwritingFont,
                                 fontSize = 48.sp,
+                                lineHeight = 64.sp,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.White.copy(alpha = 0.8f),
                                 textAlign = TextAlign.Center,

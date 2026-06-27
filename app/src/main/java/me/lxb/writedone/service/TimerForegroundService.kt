@@ -13,7 +13,7 @@ class TimerForegroundService : Service() {
         const val ACTION_START = "me.lxb.writedone.action.START_TIMER"
         const val ACTION_STOP = "me.lxb.writedone.action.STOP_TIMER"
         const val EXTRA_START_TIME = "extra_start_time"
-        const val WORK_SECONDS = 1500L
+        const val WORK_SECONDS = 10L
     }
 
     private val handler = Handler(Looper.getMainLooper())

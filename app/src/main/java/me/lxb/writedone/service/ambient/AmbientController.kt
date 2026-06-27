@@ -43,7 +43,6 @@ class AmbientController(
                     _state.value = AmbientState(
                         status = AmbientStatus.Active,
                         displayMode = mode,
-                        compositingSuspended = mode == AmbientDisplayMode.Blackout,
                     )
                     Log.i(TAG, "status -> Active, mode=$mode")
                     if (mode == AmbientDisplayMode.Breathing) {
@@ -79,9 +78,8 @@ class AmbientController(
             _state.value = AmbientState(
                 status = AmbientStatus.Active,
                 displayMode = AmbientDisplayMode.Blackout,
-                compositingSuspended = true,
             )
-            Log.i(TAG, "mode -> Blackout, compositing suspended")
+            Log.i(TAG, "mode -> Blackout")
         } else {
             _state.value = AmbientState(
                 status = AmbientStatus.Active,
