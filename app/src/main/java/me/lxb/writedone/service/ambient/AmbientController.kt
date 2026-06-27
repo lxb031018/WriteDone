@@ -28,9 +28,9 @@ class AmbientController(
     private val _state = MutableStateFlow(AmbientState())
     val state: StateFlow<AmbientState> = _state.asStateFlow()
 
-    fun enter() {
-        Log.i(TAG, "enter")
-        val mode = _state.value.displayMode
+    fun enter(breathingLampEnabled: Boolean) {
+        Log.i(TAG, "enter($breathingLampEnabled)")
+        val mode = if (breathingLampEnabled) AmbientDisplayMode.Breathing else AmbientDisplayMode.Blackout
         sensorJob?.cancel()
         breathingJob?.cancel()
         _state.value = AmbientState(displayMode = mode)
@@ -40,7 +40,6 @@ class AmbientController(
             sensorMonitor.isReady.collect { ready ->
                 if (ready) {
                     firstFalse = true
-                    val mode = _state.value.displayMode
                     _state.value = AmbientState(
                         status = AmbientStatus.Active,
                         displayMode = mode,
@@ -68,12 +67,8 @@ class AmbientController(
     }
 
     fun updateDisplayMode(breathingLampEnabled: Boolean) {
+        if (_state.value.status != AmbientStatus.Active) return
         val mode = if (breathingLampEnabled) AmbientDisplayMode.Breathing else AmbientDisplayMode.Blackout
-        val current = _state.value
-        if (current.status != AmbientStatus.Active) {
-            _state.value = current.copy(displayMode = mode)
-            return
-        }
         if (mode == AmbientDisplayMode.Blackout) {
             breathingJob?.cancel()
             _state.value = AmbientState(
@@ -101,7 +96,7 @@ class AmbientController(
         sensorJob?.cancel()
         breathingJob?.cancel()
         sensorMonitor.stop()
-        _state.value = AmbientState()
+        _state.value = AmbientState(displayMode = _state.value.displayMode)
     }
 
     fun dispose() {

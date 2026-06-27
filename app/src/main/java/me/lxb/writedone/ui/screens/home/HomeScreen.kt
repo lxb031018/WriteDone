@@ -222,7 +222,7 @@ fun HomeScreen(
             .distinctUntilChanged()
             .collect { status ->
                 val active = status == TimerStatus.Running && isLandscape
-                if (active) ambientController.enter() else ambientController.exit()
+                if (active) ambientController.enter(breathingLampEnabled) else ambientController.exit()
                 window?.let { win ->
                     val controller = WindowInsetsControllerCompat(win, view)
                     if (active) {
