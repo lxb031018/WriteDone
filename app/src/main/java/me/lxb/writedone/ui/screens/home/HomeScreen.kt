@@ -1,8 +1,11 @@
 package me.lxb.writedone.ui.screens.home
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
+import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import android.os.Handler
 import android.os.Looper
@@ -29,8 +32,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -54,6 +55,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -80,6 +82,7 @@ import me.lxb.writedone.ui.screens.home.TimerStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.util.OemPermissionGuide
 import me.lxb.writedone.ui.components.RainbowBreakOverlay
+import me.lxb.writedone.ui.components.TimerComponent
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
 import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
@@ -131,12 +134,26 @@ fun HomeScreen(
     val autoStartTimerOnLandscapeEnabled by settingsViewModel.autoStartTimerOnLandscapeEnabled.collectAsState()
     val themeMode by settingsViewModel.themeMode.collectAsState()
     val timerState by timerViewModel.state.collectAsState()
+    val context = LocalContext.current
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { }
+    val onTimerToggle: () -> Unit = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            timerViewModel.toggleTimer()
+        }
+    }
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val density = LocalDensity.current
-    val context = LocalContext.current
 
     var screenWidthPx by remember { mutableFloatStateOf(1f) }
     var isPeeking by remember { mutableStateOf(false) }
@@ -517,7 +534,6 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight()
-                                            .verticalScroll(rememberScrollState())
                                             .padding(
                                                 start = Dimens.gap,
                                                 top = Dimens.gap,
@@ -525,7 +541,15 @@ fun HomeScreen(
                                                 bottom = Dimens.pageBottom,
                                             ),
                                     ) {
-                                        Spacer(Modifier.height(Dimens.gapMd))
+                                        TimerComponent(
+                                            state = timerState,
+                                            onToggle = onTimerToggle,
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                        )
+
+                                        Spacer(Modifier.height(Dimens.gapLg))
+
                                         TimerInputCard(
                                             timerViewModel = timerViewModel,
                                             completedViewModel = completedViewModel,
@@ -536,11 +560,9 @@ fun HomeScreen(
                                     }
                                 }
                             } else {
-                                TimerInputCard(
-                                    timerViewModel = timerViewModel,
-                                    completedViewModel = completedViewModel,
-                                    isLandscape = false,
-                                    breathingEnabled = breathingEnabled,
+                                TimerComponent(
+                                    state = timerState,
+                                    onToggle = onTimerToggle,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(
@@ -548,6 +570,18 @@ fun HomeScreen(
                                             top = Dimens.gapMd,
                                             end = Dimens.pageH,
                                         ),
+                                )
+
+                                Spacer(Modifier.height(Dimens.gapLg))
+
+                                TimerInputCard(
+                                    timerViewModel = timerViewModel,
+                                    completedViewModel = completedViewModel,
+                                    isLandscape = false,
+                                    breathingEnabled = breathingEnabled,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = Dimens.pageH),
                                 )
 
                                 Spacer(Modifier.height(Dimens.gapLg))

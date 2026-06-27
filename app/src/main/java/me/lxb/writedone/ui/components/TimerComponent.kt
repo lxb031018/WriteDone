@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
@@ -41,10 +40,10 @@ import me.lxb.writedone.ui.screens.home.TimerUiState
  * Timer display component.
  *
  * Layout strategy:
- *   - `TextAutoSize.StepBased` with `maxFontSize` derived from the container
- *     height, so the text naturally scales on both small phones and tablets
+ *   - Container wraps text height — no hardcoded height or weight.
+ *   - `TextAutoSize.StepBased` with `maxFontSize` derived from the available
+ *     width, so the text naturally scales on both small phones and tablets
  *     without overflowing.
- *   - Container height is managed by the parent [TimerInputCard].
  *
  * Shadows:
  *   - Two `BasicText` layers stacked: the bottom carries the white highlight,
@@ -85,12 +84,12 @@ fun TimerComponent(
         fontSize = 200.sp,
         fontWeight = FontWeight.Normal,
     )
-    var containerHeightPx by remember { mutableIntStateOf(0) }
+    var containerWidthPx by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
-    val maxFontSize = if (containerHeightPx > 0) {
-        with(density) { (containerHeightPx * 0.6f / this.density).sp }
+    val maxFontSize = if (containerWidthPx > 0) {
+        with(density) { (containerWidthPx * 0.25f / this.density).sp }
     } else {
-        600.sp
+        200.sp
     }
     val autoSize = remember(maxFontSize) {
         TextAutoSize.StepBased(
@@ -108,8 +107,7 @@ fun TimerComponent(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .onSizeChanged { containerHeightPx = it.height }
+            .onSizeChanged { containerWidthPx = it.width }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
@@ -141,6 +139,7 @@ fun TimerComponent(
                     ),
                 ),
                 autoSize = autoSize,
+                softWrap = false,
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer {
@@ -163,6 +162,7 @@ fun TimerComponent(
                     ),
                 ),
                 autoSize = autoSize,
+                softWrap = false,
                 modifier = pressScaleModifier,
             )
             // Layer 2: main drop shadow + gradient fill (Flutter `_shadows[0]`)
@@ -176,6 +176,7 @@ fun TimerComponent(
                     ),
                 ),
                 autoSize = autoSize,
+                softWrap = false,
                 modifier = pressScaleModifier,
             )
         }
