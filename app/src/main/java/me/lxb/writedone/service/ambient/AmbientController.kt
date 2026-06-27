@@ -39,16 +39,20 @@ class AmbientController(
             sensorMonitor.isReady.collect { ready ->
                 if (ready) {
                     firstFalse = true
-                    _state.value = AmbientState(status = AmbientStatus.Active)
-                    Log.i(TAG, "status -> Active")
-                    delay(BREATHING_START_DELAY_MS)
-                    breathingJob?.cancel()
-                    breathingJob = launch {
-                        _state.value = AmbientState(
-                            status = AmbientStatus.Active,
-                            breathingEnabled = true,
-                        )
-                        Log.i(TAG, "breathing -> true")
+                    val mode = _state.value.displayMode
+                    _state.value = AmbientState(
+                        status = AmbientStatus.Active,
+                        displayMode = mode,
+                        compositingSuspended = mode == AmbientDisplayMode.Blackout,
+                    )
+                    Log.i(TAG, "status -> Active, mode=$mode")
+                    if (mode == AmbientDisplayMode.Breathing) {
+                        delay(BREATHING_START_DELAY_MS)
+                        breathingJob?.cancel()
+                        breathingJob = launch {
+                            _state.value = _state.value.copy(breathingEnabled = true)
+                            Log.i(TAG, "breathing -> true")
+                        }
                     }
                 } else {
                     if (firstFalse) {
@@ -59,6 +63,36 @@ class AmbientController(
                     _state.value = AmbientState()
                     Log.i(TAG, "status -> Normal")
                 }
+            }
+        }
+    }
+
+    fun updateDisplayMode(breathingLampEnabled: Boolean) {
+        val mode = if (breathingLampEnabled) AmbientDisplayMode.Breathing else AmbientDisplayMode.Blackout
+        val current = _state.value
+        if (current.status != AmbientStatus.Active) {
+            _state.value = current.copy(displayMode = mode)
+            return
+        }
+        if (mode == AmbientDisplayMode.Blackout) {
+            breathingJob?.cancel()
+            _state.value = AmbientState(
+                status = AmbientStatus.Active,
+                displayMode = AmbientDisplayMode.Blackout,
+                compositingSuspended = true,
+            )
+            Log.i(TAG, "mode -> Blackout, compositing suspended")
+        } else {
+            _state.value = AmbientState(
+                status = AmbientStatus.Active,
+                displayMode = AmbientDisplayMode.Breathing,
+            )
+            Log.i(TAG, "mode -> Breathing")
+            breathingJob?.cancel()
+            breathingJob = scope.launch {
+                delay(BREATHING_START_DELAY_MS)
+                _state.value = _state.value.copy(breathingEnabled = true)
+                Log.i(TAG, "breathing -> true")
             }
         }
     }

@@ -74,6 +74,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.pow
 import kotlin.math.sin
 import me.lxb.writedone.service.ambient.AmbientController
+import me.lxb.writedone.service.ambient.AmbientDisplayMode
 import me.lxb.writedone.service.ambient.AmbientStatus
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.screens.home.TimerStatus
@@ -209,9 +210,6 @@ fun HomeScreen(
     }
 
     val breathingAlpha: State<Float>? = if (ambientState.breathingEnabled) breathingAlphaValue else null
-    val ambientProgress = themeAnim.value
-
-    // Inline breathing flag (kept for breathingEnabled propagation to children).
     val breathingEnabled = ambientState.breathingEnabled
 
     // Ambient mode + status bar: subscribe to timer status (Idle↔Running only).
@@ -228,10 +226,7 @@ fun HomeScreen(
                 window?.let { win ->
                     val controller = WindowInsetsControllerCompat(win, view)
                     if (active) {
-                        controller.hide(WindowInsetsCompat.Type.statusBars())
-                        if (autoDimBrightness) {
-                            win.attributes = win.attributes.apply { screenBrightness = 0f }
-                        }
+                        controller.hide(WindowInsetsCompat.Type.systemBars())
                         val decorView = win.decorView
                         // Auto-hide status bar 1s after user pulls it down (legacy listener)
                         @Suppress("DEPRECATION")
@@ -240,7 +235,7 @@ fun HomeScreen(
                                 Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
                                 decorView.postDelayed({
                                     WindowInsetsControllerCompat(win, view)
-                                        .hide(WindowInsetsCompat.Type.statusBars())
+                                        .hide(WindowInsetsCompat.Type.systemBars())
                                 }, 1000L)
                             }
                         }
@@ -254,7 +249,7 @@ fun HomeScreen(
                                 if (insets.isVisible(WindowInsetsCompat.Type.statusBars())) {
                                     delay(1000L)
                                     WindowInsetsControllerCompat(win, view)
-                                        .hide(WindowInsetsCompat.Type.statusBars())
+                                        .hide(WindowInsetsCompat.Type.systemBars())
                                 }
                             }
                         }
@@ -264,8 +259,7 @@ fun HomeScreen(
                         Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
                         hideJob?.cancel()
                         hideJob = null
-                        controller.show(WindowInsetsCompat.Type.statusBars())
-                        win.attributes = win.attributes.apply { screenBrightness = -1f }
+                        controller.show(WindowInsetsCompat.Type.systemBars())
                     }
                 }
             }
@@ -285,12 +279,23 @@ fun HomeScreen(
         }
     }
 
-    // Brightness control: force minimum in pure-black ambient (breathing lamp OFF),
-    // otherwise follow autoDimBrightness setting.
+    // Notify controller when breathing lamp setting changes
+    LaunchedEffect(breathingLampEnabled) {
+        ambientController.updateDisplayMode(breathingLampEnabled)
+    }
+
+    // Pause/resume tick loop during blackout for power saving
+    // Peek overrides suspension so the timer stays live while visible.
+    val effectiveCompositingSuspended = ambientState.compositingSuspended && !isPeeking
+    LaunchedEffect(effectiveCompositingSuspended) {
+        timerViewModel.setCompositingSuspended(effectiveCompositingSuspended)
+    }
+
+    // Brightness control: dim screen when autoDim is enabled.
     // During peek, restore system brightness temporarily.
-    LaunchedEffect(ambientState.status, autoDimBrightness, breathingLampEnabled, isPeeking) {
+    LaunchedEffect(ambientState.status, autoDimBrightness, isPeeking) {
         val active = ambientState.status == AmbientStatus.Active
-        if (active && !isPeeking && (!breathingLampEnabled || autoDimBrightness)) {
+        if (active && !isPeeking && autoDimBrightness) {
             window?.attributes = window?.attributes?.apply { screenBrightness = 0f }
         } else if (!active || isPeeking) {
             window?.attributes = window?.attributes?.apply { screenBrightness = -1f }
@@ -406,7 +411,7 @@ fun HomeScreen(
                     .background(Color.Transparent),
             ) {
                 val isAmbientHidden = ambientState.status == AmbientStatus.Active
-                    && !breathingLampEnabled && !isPeeking
+                    && ambientState.displayMode == AmbientDisplayMode.Blackout && !isPeeking
 
                 when {
                     // Ambient pure-black mode with break overlay

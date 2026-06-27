@@ -59,6 +59,7 @@ class TimerViewModel @Inject constructor(
 
     private var timerJob: Job? = null
     private var pomodoroSessionActive = false
+    private var compositingSuspended = false
 
     init {
         viewModelScope.launch {
@@ -79,6 +80,18 @@ class TimerViewModel @Inject constructor(
             }
         }
         startTimer(startTime, elapsed)
+    }
+
+    fun setCompositingSuspended(suspended: Boolean) {
+        compositingSuspended = suspended
+        if (suspended && _state.value.status == TimerStatus.Running) {
+            timerJob?.cancel()
+            timerJob = null
+        } else if (!suspended && _state.value.status == TimerStatus.Running) {
+            val startTime = _state.value.startTimeMillis ?: return
+            val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt()
+            startTimer(startTime, elapsed)
+        }
     }
 
     fun setAmbientMode(active: Boolean) {
