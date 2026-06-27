@@ -1,5 +1,7 @@
 package me.lxb.writedone.service.ambient
 
+import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -11,34 +13,67 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AmbientController(
+    context: Context,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) {
     companion object {
+        private const val TAG = "AmbientCtrl"
         private const val BREATHING_START_DELAY_MS = 1500L
     }
-    private var timerJob: Job? = null
+
+    private val sensorMonitor = AmbientSensorMonitor(context, scope)
+    private var sensorJob: Job? = null
+    private var breathingJob: Job? = null
 
     private val _state = MutableStateFlow(AmbientState())
     val state: StateFlow<AmbientState> = _state.asStateFlow()
 
     fun enter() {
-        timerJob?.cancel()
-        _state.value = AmbientState(status = AmbientStatus.Active)
-        timerJob = scope.launch {
-            delay(BREATHING_START_DELAY_MS)
-            _state.value = AmbientState(
-                status = AmbientStatus.Active,
-                breathingEnabled = true,
-            )
+        Log.d(TAG, "enter() called")
+        sensorJob?.cancel()
+        breathingJob?.cancel()
+        _state.value = AmbientState()
+        sensorMonitor.start()
+        var firstFalse = true
+        sensorJob = scope.launch {
+            sensorMonitor.isReady.collect { ready ->
+                Log.d(TAG, "collect: isReady=$ready")
+                if (ready) {
+                    firstFalse = true
+                    _state.value = AmbientState(status = AmbientStatus.Active)
+                    Log.i(TAG, "status -> Active")
+                    delay(BREATHING_START_DELAY_MS)
+                    breathingJob?.cancel()
+                    breathingJob = launch {
+                        _state.value = AmbientState(
+                            status = AmbientStatus.Active,
+                            breathingEnabled = true,
+                        )
+                        Log.i(TAG, "breathingEnabled -> true")
+                    }
+                } else {
+                    if (firstFalse) {
+                        firstFalse = false
+                        Log.d(TAG, "collect: skip first false")
+                        return@collect
+                    }
+                    breathingJob?.cancel()
+                    _state.value = AmbientState()
+                    Log.d(TAG, "status -> Normal (isReady=false)")
+                }
+            }
         }
     }
 
     fun exit() {
-        timerJob?.cancel()
+        Log.d(TAG, "exit() called")
+        sensorJob?.cancel()
+        breathingJob?.cancel()
+        sensorMonitor.stop()
         _state.value = AmbientState()
     }
 
     fun dispose() {
-        timerJob?.cancel()
+        exit()
     }
 }

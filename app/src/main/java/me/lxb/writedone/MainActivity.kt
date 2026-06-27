@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var noteRepo: NoteRepository
     @Inject lateinit var syncManager: SyncManager
 
-    private val ambientController = AmbientController()
+    private val ambientController by lazy { AmbientController(applicationContext) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

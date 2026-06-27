@@ -205,7 +205,7 @@ fun HomeScreen(
     // Inline breathing flag (kept for breathingEnabled propagation to children).
     val breathingEnabled = ambientState.breathingEnabled
 
-    // Keep screen on + ambient mode + status bar: subscribe to timer status (Idle↔Running only).
+    // Ambient mode + status bar: subscribe to timer status (Idle↔Running only).
     val view = LocalView.current
     val window = (context as? Activity)?.window
     LaunchedEffect(isLandscape, ambientController, view) {
@@ -215,7 +215,6 @@ fun HomeScreen(
             .distinctUntilChanged()
             .collect { status ->
                 val active = status == TimerStatus.Running && isLandscape
-                view.keepScreenOn = active
                 if (active) ambientController.enter() else ambientController.exit()
                 window?.let { win ->
                     val controller = WindowInsetsControllerCompat(win, view)
@@ -261,6 +260,11 @@ fun HomeScreen(
                     }
                 }
             }
+    }
+
+    // Keep screen on only when ambient mode is active.
+    LaunchedEffect(ambientState.status) {
+        view.keepScreenOn = ambientState.status == AmbientStatus.Active
     }
 
     // Y threshold (in px) above which a horizontal drag opens the drawer (legacy).
