@@ -32,10 +32,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -82,15 +79,14 @@ import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.screens.home.TimerStatus
 import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.util.OemPermissionGuide
+import me.lxb.writedone.ui.components.RainbowBreakOverlay
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
 import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
 import me.lxb.writedone.ui.screens.legal.UserAgreementPage
 import me.lxb.writedone.ui.screens.settings.SettingsDrawer
 import me.lxb.writedone.ui.theme.AppColors
-import me.lxb.writedone.ui.theme.BreakTexts
 import me.lxb.writedone.ui.theme.Dimens
-import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.ui.theme.LocalTimerPalette
@@ -442,32 +438,10 @@ fun HomeScreen(
                 }
 
                 when {
-                    // Ambient pure-black mode with break overlay
-                    isAmbientHidden && timerState.breakButtonVisible -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = { timerViewModel.takeBreak() },
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = remember { BreakTexts.random() },
-                                style = TextStyle(
-                                    fontFamily = handwritingFont,
-                                    fontSize = 48.sp,
-                                    lineHeight = 64.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    brush = rainbowBrush,
-                                ),
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                    }
+                    timerState.breakButtonVisible && isAmbientHidden ->
+                        RainbowBreakOverlay(rainbowBrush, { timerViewModel.takeBreak() }, Color.Black)
+                    timerState.breakButtonVisible ->
+                        RainbowBreakOverlay(rainbowBrush, { timerViewModel.takeBreak() })
                     // Ambient pure-black mode: hide all content, tap to peek
                     isAmbientHidden -> {
                         Box(

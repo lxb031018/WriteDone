@@ -84,18 +84,11 @@ fun TimerInputCard(
                 .fillMaxWidth()
                 .height(120.dp),
         ) {
-            if (timerState.breakButtonVisible) {
-                TimerCompleteActions(
-                    onBreak = { timerViewModel.takeBreak() },
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                TimerComponent(
-                    state = timerState,
-                    onToggle = onToggle,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+            TimerComponent(
+                state = timerState,
+                onToggle = onToggle,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         Spacer(Modifier.height(Dimens.gapLg))
