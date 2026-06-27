@@ -12,11 +12,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -418,29 +413,31 @@ fun HomeScreen(
                 val isAmbientHidden = ambientState.status == AmbientStatus.Active
                     && ambientState.displayMode == AmbientDisplayMode.Blackout && !isPeeking
 
-                val rainbowColors = remember {
-                    listOf(
+                val smoothRainbow = remember {
+                    val base = listOf(
                         Color(0xFFFF6B6B),
                         Color(0xFFFFE66D),
                         Color(0xFF69DB7C),
                         Color(0xFF74C0FC),
                         Color(0xFFDA77F2),
                     )
+                    val steps = 12
+                    buildList {
+                        for (i in base.indices)
+                            for (s in 0 until steps)
+                                add(lerp(base[i], base[(i + 1) % base.size], s.toFloat() / steps))
+                    }
                 }
-                val rainbowTransition = rememberInfiniteTransition(label = "rainbow")
-                val scrollOffset by rainbowTransition.animateFloat(
-                    initialValue = 0f,
-                    targetValue = 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(3000, easing = LinearEasing),
-                        repeatMode = RepeatMode.Restart,
-                    ),
-                    label = "scroll",
-                )
-                val rainbowBrush = remember(scrollOffset) {
-                    val shift = (scrollOffset * rainbowColors.size).toInt()
-                    val shifted = rainbowColors.drop(shift) + rainbowColors.take(shift)
-                    Brush.linearGradient(shifted)
+                val tick = remember { mutableIntStateOf(0) }
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        tick.intValue = (tick.intValue + 2) % 60
+                        delay(100)
+                    }
+                }
+                val rainbowBrush = remember(tick.intValue) {
+                    val colors = List(5) { i -> smoothRainbow[(tick.intValue + i * 12) % 60] }
+                    Brush.linearGradient(colors)
                 }
 
                 when {
