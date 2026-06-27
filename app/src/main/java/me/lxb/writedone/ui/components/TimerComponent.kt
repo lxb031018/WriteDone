@@ -29,8 +29,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import me.lxb.writedone.R
-import me.lxb.writedone.ui.theme.AppColors
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
+import me.lxb.writedone.ui.theme.LocalTimerPalette
 import me.lxb.writedone.ui.screens.home.TimerUiState
 
 /**
@@ -72,12 +72,13 @@ fun TimerComponent(
 
     val timerFont = remember { FontFamily(Font(R.font.handlee)) }
 
+    val palette = LocalTimerPalette.current
     val textBrush = Brush.linearGradient(
-        colors = listOf(AppColors.pomodoroLight, AppColors.pomodoro, AppColors.pomodoroDark),
+        colors = listOf(palette.light, palette.mid, palette.dark),
     )
 
     val text = formatHms(state.elapsedSeconds)
-    val glowColor = AppColors.pomodoro
+    val glowColor = palette.glow
     val baseStyle = TextStyle(
         fontFamily = timerFont,
         brush = textBrush,

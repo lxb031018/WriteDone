@@ -90,6 +90,8 @@ import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
+import me.lxb.writedone.ui.theme.LocalTimerPalette
+import me.lxb.writedone.ui.theme.rococoPalettes
 import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
 import me.lxb.writedone.ui.screens.home.TimerViewModel
@@ -301,9 +303,12 @@ fun HomeScreen(
     var dragStartY by remember { mutableFloatStateOf(0f) }
     var lastDragDirection by remember { mutableFloatStateOf(0f) }
 
+    val timerPalette = rococoPalettes[timerState.paletteIndex]
+
     CompositionLocalProvider(
         LocalAmbientProgress provides themeAnim.value,
         LocalBreathingAlpha provides breathingAlpha,
+        LocalTimerPalette provides timerPalette,
     ) {
         val colorScheme = MaterialTheme.colorScheme
 

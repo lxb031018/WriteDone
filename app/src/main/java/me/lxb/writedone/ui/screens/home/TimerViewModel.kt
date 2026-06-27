@@ -24,6 +24,8 @@ import me.lxb.writedone.domain.usecase.TimerUseCase
 import me.lxb.writedone.service.TimerForegroundService
 import me.lxb.writedone.service.notification.AlarmReceiver
 import me.lxb.writedone.service.notification.NotificationHelper
+import kotlin.random.Random
+import me.lxb.writedone.ui.theme.rococoPalettes
 import javax.inject.Inject
 
 enum class TimerStatus { Idle, Running }
@@ -41,6 +43,7 @@ data class TimerUiState(
     val startTimeMillis: Long? = null,
     val cumulativeSeconds: Int = 0,
     val pomodoroSessionActive: Boolean = false,
+    val paletteIndex: Int = 0,
 ) {
     val breakButtonVisible: Boolean
         get() = cumulativeSeconds >= WORK_SECONDS ||
@@ -63,6 +66,7 @@ class TimerViewModel @Inject constructor(
     private var timerJob: Job? = null
 
     init {
+        _state.update { it.copy(paletteIndex = Random.nextInt(rococoPalettes.size)) }
         viewModelScope.launch {
             restoreTimer()
         }
@@ -105,11 +109,12 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             timerUseCase.stopTimer()
         }
+        val nextPalette = Random.nextInt(rococoPalettes.size)
         if (current.pomodoroSessionActive) {
             val newCumulative = current.cumulativeSeconds + current.elapsedSeconds
-            _state.update { TimerUiState(cumulativeSeconds = newCumulative) }
+            _state.update { TimerUiState(cumulativeSeconds = newCumulative, paletteIndex = nextPalette) }
         } else {
-            _state.update { TimerUiState() }
+            _state.update { TimerUiState(paletteIndex = nextPalette) }
         }
     }
 
@@ -126,7 +131,7 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             timerUseCase.takeBreak()
         }
-        _state.update { TimerUiState() }
+        _state.update { TimerUiState(paletteIndex = Random.nextInt(rococoPalettes.size)) }
     }
 
     fun toggleTimer() {
