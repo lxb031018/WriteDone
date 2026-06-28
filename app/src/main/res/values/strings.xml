@@ -40,7 +40,7 @@
 
     <!-- Agreement Dialog -->
     <string name="agreement_welcome">欢迎使用 WriteDone</string>
-    <string name="agreement_description">WriteDone 是一款纯本地的离线时间管理工具，不联网、不收集任何个人信息，未集成任何第三方 SDK。</string>
+    <string name="agreement_description">WriteDone 是一款纯本地的离线时间记录工具，不联网、不收集任何个人信息，未集成任何第三方 SDK。</string>
     <string name="agreement_instruction">开始前，请阅读并同意以下文件：</string>
     <string name="agreement_user_agreement_title">《用户协议》</string>
     <string name="agreement_user_agreement_summary">约定您与开发者之间就使用本应用的权利和义务。</string>
@@ -69,7 +69,6 @@
     <string name="calendar_copy_selected_count">复制选中（%d天）</string>
     <string name="calendar_export_selected">复制</string>
     <string name="calendar_export_selected_count">复制</string>
-    <string name="calendar_review">复盘</string>
     <string name="calendar_no_records">这天还没有记录</string>
     <string name="calendar_copied_toast">已复制到剪贴板</string>
     <string name="calendar_export_success">JSON 已复制到剪贴板</string>
@@ -101,7 +100,7 @@
     <string name="legal_effective_date">生效日期:</string>
     <string name="legal_preamble">本协议是开发者 lxb (以下简称&quot;我们&quot;或&quot;开发者&quot;) 与您 (以下简称&quot;用户&quot;或&quot;您&quot;) 之间就使用 &quot;WriteDone&quot; 移动应用 (以下简称&quot;本应用&quot;) 所订立的协议。请您仔细阅读本协议的全部条款, 一旦您开始使用本应用即视为您已阅读、理解并接受本协议的所有条款。</string>
     <string name="legal_section1">一、关于本应用</string>
-    <string name="legal_app_desc">WriteDone 是一款离线个人时间管理工具, 灵感来自 Git 的&quot;原子提交&quot;理念, 鼓励用户在自由时间主动做点有意义的事并记录下来。</string>
+    <string name="legal_app_desc">WriteDone 是一款离线个人时间记录工具, 灵感来自 Git 的&quot;原子提交&quot;理念, 鼓励用户主动做点有意义的事并记录下来。</string>
     <string name="legal_section1_1">1.1 核心功能</string>
     <string name="legal_core1">用户写下想做的事情, 点击开始后进入计时</string>
     <string name="legal_core2">计时完成后保存为一次&quot;提交&quot; (类似 git commit)</string>

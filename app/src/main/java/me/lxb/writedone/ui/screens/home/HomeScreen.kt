@@ -93,6 +93,7 @@ import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.ui.theme.LocalTimerPalette
+import me.lxb.writedone.ui.theme.ThemeMode
 import me.lxb.writedone.ui.theme.rococoPalettes
 import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
@@ -633,7 +634,7 @@ fun HomeScreen(
                     onToggleBreathingLamp = { settingsViewModel.setBreathingLampEnabled(it) },
                     autoStartTimerOnLandscapeEnabled = autoStartTimerOnLandscapeEnabled,
                     onToggleAutoStartTimerOnLandscape = { settingsViewModel.setAutoStartTimerOnLandscapeEnabled(it) },
-                    themeMode = themeMode,
+                    themeMode = themeMode ?: ThemeMode.System,
                     onThemeModeChange = { settingsViewModel.setThemeMode(it) },
                     onUserAgreement = { showUserAgreement = true },
                     onPrivacyPolicy = { showPrivacyPolicy = true },

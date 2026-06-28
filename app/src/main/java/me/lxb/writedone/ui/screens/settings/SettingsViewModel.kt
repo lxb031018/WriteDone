@@ -31,9 +31,9 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsUseCase.setAutoDimBrightness(enabled) }
     }
 
-    val themeMode: StateFlow<ThemeMode> = settingsUseCase.themeMode
+    val themeMode: StateFlow<ThemeMode?> = settingsUseCase.themeMode
         .map { name -> try { ThemeMode.valueOf(name) } catch (_: Exception) { ThemeMode.System } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.System)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { settingsUseCase.setThemeMode(mode.name) }

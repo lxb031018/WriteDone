@@ -80,7 +80,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             var ambientProgress by remember { mutableFloatStateOf(0f) }
             val themeMode by settingsViewModel.themeMode.collectAsStateWithLifecycle()
-            val darkTheme = when (themeMode) {
+
+            val mode = themeMode ?: run {
+                SplashScreen()
+                return@setContent
+            }
+
+            val darkTheme = when (mode) {
                 ThemeMode.System -> isSystemInDarkTheme()
                 ThemeMode.Light -> false
                 ThemeMode.Dark -> true
