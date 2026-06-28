@@ -65,4 +65,15 @@ object AppColors {
         Color(0xFF3A282E), Color(0xFF282A38), Color(0xFF263438),
         Color(0xFF383828), Color(0xFF2E3828), Color(0xFF3A2E28),
     )
+
+    val morandiPalette = listOf(
+        Color(0xFFB5A89C),
+        Color(0xFFC4A69D),
+        Color(0xFF9DA993),
+        Color(0xFFA39DA9),
+        Color(0xFFC9B99A),
+        Color(0xFF8FA4B0),
+        Color(0xFFB8927C),
+        Color(0xFFC4A89D),
+    )
 }

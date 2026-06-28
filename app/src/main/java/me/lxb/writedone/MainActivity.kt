@@ -39,6 +39,7 @@ import me.lxb.writedone.ui.screens.home.HomeScreen
 import me.lxb.writedone.ui.screens.settings.AboutPage
 import me.lxb.writedone.ui.screens.settings.SyncSettingsPage
 import me.lxb.writedone.ui.screens.settings.SyncViewModel
+import me.lxb.writedone.ui.screens.splash.SplashScreen
 import me.lxb.writedone.ui.theme.ThemeMode
 import me.lxb.writedone.ui.theme.WriteDoneTheme
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
@@ -151,7 +152,10 @@ private fun WriteDoneApp(
         }
     }
 
-    if (!agreementChecked) return
+    if (!agreementChecked) {
+        SplashScreen()
+        return
+    }
 
     // Auto-sync 3 seconds after app opens
     LaunchedEffect(agreementChecked) {
