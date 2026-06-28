@@ -35,13 +35,15 @@ data class StopEvent(
     val startTimeMillis: Long,
 )
 
-const val WORK_SECONDS = 10
+const val WORK_SECONDS = 1500
+const val BREAK_RESET_SECONDS = 150
 
 data class TimerUiState(
     val status: TimerStatus = TimerStatus.Idle,
     val elapsedSeconds: Int = 0,
     val startTimeMillis: Long? = null,
     val cumulativeSeconds: Int = 0,
+    val lastStopTimeMillis: Long? = null,
     val pomodoroSessionActive: Boolean = false,
     val paletteIndex: Int = 0,
 ) {
@@ -112,7 +114,15 @@ class TimerViewModel @Inject constructor(
         val nextPalette = Random.nextInt(rococoPalettes.size)
         if (current.pomodoroSessionActive) {
             val newCumulative = current.cumulativeSeconds + current.elapsedSeconds
-            _state.update { TimerUiState(cumulativeSeconds = newCumulative, paletteIndex = nextPalette) }
+            _state.update { it.copy(
+                status = TimerStatus.Idle,
+                elapsedSeconds = 0,
+                startTimeMillis = null,
+                cumulativeSeconds = newCumulative,
+                lastStopTimeMillis = System.currentTimeMillis(),
+                pomodoroSessionActive = true,
+                paletteIndex = nextPalette,
+            )}
         } else {
             _state.update { TimerUiState(paletteIndex = nextPalette) }
         }
@@ -165,6 +175,13 @@ class TimerViewModel @Inject constructor(
 
     private fun startTimer(startTimeMillis: Long, initialElapsed: Int) {
         timerJob?.cancel()
+        val current = _state.value
+        if (current.pomodoroSessionActive && current.lastStopTimeMillis != null) {
+            val gapSeconds = (startTimeMillis - current.lastStopTimeMillis) / 1000
+            if (gapSeconds >= BREAK_RESET_SECONDS) {
+                _state.update { it.copy(cumulativeSeconds = 0) }
+            }
+        }
         _state.update {
             it.copy(
                 status = TimerStatus.Running,

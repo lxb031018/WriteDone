@@ -93,7 +93,7 @@
     <!-- Notification -->
     <string name="notification_channel_name">番茄计时器提醒</string>
     <string name="notification_break_title">休息一下吧</string>
-    <string name="notification_break_text">已经计时25分钟啦，该休息一下啦！</string>
+    <string name="notification_break_text">已经计时25分钟啦，完事该休息一下啦！</string>
 
     <!-- Legal Content - User Agreement -->
     <string name="legal_last_updated">最后更新日期:</string>
