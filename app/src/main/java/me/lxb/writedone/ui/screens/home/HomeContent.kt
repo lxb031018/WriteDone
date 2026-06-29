@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -93,132 +94,148 @@ fun HomeContent(
             Brush.linearGradient(colors)
         }
 
-        when {
-            timerState.breakButtonVisible && isAmbientHidden ->
-                RainbowBreakOverlay(rainbowBrush, { timerViewModel.takeBreak() }, Color.Black)
-            timerState.breakButtonVisible ->
-                RainbowBreakOverlay(rainbowBrush, { timerViewModel.takeBreak() })
-            isAmbientHidden -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onPeek,
-                        ),
-                )
-            }
-            else -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(colorScheme.background)
-                        .statusBarsPadding(),
-                ) {
-                    if (isLandscape) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .weight(1f),
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .padding(
-                                        start = Dimens.pageH,
-                                        top = Dimens.gap,
-                                        end = Dimens.gap,
-                                        bottom = 0.dp,
-                                    ),
-                            ) {
-                                CompletedSection(
-                                    notes = completedState.todayNotes,
-                                    headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
-                                    showHeader = true,
-                                    breathingEnabled = breathingEnabled,
-                                    onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            }
-                            VerticalDivider(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .fillMaxHeight(),
-                                color = colorScheme.outline,
-                                thickness = 1.dp,
-                            )
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .padding(
-                                        start = Dimens.gap,
-                                        top = Dimens.gap,
-                                        end = Dimens.pageH,
-                                        bottom = Dimens.pageBottom,
-                                    ),
-                            ) {
-                                TimerComponent(
-                                    state = timerState,
-                                    onToggle = onTimerToggle,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
+        // ── Layer 1: Normal content (always composed, so TimerInputCard stays alive) ──
+        val normalBg = when {
+            isAmbientHidden -> Color.Black
+            else -> colorScheme.background
+        }
 
-                                Spacer(Modifier.height(Dimens.gapLg))
-
-                                TimerInputCard(
-                                    timerViewModel = timerViewModel,
-                                    completedViewModel = completedViewModel,
-                                    isLandscape = true,
-                                    breathingEnabled = breathingEnabled,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                        }
-                    } else {
-                        TimerComponent(
-                            state = timerState,
-                            onToggle = onTimerToggle,
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(normalBg)
+                .then(
+                    if (isAmbientHidden && !timerState.breakButtonVisible)
+                        Modifier.alpha(0f)
+                    else Modifier
+                ),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (!isAmbientHidden) Modifier.statusBarsPadding() else Modifier),
+            ) {
+                if (isLandscape) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f),
+                    ) {
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .weight(1f)
+                                .fillMaxHeight()
                                 .padding(
                                     start = Dimens.pageH,
-                                    top = Dimens.gapMd,
-                                    end = Dimens.pageH,
+                                    top = Dimens.gap,
+                                    end = Dimens.gap,
+                                    bottom = 0.dp,
                                 ),
-                        )
-
-                        Spacer(Modifier.height(Dimens.gapLg))
-
-                        TimerInputCard(
-                            timerViewModel = timerViewModel,
-                            completedViewModel = completedViewModel,
-                            isLandscape = false,
-                            breathingEnabled = breathingEnabled,
+                        ) {
+                            CompletedSection(
+                                notes = completedState.todayNotes,
+                                headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
+                                showHeader = true,
+                                breathingEnabled = breathingEnabled,
+                                onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                        VerticalDivider(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = Dimens.pageH),
+                                .width(1.dp)
+                                .fillMaxHeight(),
+                            color = colorScheme.outline,
+                            thickness = 1.dp,
                         )
-
-                        Spacer(Modifier.height(Dimens.gapLg))
-
-                        CompletedSection(
-                            notes = completedState.todayNotes,
-                            headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
-                            showHeader = true,
-                            breathingEnabled = breathingEnabled,
-                            onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = Dimens.pageH)
-                                .weight(1f),
-                        )
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(
+                                    start = Dimens.gap,
+                                    top = Dimens.gap,
+                                    end = Dimens.pageH,
+                                    bottom = Dimens.pageBottom,
+                                ),
+                        ) {
+                            TimerComponent(
+                                state = timerState,
+                                onToggle = onTimerToggle,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+
+                            Spacer(Modifier.height(Dimens.gapLg))
+
+                            TimerInputCard(
+                                timerViewModel = timerViewModel,
+                                completedViewModel = completedViewModel,
+                                isLandscape = true,
+                                breathingEnabled = breathingEnabled,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
+                } else {
+                    TimerComponent(
+                        state = timerState,
+                        onToggle = onTimerToggle,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                start = Dimens.pageH,
+                                top = Dimens.gapMd,
+                                end = Dimens.pageH,
+                            ),
+                    )
+
+                    Spacer(Modifier.height(Dimens.gapLg))
+
+                    TimerInputCard(
+                        timerViewModel = timerViewModel,
+                        completedViewModel = completedViewModel,
+                        isLandscape = false,
+                        breathingEnabled = breathingEnabled,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.pageH),
+                    )
+
+                    Spacer(Modifier.height(Dimens.gapLg))
+
+                    CompletedSection(
+                        notes = completedState.todayNotes,
+                        headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
+                        showHeader = true,
+                        breathingEnabled = breathingEnabled,
+                        onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.pageH)
+                            .weight(1f),
+                    )
                 }
             }
+        }
+
+        // ── Layer 2: Ambient blackout (behind break overlay) ──
+        if (isAmbientHidden && !timerState.breakButtonVisible) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onPeek,
+                    ),
+            )
+        }
+
+        // ── Layer 3: Break overlay on very top ──
+        if (timerState.breakButtonVisible) {
+            val bgColor = if (isAmbientHidden) Color.Black else colorScheme.background
+            RainbowBreakOverlay(rainbowBrush, { timerViewModel.takeBreak() }, bgColor)
         }
     }
 }
