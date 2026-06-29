@@ -69,7 +69,7 @@ fun TimerComponent(
         label = "timerScale",
     )
 
-    val timerFont = remember { FontFamily(Font(R.font.handlee)) }
+    val timerFont = remember { FontFamily(Font(R.font.cutive_mono)) }
 
     val palette = LocalTimerPalette.current
     val textBrush = Brush.linearGradient(
