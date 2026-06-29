@@ -17,23 +17,10 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -45,32 +32,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.core.content.ContextCompat
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.stringResource
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import me.lxb.writedone.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import androidx.compose.runtime.mutableIntStateOf
 import kotlinx.coroutines.launch
 import kotlin.math.pow
 import kotlin.math.sin
@@ -79,17 +54,7 @@ import me.lxb.writedone.service.ambient.AmbientDisplayMode
 import me.lxb.writedone.service.ambient.AmbientStatus
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.screens.home.TimerStatus
-import me.lxb.writedone.ui.components.CompletedSection
 import me.lxb.writedone.util.OemPermissionGuide
-import me.lxb.writedone.ui.components.RainbowBreakOverlay
-import me.lxb.writedone.ui.components.TimerComponent
-import me.lxb.writedone.ui.components.TimerInputCard
-import me.lxb.writedone.ui.screens.calendar.CalendarOverlay
-import me.lxb.writedone.ui.screens.legal.PrivacyPolicyPage
-import me.lxb.writedone.ui.screens.legal.UserAgreementPage
-import me.lxb.writedone.ui.screens.settings.SettingsDrawer
-import me.lxb.writedone.ui.theme.AppColors
-import me.lxb.writedone.ui.theme.Dimens
 import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.ui.theme.LocalTimerPalette
@@ -99,7 +64,6 @@ import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
 import me.lxb.writedone.ui.screens.home.TimerViewModel
 import me.lxb.writedone.ui.screens.settings.SettingsViewModel
-import kotlin.math.roundToInt
 
 /**
  * Home screen — 1:1 port of `lib/features/home/home.dart`.
@@ -427,293 +391,70 @@ fun HomeScreen(
                 },
         ) {
             // ── Layer 1: Main Content ──
-            // Flutter: offset = -w * t  where w = SCREEN width (so Main is fully off-screen when t=1)
-            // t=0(closed): offset = 0, t=1(open): offset = -w (shifted left off-screen)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset { IntOffset((screenWidthPx * calendarAnim.value - screenWidthPx * drawerAnim.value).roundToInt(), 0) }
-                    .background(Color.Transparent),
-            ) {
-                val isAmbientHidden = ambientState.status == AmbientStatus.Active
-                    && ambientState.displayMode == AmbientDisplayMode.Blackout && !isPeeking
-
-                val smoothRainbow = remember {
-                    val base = listOf(
-                        Color(0xFFFF6B6B),
-                        Color(0xFFFFE66D),
-                        Color(0xFF69DB7C),
-                        Color(0xFF74C0FC),
-                        Color(0xFFDA77F2),
-                    )
-                    val steps = 12
-                    buildList {
-                        for (i in base.indices)
-                            for (s in 0 until steps)
-                                add(lerp(base[i], base[(i + 1) % base.size], s.toFloat() / steps))
+            HomeContent(
+                timerState = timerState,
+                completedState = completedState,
+                timerViewModel = timerViewModel,
+                completedViewModel = completedViewModel,
+                isLandscape = isLandscape,
+                isAmbientHidden = ambientState.status == AmbientStatus.Active
+                    && ambientState.displayMode == AmbientDisplayMode.Blackout && !isPeeking,
+                breathingEnabled = breathingEnabled,
+                onTimerToggle = onTimerToggle,
+                onPeek = {
+                    isPeeking = true
+                    peekJob?.cancel()
+                    peekJob = scope.launch {
+                        delay(3000L)
+                        isPeeking = false
                     }
-                }
-                val tick = remember { mutableIntStateOf(0) }
-                LaunchedEffect(Unit) {
-                    while (true) {
-                        tick.intValue = (tick.intValue + 2) % 60
-                        delay(100)
+                },
+                screenWidthPx = screenWidthPx,
+                drawerAnim = drawerAnim,
+                calendarAnim = calendarAnim,
+            )
+
+            // ── Drawer & Calendar Overlays ──
+            HomeOverlays(
+                drawerAnim = drawerAnim,
+                calendarAnim = calendarAnim,
+                screenWidthPx = screenWidthPx,
+                selectedDate = completedState.selectedDate,
+                notes = completedState.notes,
+                noteRepo = noteRepo ?: error("noteRepo must be provided"),
+                onDrawerClose = { animateDrawerTo(0f) },
+                onCalendarClose = { animateCalendarTo(0f) },
+                onDateSelected = { completedViewModel.selectDate(it) },
+                autoDimBrightness = autoDimBrightness,
+                onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
+                breathingLampEnabled = breathingLampEnabled,
+                onToggleBreathingLamp = { settingsViewModel.setBreathingLampEnabled(it) },
+                autoStartTimerOnLandscapeEnabled = autoStartTimerOnLandscapeEnabled,
+                onToggleAutoStartTimerOnLandscape = { settingsViewModel.setAutoStartTimerOnLandscapeEnabled(it) },
+                themeMode = themeMode ?: ThemeMode.System,
+                onThemeModeChange = { settingsViewModel.setThemeMode(it) },
+                onUserAgreement = { showUserAgreement = true },
+                onPrivacyPolicy = { showPrivacyPolicy = true },
+                onSyncSettings = onSyncSettings,
+                onNotificationPermission = {
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                        context.startActivity(this)
                     }
-                }
-                val rainbowBrush = remember(tick.intValue) {
-                    val colors = List(5) { i -> smoothRainbow[(tick.intValue + i * 12) % 60] }
-                    Brush.linearGradient(colors)
-                }
-
-                when {
-                    timerState.breakButtonVisible && isAmbientHidden ->
-                        RainbowBreakOverlay(rainbowBrush, { timerViewModel.takeBreak() }, Color.Black)
-                    timerState.breakButtonVisible ->
-                        RainbowBreakOverlay(rainbowBrush, { timerViewModel.takeBreak() })
-                    // Ambient pure-black mode: hide all content, tap to peek
-                    isAmbientHidden -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = {
-                                        isPeeking = true
-                                        peekJob?.cancel()
-                                        peekJob = scope.launch {
-                                            delay(3000L)
-                                            isPeeking = false
-                                        }
-                                    },
-                                ),
-                        )
+                },
+                onExactAlarmPermission = {
+                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                        context.startActivity(this)
                     }
-                    // Normal content display
-                    else -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(colorScheme.background)
-                                .statusBarsPadding(),
-                        ) {
-                            if (isLandscape) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .weight(1f),
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxHeight()
-                                            .padding(
-                                                start = Dimens.pageH,
-                                                top = Dimens.gap,
-                                                end = Dimens.gap,
-                                                bottom = 0.dp,
-                                            ),
-                                    ) {
-                                        CompletedSection(
-                                            notes = completedState.todayNotes,
-                                            headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
-                                            showHeader = true,
-                                            breathingEnabled = breathingEnabled,
-                                            onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
-                                            modifier = Modifier.fillMaxSize(),
-                                        )
-                                    }
-                                    VerticalDivider(
-                                        modifier = Modifier
-                                            .width(1.dp)
-                                            .fillMaxHeight(),
-                                        color = colorScheme.outline,
-                                        thickness = 1.dp,
-                                    )
-                                    Column(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxHeight()
-                                            .padding(
-                                                start = Dimens.gap,
-                                                top = Dimens.gap,
-                                                end = Dimens.pageH,
-                                                bottom = Dimens.pageBottom,
-                                            ),
-                                    ) {
-                                        TimerComponent(
-                                            state = timerState,
-                                            onToggle = onTimerToggle,
-                                            modifier = Modifier
-                                                .fillMaxWidth(),
-                                        )
-
-                                        Spacer(Modifier.height(Dimens.gapLg))
-
-                                        TimerInputCard(
-                                            timerViewModel = timerViewModel,
-                                            completedViewModel = completedViewModel,
-                                            isLandscape = true,
-                                            breathingEnabled = breathingEnabled,
-                                            modifier = Modifier.fillMaxWidth(),
-                                        )
-                                    }
-                                }
-                            } else {
-                                TimerComponent(
-                                    state = timerState,
-                                    onToggle = onTimerToggle,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(
-                                            start = Dimens.pageH,
-                                            top = Dimens.gapMd,
-                                            end = Dimens.pageH,
-                                        ),
-                                )
-
-                                Spacer(Modifier.height(Dimens.gapLg))
-
-                                TimerInputCard(
-                                    timerViewModel = timerViewModel,
-                                    completedViewModel = completedViewModel,
-                                    isLandscape = false,
-                                    breathingEnabled = breathingEnabled,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = Dimens.pageH),
-                                )
-
-                                Spacer(Modifier.height(Dimens.gapLg))
-
-                                CompletedSection(
-                                    notes = completedState.todayNotes,
-                                    headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
-                                    showHeader = true,
-                                    breathingEnabled = breathingEnabled,
-                                    onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = Dimens.pageH)
-                                        .weight(1f),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ── Scrim (tap to close) ──
-            if (drawerAnim.value > 0f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = drawerAnim.value * 0.5f))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { animateDrawerTo(0f) },
-                        ),
-                )
-            }
-
-            // ── Drawer ──
-            // Flutter: offset = w * (1 - t)  where w = SCREEN width
-            // t=0(closed): offset = w (offscreen right), t=1(open): offset = 0 (visible)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset { IntOffset((screenWidthPx * (1f - drawerAnim.value)).roundToInt(), 0) }
-                    .clipToBounds(),
-            ) {
-                SettingsDrawer(
-                    autoDimBrightness = autoDimBrightness,
-                    onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
-                    breathingLampEnabled = breathingLampEnabled,
-                    onToggleBreathingLamp = { settingsViewModel.setBreathingLampEnabled(it) },
-                    autoStartTimerOnLandscapeEnabled = autoStartTimerOnLandscapeEnabled,
-                    onToggleAutoStartTimerOnLandscape = { settingsViewModel.setAutoStartTimerOnLandscapeEnabled(it) },
-                    themeMode = themeMode ?: ThemeMode.System,
-                    onThemeModeChange = { settingsViewModel.setThemeMode(it) },
-                    onUserAgreement = { showUserAgreement = true },
-                    onPrivacyPolicy = { showPrivacyPolicy = true },
-                    onSyncSettings = onSyncSettings,
-                    onNotificationPermission = {
-                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                            context.startActivity(this)
-                        }
-                    },
-                    onExactAlarmPermission = {
-                        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                            context.startActivity(this)
-                        }
-                    },
-                    onAutoStartPermission = {
-                        OemPermissionGuide.openAutoStartSettings(context)
-                    },
-                    onBatteryOptimization = {
-                        OemPermissionGuide.openBatteryOptimizationSettings(context)
-                    },
-                    onLockScreenNotification = {
-                        OemPermissionGuide.openLockScreenNotificationSettings(context)
-                    },
-                    modifier = Modifier.align(Alignment.CenterStart),
-                )
-            }
-
-            // ── Back gesture: close drawer ──
-            if (drawerAnim.value > 0f) {
-                BackHandler { animateDrawerTo(0f) }
-            }
-
-            // ── Back gesture: close calendar overlay ──
-            if (calendarAnim.value > 0f) {
-                BackHandler { animateCalendarTo(0f) }
-            }
-
-            // ── Calendar Scrim ──
-            if (calendarAnim.value > 0f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = calendarAnim.value * 0.5f))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { animateCalendarTo(0f) },
-                        ),
-                )
-            }
-
-            // ── Layer 3: Calendar (slides in from LEFT, pushes content right) ──
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset { IntOffset((-screenWidthPx * (1f - calendarAnim.value)).roundToInt(), 0) }
-                    .clipToBounds(),
-            ) {
-                CalendarOverlay(
-                    calendarAnim = calendarAnim,
-                    screenWidthPx = screenWidthPx,
-                    bgColor = colorScheme.background,
-                    selectedDate = completedState.selectedDate,
-                    notes = completedState.notes,
-                    noteRepo = noteRepo ?: error("noteRepo must be provided"),
-                    onDateSelected = { completedViewModel.selectDate(it) },
-                )
-            }
-
-            // ── Legal page overlays ──
-            if (showUserAgreement) {
-                BackHandler { showUserAgreement = false }
-                UserAgreementPage(onBack = { showUserAgreement = false })
-            }
-            if (showPrivacyPolicy) {
-                BackHandler { showPrivacyPolicy = false }
-                PrivacyPolicyPage(onBack = { showPrivacyPolicy = false })
-            }
+                },
+                onAutoStartPermission = { OemPermissionGuide.openAutoStartSettings(context) },
+                onBatteryOptimization = { OemPermissionGuide.openBatteryOptimizationSettings(context) },
+                onLockScreenNotification = { OemPermissionGuide.openLockScreenNotificationSettings(context) },
+                showUserAgreement = showUserAgreement,
+                showPrivacyPolicy = showPrivacyPolicy,
+                onCloseUserAgreement = { showUserAgreement = false },
+                onClosePrivacyPolicy = { showPrivacyPolicy = false },
+            )
 
         }
     }
