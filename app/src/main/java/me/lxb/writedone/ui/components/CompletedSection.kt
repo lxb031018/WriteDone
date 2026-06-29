@@ -32,7 +32,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,7 +45,6 @@ import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.ui.theme.LocalDarkTheme
 import me.lxb.writedone.util.FormatUtils
-import java.util.Calendar
 import java.util.Date
 
 import kotlin.random.Random
@@ -145,10 +143,6 @@ fun CompletedCard(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val isDark = LocalDarkTheme.current
-    val dateFormatStr = stringResource(R.string.sticky_header_date)
-
-    val headerStart = stringResource(R.string.sticky_header_start)
-    val headerDuration = stringResource(R.string.sticky_header_duration)
     val seed = remember { note.id.hashCode() + note.content.hashCode() }
     val rng = remember { Random(seed.toLong()) }
     val rotationDeg = remember { (rng.nextDouble() - 0.5) * 4.0 }
@@ -175,16 +169,6 @@ fun CompletedCard(
     )
     val cursorColor = colorScheme.primary
 
-    val headerText = remember(note, dateFormatStr, headerStart, headerDuration) {
-        val cal = Calendar.getInstance().apply { time = Date(note.createdAt) }
-        buildString {
-            append(String.format(dateFormatStr, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)))
-            append("$headerStart${FormatUtils.time(Date(note.createdAt))}")
-            append("    ")
-            append("$headerDuration${FormatUtils.duration(note.durationSeconds)}")
-        }
-    }
-
     var bodyText by remember(note.id) { mutableStateOf(note.body) }
     val isBodyEditable = onBodyChange != null
 
@@ -202,16 +186,33 @@ fun CompletedCard(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val startDate = remember(note.createdAt) { Date(note.createdAt) }
+                    val endDate = remember(note.createdAt, note.durationSeconds) { Date(note.createdAt + note.durationSeconds * 1000L) }
                     Text(
-                        text = headerText,
+                        text = FormatUtils.formatDateWithDay(startDate),
                         fontFamily = handwritingFont,
                         fontSize = 13.sp,
                         color = headerTextColor,
                         modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Start,
                     )
-
+                    Text(
+                        text = "${FormatUtils.time(startDate)}-${FormatUtils.time(endDate)}",
+                        fontFamily = handwritingFont,
+                        fontSize = 13.sp,
+                        color = headerTextColor,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = FormatUtils.duration(note.durationSeconds),
+                        fontFamily = handwritingFont,
+                        fontSize = 13.sp,
+                        color = headerTextColor,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.End,
+                    )
                 }
                 Spacer(Modifier.height(Dimens.gap))
                 HorizontalDivider(color = dividerColor, thickness = 1.dp)

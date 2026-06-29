@@ -77,11 +77,7 @@
 
     <!-- Sticky Note -->
     <string name="sticky_placeholder">定个小目标 (¥ᴗ¥)✨</string>
-    <string name="sticky_header_date">%1$d年%2$d月%3$d日    </string>
-    <string name="sticky_header_start">开始:</string>
-    <string name="sticky_header_empty_date">--年--月--日    开始:--:--</string>
-    <string name="sticky_header_duration">用时:</string>
-    <string name="sticky_duration_empty">    用时:--</string>
+    <string name="sticky_duration_empty">Duration</string>
 
     <!-- Completed Section -->
     <string name="completed_empty_text">轻触上方计时器，开始第一件事</string>

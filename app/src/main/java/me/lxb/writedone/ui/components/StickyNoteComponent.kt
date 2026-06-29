@@ -3,6 +3,7 @@ package me.lxb.writedone.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
@@ -30,7 +32,6 @@ import me.lxb.writedone.ui.theme.LocalAmbientProgress
 import me.lxb.writedone.ui.theme.LocalBreathingAlpha
 import me.lxb.writedone.ui.theme.LocalDarkTheme
 import me.lxb.writedone.util.FormatUtils
-import java.util.Calendar
 import java.util.Date
 
 import kotlin.random.Random
@@ -56,10 +57,6 @@ fun StickyNoteInput(
     val breathingAlpha = LocalBreathingAlpha.current
 
     val colorScheme = MaterialTheme.colorScheme
-    val dateFormatStr = stringResource(R.string.sticky_header_date)
-    val headerStart = stringResource(R.string.sticky_header_start)
-    val emptyDateStr = stringResource(R.string.sticky_header_empty_date)
-    val headerDuration = stringResource(R.string.sticky_header_duration)
     val durationEmptyStr = stringResource(R.string.sticky_duration_empty)
 
     val isDark = LocalDarkTheme.current
@@ -82,25 +79,6 @@ fun StickyNoteInput(
     )
     val cursorColor = colorScheme.primary
 
-    val headerText = remember(createdAt, durationSeconds, dateFormatStr, headerStart, emptyDateStr, headerDuration, durationEmptyStr) {
-        buildString {
-            if (createdAt != null) {
-                val cal = Calendar.getInstance().apply { time = createdAt }
-                append(String.format(dateFormatStr, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)))
-                append("$headerStart${FormatUtils.time(createdAt)}")
-            } else {
-                append(emptyDateStr)
-            }
-            if (durationSeconds != null) {
-                append("    ")
-                append("$headerDuration${FormatUtils.duration(durationSeconds)}")
-            } else {
-                append("    ")
-                append(durationEmptyStr)
-            }
-        }
-    }
-
     Box(modifier = modifier.fillMaxWidth()) {
         BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
             Column(
@@ -111,12 +89,34 @@ fun StickyNoteInput(
                     .background(color = bgColor, shape = RoundedCornerShape(4.dp))
                     .padding(Dimens.cardPad),
             ) {
-                Text(
-                    text = headerText,
-                    fontFamily = handwritingFont,
-                    fontSize = 13.sp,
-                    color = headerColor,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = if (createdAt != null) FormatUtils.formatDateWithDay(createdAt) else "Date",
+                        fontFamily = handwritingFont,
+                        fontSize = 13.sp,
+                        color = headerColor,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Start,
+                    )
+                    Text(
+                        text = if (createdAt != null) FormatUtils.time(createdAt) else "Start",
+                        fontFamily = handwritingFont,
+                        fontSize = 13.sp,
+                        color = headerColor,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = if (durationSeconds != null) FormatUtils.duration(durationSeconds) else durationEmptyStr,
+                        fontFamily = handwritingFont,
+                        fontSize = 13.sp,
+                        color = headerColor,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.End,
+                    )
+                }
                 Spacer(Modifier.height(Dimens.gap))
                 HorizontalDivider(color = borderColor, thickness = 1.dp)
                 Spacer(Modifier.height(Dimens.gap))
