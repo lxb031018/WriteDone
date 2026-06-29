@@ -44,7 +44,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     }
 
     override val themeMode: Flow<String> = context.settingsDataStore.data.map { prefs ->
-        prefs[themeModeKey] ?: "System"
+        prefs[themeModeKey] ?: "Light"
     }
 
     override suspend fun setThemeMode(mode: String) {

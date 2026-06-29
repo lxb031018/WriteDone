@@ -32,7 +32,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     val themeMode: StateFlow<ThemeMode?> = settingsUseCase.themeMode
-        .map { name -> try { ThemeMode.valueOf(name) } catch (_: Exception) { ThemeMode.System } }
+        .map { name -> try { ThemeMode.valueOf(name) } catch (_: Exception) { ThemeMode.Light } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun setThemeMode(mode: ThemeMode) {

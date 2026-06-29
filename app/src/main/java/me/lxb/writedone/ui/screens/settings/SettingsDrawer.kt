@@ -112,11 +112,6 @@ fun SettingsDrawer(
         Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_theme))
         DrawerOption(
-            text = stringResource(R.string.settings_theme_system),
-            selected = themeMode == ThemeMode.System,
-            onClick = { onThemeModeChange(ThemeMode.System) },
-        )
-        DrawerOption(
             text = stringResource(R.string.settings_theme_light),
             selected = themeMode == ThemeMode.Light,
             onClick = { onThemeModeChange(ThemeMode.Light) },
@@ -125,6 +120,11 @@ fun SettingsDrawer(
             text = stringResource(R.string.settings_theme_dark),
             selected = themeMode == ThemeMode.Dark,
             onClick = { onThemeModeChange(ThemeMode.Dark) },
+        )
+        DrawerOption(
+            text = stringResource(R.string.settings_theme_system),
+            selected = themeMode == ThemeMode.System,
+            onClick = { onThemeModeChange(ThemeMode.System) },
         )
         Spacer(Modifier.height(12.dp))
         SectionHeader(stringResource(R.string.settings_legal))
