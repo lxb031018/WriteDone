@@ -38,6 +38,7 @@ fun HomeOverlays(
     onDrawerClose: () -> Unit,
     onCalendarClose: () -> Unit,
     onDateSelected: (Date) -> Unit,
+    onNoteContentChange: ((Long, String) -> Unit)? = null,
     autoDimBrightness: Boolean,
     onToggleAutoDim: (Boolean) -> Unit,
     breathingLampEnabled: Boolean,
@@ -143,6 +144,7 @@ fun HomeOverlays(
             notes = notes,
             noteRepo = noteRepo,
             onDateSelected = onDateSelected,
+            onNoteContentChange = onNoteContentChange,
         )
     }
 

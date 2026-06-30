@@ -425,6 +425,7 @@ fun HomeScreen(
                 onDrawerClose = { animateDrawerTo(0f) },
                 onCalendarClose = { animateCalendarTo(0f) },
                 onDateSelected = { completedViewModel.selectDate(it) },
+                onNoteContentChange = { id, content -> completedViewModel.updateNoteContent(id, content) },
                 autoDimBrightness = autoDimBrightness,
                 onToggleAutoDim = { settingsViewModel.setAutoDimBrightness(it) },
                 breathingLampEnabled = breathingLampEnabled,

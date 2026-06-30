@@ -50,13 +50,13 @@ class CompletedViewModel @Inject constructor(
         loadByDate(date)
     }
 
-    fun updateNoteBody(id: Long, body: String) {
+    fun updateNoteContent(id: Long, content: String) {
         viewModelScope.launch {
-            noteUseCase.updateNoteBody(id, body)
+            noteUseCase.updateNoteContent(id, content)
             _state.update { st ->
                 st.copy(
-                    notes = st.notes.map { if (it.id == id) it.copy(body = body) else it },
-                    todayNotes = st.todayNotes.map { if (it.id == id) it.copy(body = body) else it },
+                    notes = st.notes.map { if (it.id == id) it.copy(content = content) else it },
+                    todayNotes = st.todayNotes.map { if (it.id == id) it.copy(content = content) else it },
                 )
             }
         }

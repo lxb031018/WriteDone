@@ -216,6 +216,7 @@ private fun WriteDoneApp(
                     calendarDate = date
                     completedViewModel.selectDate(date)
                 },
+                onNoteContentChange = { id, content -> completedViewModel.updateNoteContent(id, content) },
             )
         }
         Screen.About -> {

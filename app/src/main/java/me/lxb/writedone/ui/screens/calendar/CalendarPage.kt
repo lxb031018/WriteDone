@@ -51,6 +51,7 @@ fun CalendarPage(
     notes: List<CompletedNote>,
     noteRepo: NoteRepository,
     onDateSelected: (Date) -> Unit,
+    onNoteContentChange: ((Long, String) -> Unit)? = null,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -158,6 +159,7 @@ fun CalendarPage(
                     modifier = Modifier.padding(horizontal = Dimens.pageH),
                     note = note,
                     breathingEnabled = false,
+                    onContentChange = onNoteContentChange,
                 )
                 Spacer(Modifier.height(Dimens.gap))
             }

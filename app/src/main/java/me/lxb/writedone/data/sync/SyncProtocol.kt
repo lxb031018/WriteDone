@@ -14,7 +14,6 @@ internal data class SyncMessage(
 internal data class SyncNote(
     val syncId: String,
     val content: String,
-    val body: String,
     val createdAt: Long,
     val durationSeconds: Int,
     val lastModifiedAt: Long,
@@ -30,7 +29,6 @@ internal fun SyncMessage.toJson(): String = JSONObject().apply {
 internal fun SyncNote.toJson(): JSONObject = JSONObject().apply {
     put("syncId", syncId)
     put("content", content)
-    put("body", body)
     put("createdAt", createdAt)
     put("durationSeconds", durationSeconds)
     put("lastModifiedAt", lastModifiedAt)
@@ -49,7 +47,6 @@ internal fun parseSyncMessage(json: String): SyncMessage {
 internal fun parseSyncNote(obj: JSONObject): SyncNote = SyncNote(
     syncId = obj.getString("syncId"),
     content = obj.getString("content"),
-    body = obj.optString("body", ""),
     createdAt = obj.getLong("createdAt"),
     durationSeconds = obj.getInt("durationSeconds"),
     lastModifiedAt = obj.getLong("lastModifiedAt"),
@@ -58,7 +55,6 @@ internal fun parseSyncNote(obj: JSONObject): SyncNote = SyncNote(
 internal fun CompletedNote.toSyncNote() = SyncNote(
     syncId = syncId,
     content = content,
-    body = body,
     createdAt = createdAt,
     durationSeconds = durationSeconds,
     lastModifiedAt = lastModifiedAt,
@@ -67,7 +63,6 @@ internal fun CompletedNote.toSyncNote() = SyncNote(
 internal fun SyncNote.toCompletedNote() = CompletedNote(
     syncId = syncId,
     content = content,
-    body = body,
     createdAt = createdAt,
     durationSeconds = durationSeconds,
     lastModifiedAt = lastModifiedAt,

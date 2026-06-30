@@ -65,6 +65,7 @@
     <string name="calendar_day_fri">五</string>
     <string name="calendar_day_sat">六</string>
     <string name="calendar_cancel">取消</string>
+    <string name="confirm">确定</string>
     <string name="calendar_copy_selected">复制选中</string>
     <string name="calendar_copy_selected_count">复制选中（%d天）</string>
     <string name="calendar_export_selected">复制</string>
@@ -81,7 +82,7 @@
 
     <!-- Completed Section -->
     <string name="completed_empty_text">轻触上方计时器，开始第一件事</string>
-    <string name="completed_header">已完成 — %d</string>
+    <string name="completed_header">completed — %d</string>
 
     <!-- Timer -->
     <string name="timer_complete_break">不卷了，完事休息几分钟\n〜(￣▽￣〜)</string>
@@ -92,7 +93,7 @@
     <string name="notification_break_text">已经计时25分钟啦，完事该休息一下啦！</string>
 
     <!-- Legal Content - User Agreement -->
-    <string name="legal_last_updated">最后更新日期:</string>
+    <string name="legal_last_updated">最后更新日期:</string>.
     <string name="legal_effective_date">生效日期:</string>
     <string name="legal_preamble">本协议是开发者 lxb (以下简称&quot;我们&quot;或&quot;开发者&quot;) 与您 (以下简称&quot;用户&quot;或&quot;您&quot;) 之间就使用 &quot;WriteDone&quot; 移动应用 (以下简称&quot;本应用&quot;) 所订立的协议。请您仔细阅读本协议的全部条款, 一旦您开始使用本应用即视为您已阅读、理解并接受本协议的所有条款。</string>
     <string name="legal_section1">一、关于本应用</string>

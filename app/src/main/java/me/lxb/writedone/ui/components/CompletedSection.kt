@@ -1,7 +1,9 @@
 package me.lxb.writedone.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -20,6 +21,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
@@ -36,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.Dialog
 import me.lxb.writedone.R
 import me.lxb.writedone.data.model.CompletedNote
 import me.lxb.writedone.ui.theme.ZcoolKuaiLeFont as handwritingFont
@@ -56,11 +60,10 @@ fun CompletedSection(
     headerText: String = stringResource(R.string.completed_header, notes.size),
     showHeader: Boolean = true,
     breathingEnabled: Boolean = false,
-    onNoteBodyChange: ((Long, String) -> Unit)? = null,
+    onNoteContentChange: ((Long, String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val ambientProgress = LocalAmbientProgress.current
     val emptyTextColor = colorScheme.onSurfaceVariant
 
     val listState = rememberLazyListState()
@@ -100,7 +103,7 @@ fun CompletedSection(
                     CompletedCard(
                         note = note,
                         breathingEnabled = breathingEnabled,
-                        onBodyChange = onNoteBodyChange,
+                        onContentChange = onNoteContentChange,
                     )
                     Spacer(Modifier.height(Dimens.gap))
                 }
@@ -110,12 +113,66 @@ fun CompletedSection(
 }
 
 @Composable
+private fun EditNoteDialog(
+    currentContent: String,
+    bgColor: Color,
+    textColor: Color,
+    cursorColor: Color,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var text by remember { mutableStateOf(currentContent) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = bgColor, shape = RoundedCornerShape(12.dp))
+                .padding(Dimens.cardPad),
+        ) {
+            BasicTextField(
+                value = text,
+                onValueChange = { text = it },
+                textStyle = TextStyle(
+                    fontFamily = handwritingFont,
+                    fontSize = 22.sp,
+                    color = textColor,
+                ),
+                cursorBrush = SolidColor(cursorColor),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(Dimens.gapMd))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(
+                        text = stringResource(R.string.calendar_cancel),
+                        fontFamily = handwritingFont,
+                        fontSize = 16.sp,
+                        color = textColor.copy(alpha = 0.6f),
+                    )
+                }
+                Spacer(Modifier.width(Dimens.gap))
+                TextButton(onClick = { onConfirm(text) }) {
+                    Text(
+                        text = stringResource(R.string.confirm),
+                        fontFamily = handwritingFont,
+                        fontSize = 16.sp,
+                        color = textColor,
+                    )
+                }
+            }
+        }
+    }
+}
+@Composable
 private fun SectionHeader(
     text: String,
     breathingEnabled: Boolean,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val ambientProgress = LocalAmbientProgress.current
     val breathingAlpha = LocalBreathingAlpha.current
     val headerTextColor = colorScheme.onSurfaceVariant
     BreathingWrapper(enabled = breathingEnabled, alpha = breathingAlpha) {
@@ -134,12 +191,13 @@ private fun SectionHeader(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CompletedCard(
     modifier: Modifier = Modifier,
     note: CompletedNote,
     breathingEnabled: Boolean,
-    onBodyChange: ((Long, String) -> Unit)? = null,
+    onContentChange: ((Long, String) -> Unit)? = null,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val isDark = LocalDarkTheme.current
@@ -162,15 +220,9 @@ fun CompletedCard(
     )
     val dividerColor = colorScheme.outline
     val textColor = colorScheme.onSurface
-    val bodyTextColor = lerp(
-        if (isDark) AppColors.darkTextMuted else AppColors.textMuted,
-        AppColors.ambientText.copy(alpha = 0.65f),
-        ambientProgress,
-    )
     val cursorColor = colorScheme.primary
 
-    var bodyText by remember(note.id) { mutableStateOf(note.body) }
-    val isBodyEditable = onBodyChange != null
+    var showEditDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier.fillMaxWidth(),
@@ -217,39 +269,36 @@ fun CompletedCard(
                 Spacer(Modifier.height(Dimens.gap))
                 HorizontalDivider(color = dividerColor, thickness = 1.dp)
                 Spacer(Modifier.height(Dimens.gap))
-                Text(
-                    text = note.content,
-                    fontFamily = handwritingFont,
-                    fontSize = 22.sp,
-                    color = textColor,
-                )
-                if (isBodyEditable || note.body.isNotEmpty()) {
-                    Spacer(Modifier.height(Dimens.gap))
-                    if (isBodyEditable) {
-                        BasicTextField(
-                            value = bodyText,
-                            onValueChange = { newValue ->
-                                bodyText = newValue
-                                onBodyChange(note.id, newValue)
-                            },
-                            textStyle = TextStyle(
-                                fontFamily = handwritingFont,
-                                fontSize = 18.sp,
-                                color = bodyTextColor,
-                            ),
-                            cursorBrush = SolidColor(cursorColor),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    } else {
-                        Text(
-                            text = note.body,
-                            fontFamily = handwritingFont,
-                            fontSize = 18.sp,
-                            color = bodyTextColor,
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .combinedClickable(
+                            onClick = {},
+                            onLongClick = { if (onContentChange != null) showEditDialog = true },
+                        ),
+                ) {
+                    Text(
+                        text = note.content,
+                        fontFamily = handwritingFont,
+                        fontSize = 22.sp,
+                        color = textColor,
+                    )
                 }
             }
         }
+    }
+
+    if (showEditDialog && onContentChange != null) {
+        EditNoteDialog(
+            currentContent = note.content,
+            bgColor = bgColor,
+            textColor = textColor,
+            cursorColor = cursorColor,
+            onConfirm = { newContent ->
+                onContentChange(note.id, newContent)
+                showEditDialog = false
+            },
+            onDismiss = { showEditDialog = false },
+        )
     }
 }

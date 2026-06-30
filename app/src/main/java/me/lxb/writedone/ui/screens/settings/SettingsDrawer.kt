@@ -242,9 +242,11 @@ private fun SettingsGuide() {
     val colorScheme = MaterialTheme.colorScheme
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(12.dp))
-        GuideSection("📌 便利贴", "输入待办事项，计时结束后自动归档至「已完成」\n（归档后的便利贴仍可二次编辑，在空白处追加备注；原始内容不可修改，新增备注会显示在下方）")
-        GuideSection("⏱️ 计时器", "• 点击计时器：开始 / 结束计时\n• 休息提醒：累积计时达 25 分钟，进行起身活动提示（建议完成手头上的最后一件事就起身休息一下）\n• 横屏摆件时自动切换至番茄模式")
-        GuideSection("📅 日历", "右滑进入日历页面\n长按任意日期，复制当日日程摘要；粘贴至 AI 助手（如豆包/DeepSeek），聊一聊当日的生活质量")
+        GuideSection("📌 便利贴", "输入待办事项，计时结束后自动归档至「已完成」\n长按已归档的便利贴即可编辑完整内容")
+        GuideSection("⏱️ 计时器", "• 点击计时器：开始 / 结束计时\n• 休息提醒：累积计时达 25 分钟，全屏彩虹弹幕鼓励休息（建议先完成手头上的事就休息大概5分钟）\n• 横屏进入「摆件模式」时自动切换至番茄模式，可配合自动调暗亮度、呼吸灯、自动开始计时")
+        GuideSection("🎨 主题", "支持浅色模式、深色模式、跟随系统三种主题\n横屏摆件时自动切换至深色氛围")
+        GuideSection("📅 日历", "右滑进入日历页面\n长按进入多选模式，勾选多天后导出 JSON 摘要；粘贴至 AI 助手（如豆包/DeepSeek），聊一聊当日的生活质量")
+        GuideSection("🌐 局域网同步", "通过热点在两台设备间同步已完成记录，数据只保存在本地")
         GuideSection("🔔 权限说明", "为保障计时结束时的提醒功能，建议授予设置页面提到的权限。")
         GuideSection("📁 隐私承诺", "WriteDone 仅读取本地数据，不会上传至云端。")
         Spacer(Modifier.height(8.dp))
@@ -258,7 +260,7 @@ private fun SettingsGuide() {
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "浪漫小钱钱（刘俏斌 / 彬仔 / B仔）。特别在意省电，常规使用几乎不耗电；「横屏摆件模式」功耗会略增。",
+            text = "本人特别在意省电，常规使用几乎不耗电；「摆件模式」功耗略增。\napp非常具有人文关怀，鼓励休息，起身活动，缓解久坐疲劳。",
             fontSize = 13.sp,
             color = colorScheme.onSurfaceVariant,
             lineHeight = 20.sp,

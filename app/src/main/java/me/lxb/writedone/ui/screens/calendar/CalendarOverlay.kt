@@ -63,14 +63,13 @@ fun CalendarOverlay(
     notes: List<CompletedNote>,
     noteRepo: NoteRepository,
     onDateSelected: (Date) -> Unit,
+    onNoteContentChange: ((Long, String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val ambientProgress = LocalAmbientProgress.current
     val emptyColor = colorScheme.onSurfaceVariant
-    val reviewTextColor = colorScheme.secondary
     val cancelBg = colorScheme.outline
     val confirmBg = colorScheme.primary
     val disableBg = colorScheme.outline
@@ -207,6 +206,7 @@ fun CalendarOverlay(
                             modifier = Modifier.padding(horizontal = Dimens.pageH),
                             note = note,
                             breathingEnabled = false,
+                            onContentChange = onNoteContentChange,
                         )
                         Spacer(Modifier.height(Dimens.gap))
                     }

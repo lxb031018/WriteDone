@@ -10,7 +10,6 @@ data class CompletedNote(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val content: String,
-    val body: String = "",
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "duration_seconds")

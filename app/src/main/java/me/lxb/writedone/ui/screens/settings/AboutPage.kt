@@ -94,7 +94,7 @@ fun AboutPage(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "v1.0.0",
+                text = "v1.0.2",
                 color = colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,

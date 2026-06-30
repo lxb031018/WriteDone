@@ -6,7 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import me.lxb.writedone.data.model.CompletedNote
 
-@Database(entities = [CompletedNote::class], version = 5, exportSchema = false)
+@Database(entities = [CompletedNote::class], version = 6, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun completedNoteDao(): CompletedNoteDao
 
@@ -54,6 +54,25 @@ abstract class AppDatabase : RoomDatabase() {
             db.execSQL("""
                 INSERT INTO completed_notes_new (id, content, body, created_at, duration_seconds, sync_id, last_modified_at)
                 SELECT id, content, body, created_at, duration_seconds, sync_id, last_modified_at FROM completed_notes
+            """.trimIndent())
+            db.execSQL("DROP TABLE completed_notes")
+            db.execSQL("ALTER TABLE completed_notes_new RENAME TO completed_notes")
+        }
+
+        val MIGRATION_5_6 = Migration(5, 6) { db ->
+            db.execSQL("""
+                CREATE TABLE completed_notes_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    duration_seconds INTEGER NOT NULL,
+                    sync_id TEXT NOT NULL DEFAULT '',
+                    last_modified_at INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            db.execSQL("""
+                INSERT INTO completed_notes_new (id, content, created_at, duration_seconds, sync_id, last_modified_at)
+                SELECT id, content, created_at, duration_seconds, sync_id, last_modified_at FROM completed_notes
             """.trimIndent())
             db.execSQL("DROP TABLE completed_notes")
             db.execSQL("ALTER TABLE completed_notes_new RENAME TO completed_notes")

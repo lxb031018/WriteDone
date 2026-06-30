@@ -15,20 +15,20 @@ interface CompletedNoteDao {
     @Insert
     suspend fun insert(note: CompletedNote): Long
 
-    @Query("UPDATE completed_notes SET body = :body WHERE id = :id")
-    suspend fun updateNoteBody(id: Long, body: String)
+    @Query("UPDATE completed_notes SET content = :content, last_modified_at = :lastModifiedAt WHERE id = :id")
+    suspend fun updateNoteContent(id: Long, content: String, lastModifiedAt: Long)
 
     @Query("SELECT * FROM completed_notes ORDER BY created_at DESC")
     suspend fun getAll(): List<CompletedNote>
 
     @Query("""
         UPDATE completed_notes
-        SET content = :content, body = :body, created_at = :createdAt,
+        SET content = :content, created_at = :createdAt,
             duration_seconds = :durationSeconds, last_modified_at = :lastModifiedAt
         WHERE sync_id = :syncId AND last_modified_at < :lastModifiedAt
     """)
     suspend fun updateIfNewer(
-        syncId: String, content: String, body: String,
+        syncId: String, content: String,
         createdAt: Long, durationSeconds: Int,
         lastModifiedAt: Long,
     )
@@ -46,7 +46,6 @@ interface CompletedNoteDao {
                 updateIfNewer(
                     syncId = note.syncId,
                     content = note.content,
-                    body = note.body,
                     createdAt = note.createdAt,
                     durationSeconds = note.durationSeconds,
                     lastModifiedAt = note.lastModifiedAt,

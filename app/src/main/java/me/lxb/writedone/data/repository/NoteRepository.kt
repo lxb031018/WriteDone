@@ -8,8 +8,8 @@ import java.util.Date
 
 class NoteRepositoryImpl(private val dao: CompletedNoteDao) : NoteRepository {
 
-    override suspend fun updateBody(id: Long, body: String) {
-        dao.updateNoteBody(id, body)
+    override suspend fun updateContent(id: Long, content: String) {
+        dao.updateNoteContent(id, content, System.currentTimeMillis())
     }
 
     override suspend fun insert(note: CompletedNote): Long {

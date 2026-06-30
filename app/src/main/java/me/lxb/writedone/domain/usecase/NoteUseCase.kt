@@ -7,7 +7,7 @@ import javax.inject.Inject
 class NoteUseCase @Inject constructor(
     private val noteRepo: NoteRepository,
 ) {
-    suspend fun updateNoteBody(id: Long, body: String) = noteRepo.updateBody(id, body)
+    suspend fun updateNoteContent(id: Long, content: String) = noteRepo.updateContent(id, content)
 
     suspend fun addNote(content: String, createdAt: Date, durationSeconds: Int): CompletedNote {
         val now = System.currentTimeMillis()

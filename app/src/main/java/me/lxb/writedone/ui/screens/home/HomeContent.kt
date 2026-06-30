@@ -137,7 +137,7 @@ fun HomeContent(
                                 headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
                                 showHeader = true,
                                 breathingEnabled = breathingEnabled,
-                                onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
+                                onNoteContentChange = { id, content -> completedViewModel.updateNoteContent(id, content) },
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
@@ -208,7 +208,7 @@ fun HomeContent(
                         headerText = stringResource(R.string.completed_header, completedState.todayNotes.size),
                         showHeader = true,
                         breathingEnabled = breathingEnabled,
-                        onNoteBodyChange = { id, body -> completedViewModel.updateNoteBody(id, body) },
+                        onNoteContentChange = { id, content -> completedViewModel.updateNoteContent(id, content) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = Dimens.pageH)
