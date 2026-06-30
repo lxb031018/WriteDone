@@ -2,6 +2,8 @@ package me.lxb.writedone.ui.screens.home
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -42,6 +43,7 @@ import me.lxb.writedone.ui.components.RainbowBreakOverlay
 import me.lxb.writedone.ui.components.TimerComponent
 import me.lxb.writedone.ui.components.TimerInputCard
 import me.lxb.writedone.ui.theme.Dimens
+import me.lxb.writedone.ui.animation.SinCubicEasing
 
 @Composable
 fun HomeContent(
@@ -103,12 +105,7 @@ fun HomeContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(normalBg)
-                .then(
-                    if (isAmbientHidden && !timerState.breakButtonVisible)
-                        Modifier.alpha(0f)
-                    else Modifier
-                ),
+                .background(normalBg),
         ) {
             Column(
                 modifier = Modifier
@@ -219,11 +216,17 @@ fun HomeContent(
         }
 
         // ── Layer 2: Ambient blackout (behind break overlay) ──
-        if (isAmbientHidden && !timerState.breakButtonVisible) {
+        val overlayAlpha by animateFloatAsState(
+            targetValue = if (isAmbientHidden && !timerState.breakButtonVisible) 1f else 0f,
+            animationSpec = tween(durationMillis = 1200, easing = SinCubicEasing),
+            label = "ambientOverlayAlpha",
+        )
+
+        if (overlayAlpha > 0f) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black)
+                    .background(Color.Black.copy(alpha = overlayAlpha))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
