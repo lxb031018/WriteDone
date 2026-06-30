@@ -29,6 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.lxb.writedone.data.sync.SyncManager
 import me.lxb.writedone.service.ambient.AmbientController
+import me.lxb.writedone.service.ambient.FlatSensorMonitor
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.domain.usecase.SettingsUseCase
 import me.lxb.writedone.ui.screens.calendar.CalendarPage
@@ -60,6 +61,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var syncManager: SyncManager
 
     private val ambientController by lazy { AmbientController(applicationContext) }
+    private val flatSensorMonitor by lazy { FlatSensorMonitor(applicationContext) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,6 +105,7 @@ class MainActivity : ComponentActivity() {
                         settingsRepo = settingsUseCase,
                         noteRepo = noteRepo,
                         ambientController = ambientController,
+                        flatSensorMonitor = flatSensorMonitor,
                         syncManager = syncManager,
                         syncViewModel = syncViewModel,
                         ambientProgress = ambientProgress,
@@ -115,6 +118,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         ambientController.dispose()
+        flatSensorMonitor.stop()
         syncManager.destroy()
         super.onDestroy()
     }
@@ -130,6 +134,7 @@ private fun WriteDoneApp(
     settingsRepo: SettingsUseCase,
     noteRepo: NoteRepository,
     ambientController: AmbientController,
+    flatSensorMonitor: FlatSensorMonitor,
     syncManager: SyncManager,
     syncViewModel: SyncViewModel,
     ambientProgress: Float,
@@ -199,6 +204,7 @@ private fun WriteDoneApp(
                 completedViewModel = completedViewModel,
                 settingsViewModel = settingsViewModel,
                 ambientController = ambientController,
+                flatSensorMonitor = flatSensorMonitor,
                 noteRepo = noteRepo,
                 ambientProgress = ambientProgress,
                 onAmbientProgressChange = onAmbientProgressChange,

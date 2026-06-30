@@ -15,4 +15,6 @@ interface SettingsRepository {
     suspend fun setSyncHostEnabled(enabled: Boolean)
     val autoStartTimerOnLandscapeEnabled: Flow<Boolean>
     suspend fun setAutoStartTimerOnLandscapeEnabled(enabled: Boolean)
+    val autoStartTimerOnFlatEnabled: Flow<Boolean>
+    suspend fun setAutoStartTimerOnFlatEnabled(enabled: Boolean)
 }

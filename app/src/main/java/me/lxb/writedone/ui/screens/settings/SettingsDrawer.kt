@@ -40,6 +40,8 @@ fun SettingsDrawer(
     onToggleBreathingLamp: (Boolean) -> Unit,
     autoStartTimerOnLandscapeEnabled: Boolean,
     onToggleAutoStartTimerOnLandscape: (Boolean) -> Unit,
+    autoStartTimerOnFlatEnabled: Boolean,
+    onToggleAutoStartTimerOnFlat: (Boolean) -> Unit,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     onUserAgreement: () -> Unit,
@@ -101,6 +103,11 @@ fun SettingsDrawer(
             text = stringResource(R.string.settings_auto_start_timer),
             checked = autoStartTimerOnLandscapeEnabled,
             onCheckedChange = onToggleAutoStartTimerOnLandscape,
+        )
+        DrawerToggle(
+            text = stringResource(R.string.settings_auto_start_timer_on_flat),
+            checked = autoStartTimerOnFlatEnabled,
+            onCheckedChange = onToggleAutoStartTimerOnFlat,
         )
         Spacer(Modifier.height(4.dp))
         Text(

@@ -45,4 +45,11 @@ class SettingsViewModel @Inject constructor(
     fun setAutoStartTimerOnLandscapeEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsUseCase.setAutoStartTimerOnLandscapeEnabled(enabled) }
     }
+
+    val autoStartTimerOnFlatEnabled: StateFlow<Boolean> = settingsUseCase.autoStartTimerOnFlatEnabled
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setAutoStartTimerOnFlatEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsUseCase.setAutoStartTimerOnFlatEnabled(enabled) }
+    }
 }

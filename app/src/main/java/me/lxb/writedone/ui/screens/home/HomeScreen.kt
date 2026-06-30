@@ -52,6 +52,7 @@ import kotlin.math.sin
 import me.lxb.writedone.service.ambient.AmbientController
 import me.lxb.writedone.service.ambient.AmbientDisplayMode
 import me.lxb.writedone.service.ambient.AmbientStatus
+import me.lxb.writedone.service.ambient.FlatSensorMonitor
 import me.lxb.writedone.domain.repository.NoteRepository
 import me.lxb.writedone.ui.screens.home.TimerStatus
 import me.lxb.writedone.util.OemPermissionGuide
@@ -86,6 +87,7 @@ fun HomeScreen(
     completedViewModel: CompletedViewModel,
     settingsViewModel: SettingsViewModel,
     ambientController: AmbientController,
+    flatSensorMonitor: FlatSensorMonitor,
     noteRepo: NoteRepository? = null,
     ambientProgress: Float = 0f,
     onAmbientProgressChange: (Float) -> Unit = {},
@@ -97,8 +99,10 @@ fun HomeScreen(
     val autoDimBrightness by settingsViewModel.autoDimBrightness.collectAsState()
     val breathingLampEnabled by settingsViewModel.breathingLampEnabled.collectAsState()
     val autoStartTimerOnLandscapeEnabled by settingsViewModel.autoStartTimerOnLandscapeEnabled.collectAsState()
+    val autoStartTimerOnFlatEnabled by settingsViewModel.autoStartTimerOnFlatEnabled.collectAsState()
     val themeMode by settingsViewModel.themeMode.collectAsState()
     val timerState by timerViewModel.state.collectAsState()
+    val draftText by completedViewModel.draftText.collectAsState()
     val context = LocalContext.current
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -255,6 +259,42 @@ fun HomeScreen(
             if (timerViewModel.state.value.status == TimerStatus.Idle) {
                 timerViewModel.start()
             }
+        }
+    }
+
+    // Flat-detect auto-start: when user types something, start sensor;
+    // if phone placed flat while text exists, auto-start timer (no pomodoro).
+    var wasFlat by remember { mutableStateOf(false) }
+    LaunchedEffect(draftText, isLandscape, autoStartTimerOnFlatEnabled) {
+        val shouldMonitor = draftText.isNotEmpty() && !isLandscape && autoStartTimerOnFlatEnabled
+        if (shouldMonitor) {
+            flatSensorMonitor.start()
+        } else {
+            flatSensorMonitor.stop()
+            wasFlat = false
+        }
+    }
+    LaunchedEffect(Unit) {
+        flatSensorMonitor.isFlat.collect { flat ->
+            if (flat && !wasFlat) {
+                wasFlat = true
+                val currentTimerStatus = timerViewModel.state.value.status
+                val currentDraftText = completedViewModel.draftText.value
+                if (currentTimerStatus == TimerStatus.Idle && currentDraftText.isNotEmpty() && !isLandscape) {
+                    timerViewModel.start()
+                }
+            }
+            if (!flat) {
+                wasFlat = false
+            }
+        }
+    }
+
+    // Stop flat sensor when timer starts running (auto-started or manual).
+    LaunchedEffect(timerState.status) {
+        if (timerState.status == TimerStatus.Running) {
+            flatSensorMonitor.stop()
+            wasFlat = false
         }
     }
 
@@ -432,6 +472,8 @@ fun HomeScreen(
                 onToggleBreathingLamp = { settingsViewModel.setBreathingLampEnabled(it) },
                 autoStartTimerOnLandscapeEnabled = autoStartTimerOnLandscapeEnabled,
                 onToggleAutoStartTimerOnLandscape = { settingsViewModel.setAutoStartTimerOnLandscapeEnabled(it) },
+                autoStartTimerOnFlatEnabled = autoStartTimerOnFlatEnabled,
+                onToggleAutoStartTimerOnFlat = { settingsViewModel.setAutoStartTimerOnFlatEnabled(it) },
                 themeMode = themeMode ?: ThemeMode.System,
                 onThemeModeChange = { settingsViewModel.setThemeMode(it) },
                 onUserAgreement = { showUserAgreement = true },

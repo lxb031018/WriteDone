@@ -29,6 +29,16 @@ class CompletedViewModel @Inject constructor(
     suspend fun loadDraft(): String = draftRepo.load()
     suspend fun saveDraft(text: String) = draftRepo.save(text)
 
+    private val _draftText = MutableStateFlow("")
+    val draftText: StateFlow<String> = _draftText.asStateFlow()
+
+    fun updateDraftText(text: String) {
+        _draftText.value = text
+        viewModelScope.launch {
+            draftRepo.save(text)
+        }
+    }
+
     private val _state = MutableStateFlow(CompletedUiState())
     val state: StateFlow<CompletedUiState> = _state.asStateFlow()
 
@@ -36,6 +46,9 @@ class CompletedViewModel @Inject constructor(
         val today = Date()
         loadByDate(today)
         loadTodayNotes()
+        viewModelScope.launch {
+            _draftText.value = draftRepo.load()
+        }
     }
 
     private fun loadTodayNotes() {

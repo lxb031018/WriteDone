@@ -5,9 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import me.lxb.writedone.ui.screens.home.CompletedViewModel
 import me.lxb.writedone.ui.screens.home.TimerViewModel
@@ -22,34 +19,25 @@ fun TimerInputCard(
     modifier: Modifier = Modifier,
 ) {
     val timerState by timerViewModel.state.collectAsState()
-
-    var inputText by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        inputText = completedViewModel.loadDraft()
-    }
-
-    LaunchedEffect(inputText) {
-        completedViewModel.saveDraft(inputText)
-    }
+    val draftText by completedViewModel.draftText.collectAsState()
 
     LaunchedEffect(Unit) {
         timerViewModel.stopEvents.collect { (elapsed, startTimeMillis) ->
-            val content = inputText.trim()
+            val content = draftText.trim()
             if (content.isNotEmpty()) {
                 completedViewModel.addNote(
                     content = content,
                     createdAt = Date(startTimeMillis),
                     durationSeconds = elapsed,
                 )
-                inputText = ""
+                completedViewModel.updateDraftText("")
             }
         }
     }
 
     StickyNoteInput(
-        value = inputText,
-        onValueChange = { if (!isLandscape) inputText = it },
+        value = draftText,
+        onValueChange = { if (!isLandscape) completedViewModel.updateDraftText(it) },
         createdAt = timerState.startTimeMillis?.let { Date(it) },
         durationSeconds = null,
         breathingEnabled = breathingEnabled,

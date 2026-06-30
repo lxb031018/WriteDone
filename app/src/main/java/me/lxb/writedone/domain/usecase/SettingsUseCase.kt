@@ -29,4 +29,8 @@ class SettingsUseCase @Inject constructor(
     val autoStartTimerOnLandscapeEnabled: Flow<Boolean> = settingsRepo.autoStartTimerOnLandscapeEnabled
 
     suspend fun setAutoStartTimerOnLandscapeEnabled(enabled: Boolean) = settingsRepo.setAutoStartTimerOnLandscapeEnabled(enabled)
+
+    val autoStartTimerOnFlatEnabled: Flow<Boolean> = settingsRepo.autoStartTimerOnFlatEnabled
+
+    suspend fun setAutoStartTimerOnFlatEnabled(enabled: Boolean) = settingsRepo.setAutoStartTimerOnFlatEnabled(enabled)
 }
