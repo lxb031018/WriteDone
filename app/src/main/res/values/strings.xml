@@ -67,8 +67,6 @@
     <string name="calendar_day_sat">六</string>
     <string name="calendar_cancel">取消</string>
     <string name="confirm">确定</string>
-    <string name="calendar_copy_selected">复制选中</string>
-    <string name="calendar_copy_selected_count">复制选中（%d天）</string>
     <string name="calendar_export_selected">复制</string>
     <string name="calendar_export_selected_count">复制</string>
     <string name="calendar_no_records">这天还没有记录</string>
@@ -266,7 +264,7 @@
     <string name="legal_pp_change_feedback">用户反馈建议</string>
     <string name="legal_pp_section8_2">8.2 变更方式</string>
     <string name="legal_pp_change_methods_intro">任何变更将通过以下方式公布:</string>
-    <string name="legal_pp_change_github">本项目的 GitHub 仓库: github.com/lxb031018/lishi</string>
+    <string name="legal_pp_change_github">本项目的 GitHub 仓库: github.com/lxb031018/WriteDone</string>
     <string name="legal_pp_change_about">应用内&quot;关于&quot;页面 (如有)</string>
     <string name="legal_pp_change_popup">应用启动时的弹窗提示 (重大变更时)</string>
     <string name="legal_pp_section8_3">8.3 生效</string>

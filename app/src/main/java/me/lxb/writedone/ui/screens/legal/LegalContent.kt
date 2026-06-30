@@ -156,8 +156,8 @@ fun UserAgreementBody() {
     LH2(stringResource(R.string.legal_section11))
     LP(stringResource(R.string.legal_contact_intro))
     LContactLine(label = stringResource(R.string.legal_contact_email_label), value = "lxb031018@163.com")
-    LContactLine(label = stringResource(R.string.legal_contact_github_label), value = "github.com/lxb031018/lishi")
-    LContactLine(label = stringResource(R.string.legal_contact_project_label), value = "github.com/lxb031018/lishi")
+    LContactLine(label = stringResource(R.string.legal_contact_github_label), value = "github.com/lxb031018/WriteDone")
+    LContactLine(label = stringResource(R.string.legal_contact_project_label), value = "github.com/lxb031018/WriteDone")
     LPRich(buildAnnotatedString {
         withStyle(boldSpan) { append(stringResource(R.string.legal_contact_response)) }
     })
@@ -335,8 +335,8 @@ fun PrivacyPolicyBody() {
     LH2(stringResource(R.string.legal_pp_section9))
     LP(stringResource(R.string.legal_pp_contact_intro))
     LContactLine(label = stringResource(R.string.legal_pp_contact_email_label), value = "lxb031018@163.com")
-    LContactLine(label = stringResource(R.string.legal_pp_contact_github_label), value = "github.com/lxb031018/lishi/issues")
-    LContactLine(label = stringResource(R.string.legal_pp_contact_project_label), value = "github.com/lxb031018/lishi")
+    LContactLine(label = stringResource(R.string.legal_pp_contact_github_label), value = "github.com/lxb031018/WriteDone/issues")
+    LContactLine(label = stringResource(R.string.legal_pp_contact_project_label), value = "github.com/lxb031018/WriteDone")
     LPRich(buildAnnotatedString {
         append(stringResource(R.string.legal_pp_contact_subject))
     })
